@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071b25">
+  <meta name="description" content="Amanda Zirzow — where science, art, water, and life on two wheels collide. Discover paintings, 3D models, conservation, cycling, and triathlon adventures.">
+  <meta property="og:title" content="ZIRZOW — Curious by Nature">
+  <meta property="og:description" content="Science. Art. Wild places. Two wheels. One curious life.">
+  <meta property="og:type" content="website">
+  <title>ZIRZOW — Curious by Nature</title>
+  <style>
+    :root { color-scheme:dark; --bg:#06141c; --panel:#102733; --muted:#a7bdc5; --line:rgba(202,235,232,.14); --cream:#f2f1e7; --mint:#b5e89b; --aqua:#73dbd4; --orange:#ffad75; }
+    *,*::before,*::after { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--cream); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.55; overflow-x:hidden; }
+    a { color:inherit; text-decoration:none; }
+    a:focus-visible,button:focus-visible { outline:3px solid var(--aqua); outline-offset:5px; }
+    .container { width:min(1170px,calc(100% - 44px)); margin-inline:auto; }
+    .top { position:relative; isolation:isolate; overflow:hidden; min-height:730px; background:radial-gradient(ellipse at 75% 40%,#184756 0%,#0c2632 31%,#071720 72%); }
+    .top::before { content:""; position:absolute; inset:0; opacity:.25; background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px); background-size:64px 64px; mask-image:linear-gradient(90deg,transparent 10%,black 100%); z-index:-2; }
+    .top::after { content:""; position:absolute; width:850px; height:850px; border:1px solid rgba(115,219,212,.20); border-radius:50%; top:80px; right:-325px; box-shadow:0 0 0 105px rgba(115,219,212,.035),0 0 0 210px rgba(115,219,212,.022); pointer-events:none; z-index:-1; }
+    nav { min-height:92px; display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:1px solid var(--line); }
+    .brand { font-size:1.35rem; font-weight:950; letter-spacing:.22em; white-space:nowrap; }
+    .brand b { color:var(--mint); }
+    .navlinks { display:flex; align-items:center; gap:clamp(12px,2.5vw,34px); font-size:.84rem; text-transform:uppercase; font-weight:800; letter-spacing:.09em; }
+    .navlinks a:not(.nav-cta) { color:#d0dfe0; transition:color .2s; }
+    .navlinks a:hover { color:var(--mint); }
+    .nav-cta { border:1px solid rgba(181,232,155,.65); border-radius:50px; padding:10px 17px; }
+    .hero { display:grid; grid-template-columns:1.1fr .9fr; align-items:center; min-height:620px; gap:22px; padding:60px 0 100px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:10px; font-weight:900; text-transform:uppercase; letter-spacing:.23em; font-size:.73rem; color:var(--mint); }
+    .eyebrow::before { content:""; width:27px; height:2px; background:var(--mint); }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { font-size:clamp(4.6rem,9.8vw,9.4rem); font-weight:950; letter-spacing:-.09em; line-height:.85; margin:30px 0 26px; }
+    h1 .outline { color:transparent; -webkit-text-stroke:1.5px rgba(244,244,233,.72); }
+    .tagline { font-size:clamp(1.15rem,2.15vw,1.7rem); font-weight:750; max-width:630px; line-height:1.35; }
+    .tagline em { font-style:normal; color:var(--mint); }
+    .sub { color:var(--muted); max-width:540px; margin:16px 0 32px; }
+    .btns { display:flex; gap:12px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:12px; font-weight:850; border-radius:50px; padding:14px 23px; font-size:.9rem; transition:transform .2s,background .2s; }
+    .btn:hover,.card:hover { transform:translateY(-4px); }
+    .btn-primary { background:var(--mint); color:#06221b; }
+    .btn-secondary { border:1px solid rgba(224,245,234,.36); color:white; }
+    .orbit { aspect-ratio:1; width:min(100%,500px); position:relative; margin:auto; display:grid; place-items:center; }
+    .orbit-ring { position:absolute; width:90%; aspect-ratio:1; border-radius:50%; border:1px solid rgba(115,219,212,.35); }
+    .orbit-ring:nth-child(2) { width:70%; border-style:dashed; animation:spin 60s linear infinite; }
+    .orbit-ring:nth-child(3) { width:49%; border-color:rgba(181,232,155,.25); }
+    .center-mark { width:34%; aspect-ratio:1; display:grid; place-items:center; border:1px solid rgba(181,232,155,.75); border-radius:50%; background:radial-gradient(circle,#2a5860,#0d2a35); box-shadow:0 0 80px #75e0c52a; font-size:clamp(3rem,5vw,5.5rem); }
+    .orb { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:104px; aspect-ratio:1; border-radius:50%; background:#173744; border:1px solid rgba(160,237,221,.3); box-shadow:0 14px 30px #0004; text-align:center; font-size:1.9rem; }
+    .orb small { font-size:.63rem; font-weight:900; text-transform:uppercase; letter-spacing:.11em; }
+    .orb.art { top:6%; right:10%; } .orb.water { left:0; top:34%; } .orb.ride { right:0; bottom:18%; } .orb.science { bottom:0; left:23%; }
+    .scroll-note { font-size:.74rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#b3c4ca; margin-top:-58px; padding-bottom:32px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .ticker { border-block:1px solid var(--line); padding:16px 0; background:#0a2029; color:var(--aqua); font-weight:900; text-transform:uppercase; letter-spacing:.17em; font-size:.75rem; }
+    .ticker .container { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+    .ticker span::before { content:"✳"; margin-right:16px; color:var(--orange); }
+    main { padding:100px 0 0; }
+    .section-head { display:flex; justify-content:space-between; align-items:end; gap:22px; margin-bottom:28px; }
+    .kicker { color:var(--mint); text-transform:uppercase; font-size:.72rem; font-weight:900; letter-spacing:.2em; }
+    h2 { font-size:clamp(2.4rem,5vw,4.6rem); letter-spacing:-.065em; line-height:1; margin:12px 0 0; }
+    .section-description { color:var(--muted); max-width:320px; margin-bottom:2px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; }
+    .card { position:relative; overflow:hidden; min-height:310px; padding:30px; background:var(--panel); border:1px solid var(--line); border-radius:18px; display:flex; flex-direction:column; align-items:flex-start; transition:transform .25s,border-color .25s; }
+    .card:hover { border-color:rgba(181,232,155,.6); }
+    .card.feature { grid-column:span 2; background:radial-gradient(circle at 90% 10%,#2c625d 0%,#173d42 38%,#102733 75%); }
+    .card.art { background:radial-gradient(circle at 90% 0%,#644639,#2c3239 43%,#14242c); }
+    .card.ride { background:radial-gradient(circle at 90% 0%,#475b40,#253b37 43%,#132a30); }
+    .card.water { background:radial-gradient(circle at 100% 0%,#165869,#102f42 48%,#102733); }
+    .card.science { background:radial-gradient(circle at 100% 0%,#514b68,#293342 44%,#122833); }
+    .card.give { background:radial-gradient(circle at 100% 0%,#6b4c35,#39332f 45%,#172730); }
+    .card .number { font-size:.7rem; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:#cbddd9; }
+    .card .visual { font-size:3.5rem; align-self:flex-end; margin:auto 0 4px; filter:drop-shadow(0 8px 16px #0005); }
+    .card.feature .visual { font-size:6rem; }
+    .card h3 { font-size:clamp(1.25rem,2vw,1.75rem); line-height:1.12; letter-spacing:-.03em; margin:0 0 8px; }
+    .card p { color:#bfd0d3; font-size:.89rem; margin-bottom:15px; max-width:390px; }
+    .card .go { color:var(--mint); font-weight:900; font-size:.84rem; margin-top:auto; }
+    .card .go::after { content:" ↗"; font-size:1.1rem; }
+    .water-map { margin-top:106px; }
+    .water-map .section-description { max-width:390px; }
+    .map-shell { padding:clamp(12px,2vw,20px); background:#e9f2ef; border:1px solid #b9d5d1; border-radius:24px; box-shadow:0 28px 70px #0003; }
+    .map-frame { position:relative; width:100%; height:650px; min-height:600px; overflow:hidden; border-radius:16px; border:2px solid #cbd5e1; box-shadow:0 4px 16px rgba(0,0,0,.08); background:#dce8e9; }
+    .map-frame iframe { width:100%; height:100%; border:0; display:block; }
+    .map-note { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin:15px 6px 3px; font-size:.86rem; color:#475569; }
+    .map-note a { color:#006d82; font-weight:850; text-decoration:underline; text-underline-offset:3px; }
+    .map-note a:hover { color:#024756; }
+    .about { margin-top:106px; border-radius:24px; background:#e7ede4; color:#09232b; padding:clamp(30px,6vw,75px); display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; }
+    .about .kicker { color:#2a7065; }
+    .about h2 { max-width:650px; margin:20px 0 25px; }
+    .about p { font-size:1.05rem; max-width:620px; }
+    .quote-graphic { min-height:280px; border-radius:18px; background:radial-gradient(circle at 65% 30%,#80b7a7,#1b5964 55%,#0d3340); color:#f0f5ed; display:grid; place-items:center; text-align:center; padding:24px; position:relative; overflow:hidden; }
+    .quote-graphic::before { content:""; position:absolute; width:300px; aspect-ratio:1; border:1px solid #c4edc57a; border-radius:50%; top:-100px; right:-80px; box-shadow:0 0 0 56px #c4edc51b,0 0 0 112px #c4edc510; }
+    .quote-graphic strong { position:relative; font-size:clamp(1.9rem,3.5vw,3.4rem); letter-spacing:-.06em; line-height:1.08; }
+    .footer { padding:78px 0 30px; margin-top:90px; border-top:1px solid var(--line); }
+    .footer-inner { display:flex; justify-content:space-between; gap:25px; flex-wrap:wrap; align-items:end; }
+    .footer h2 { font-size:clamp(3rem,7vw,6rem); }
+    .footer p { color:var(--muted); }
+    .footer-links { display:flex; flex-wrap:wrap; gap:12px; max-width:420px; justify-content:flex-end; }
+    .footer-links a { border:1px solid var(--line); padding:9px 15px; border-radius:25px; font-weight:750; font-size:.83rem; }
+    .footer-links a:hover { background:var(--panel); }
+    .copyright { margin-top:65px; padding-top:22px; border-top:1px solid var(--line); color:#9fb4bd; font-size:.75rem; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    @media (max-width:900px) { .hero { grid-template-columns:1fr; padding-top:65px; gap:20px; } .top { min-height:0; } .orbit { width:min(75%,390px); } .scroll-note { margin-top:0; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .about { grid-template-columns:1fr; } }
+    @media (max-width:620px) { .water-map { margin-top:70px; } .map-frame { height:66vh; min-height:480px; } .map-note { align-items:flex-start; flex-direction:column; } .container { width:min(100% - 32px,1170px); } nav { min-height:76px; align-items:flex-start; padding:21px 0; flex-direction:column; gap:12px; } .navlinks { gap:17px; flex-wrap:wrap; font-size:.72rem; } .nav-cta { padding:7px 11px; } .hero { padding:55px 0 50px; } h1 { font-size:clamp(4.1rem,17vw,7rem); } .orbit { width:min(100%,320px); } .orb { width:76px; font-size:1.45rem; } .orb small { font-size:.53rem; } .ticker .container { justify-content:flex-start; } main { padding-top:70px; } .section-head { display:block; } .section-description { margin-top:20px; } .grid { grid-template-columns:1fr; } .card,.card.feature { grid-column:span 1; min-height:265px; } .card.feature .visual { font-size:4rem; } .about { margin-top:70px; } .footer-links { justify-content:flex-start; } .copyright { margin-top:44px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }
+  </style>
+</head>
+<body>
+  <header class="top" id="top">
+    <div class="container">
+      <nav aria-label="Main navigation">
+        <a href="#top" class="brand" aria-label="Zirzow home">ZIRZOW<b>.</b></a>
+        <div class="navlinks">
+          <a href="#explore">Explore</a>
+          <a href="#water-map">Water map</a>
+          <a href="#about">About</a>
+          <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">My website</a>
+          <a class="nav-cta" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Follow along ↗</a>
+        </div>
+      </nav>
+      <div class="hero">
+        <div>
+          <span class="eyebrow">A little bit of everything wild</span>
+          <h1>STAY<br><span class="outline">CURIOUS.</span></h1>
+          <p class="tagline">Science-minded. Art-driven. <em>Always exploring.</em></p>
+          <p class="sub">I'm Amanda Zirzow. My world moves between the studio, the lab, Florida's waterways, and the open road. Come see what I'm creating, discovering, and chasing next.</p>
+          <div class="btns">
+            <a class="btn btn-primary" href="#explore">Explore my world <span aria-hidden="true">↗</span></a>
+            <a class="btn btn-secondary" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">Visit my website <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <div class="orbit" aria-label="Illustration of science, art, water and cycling interests" role="img">
+          <div class="orbit-ring"></div><div class="orbit-ring"></div><div class="orbit-ring"></div>
+          <div class="center-mark" aria-hidden="true">✳</div>
+          <div class="orb art" aria-hidden="true">🎨<small>Art</small></div>
+          <div class="orb water" aria-hidden="true">🌊<small>Water</small></div>
+          <div class="orb ride" aria-hidden="true">🚴<small>Cycling</small></div>
+          <div class="orb science" aria-hidden="true">🔬<small>Science</small></div>
+        </div>
+      </div>
+      <div class="scroll-note">↓ Discover what I'm into</div>
+    </div>
+  </header>
+  <div class="ticker" aria-label="Interests"><div class="container"><span>Creative spirit</span><span>Endless curiosity</span><span>Wild Florida</span><span>Life in motion</span></div></div>
+  <main>
+    <section class="container" id="explore" aria-labelledby="explore-title">
+      <div class="section-head">
+        <div><div class="kicker">01 / The collection</div><h2 id="explore-title">Pick your adventure<span style="color:var(--mint)">.</span></h2></div>
+        <p class="section-description">Different passions, one big world. Every card takes you somewhere real.</p>
+      </div>
+      <div class="grid">
+        <a class="card feature" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">
+          <span class="number">01 / Home base</span><span class="visual" aria-hidden="true">✺</span><h3>My website & creative universe</h3><p>A closer look at my work, projects, passions, and everything in between.</p><span class="go">Visit amandazirzow.com</span>
+        </a>
+        <a class="card art" href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">
+          <span class="number">02 / Fine art</span><span class="visual" aria-hidden="true">🎨</span><h3>Paintings & color</h3><p>Explore my paintings on TERAVARNA.</p><span class="go">See my art</span>
+        </a>
+        <a class="card science" href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">
+          <span class="number">03 / Digital discovery</span><span class="visual" aria-hidden="true">🧬</span><h3>3D models</h3><p>Science, natural forms, and ideas brought to life in three dimensions.</p><span class="go">Explore Sketchfab</span>
+        </a>
+        <a class="card ride" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">
+          <span class="number">04 / In motion</span><span class="visual" aria-hidden="true">🚴</span><h3>Ride. Run. Repeat.</h3><p>Follow the miles, workouts, and adventures on Strava.</p><span class="go">Follow my training</span>
+        </a>
+        <a class="card water" href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">
+          <span class="number">05 / Protect what matters</span><span class="visual" aria-hidden="true">🌊</span><h3>Water is life.</h3><p>Discover Calusa Waterkeeper's work protecting Southwest Florida's waterways.</p><span class="go">Explore Calusa Waterkeeper</span>
+        </a>
+        <a class="card give" href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">
+          <span class="number">06 / Fuel the journey</span><span class="visual" aria-hidden="true">🏊</span><h3>Support my triathlon journey</h3><p>Cheer on the training, races, and big goals ahead.</p><span class="go">Support via Venmo</span>
+        </a>
+      </div>
+    </section>
+    <section class="container water-map" id="water-map" aria-labelledby="water-map-title">
+      <div class="section-head">
+        <div><div class="kicker">02 / Explore the waterways</div><h2 id="water-map-title">Know your water<span style="color:var(--aqua)">.</span></h2></div>
+        <p class="section-description">Explore the Southwest Florida interactive water quality map from Calusa Waterkeeper.</p>
+      </div>
+      <div class="map-shell">
+        <!-- Calusa Waterkeeper - Southwest Florida Interactive Water Quality Map -->
+        <div class="map-frame">
+          <iframe
+            src="https://calusa-waterkeeper.ai.studio/?embed=map"
+            title="Calusa Waterkeeper - Southwest Florida Interactive Water Quality Map"
+            width="100%"
+            height="100%"
+            loading="lazy"
+            allow="geolocation; fullscreen"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <div class="map-note">
+          <span>Water quality information for Southwest Florida. Map content is provided by Calusa Waterkeeper.</span>
+          <a href="https://calusa-waterkeeper.ai.studio/?embed=map" target="_blank" rel="noopener noreferrer">Open the fullscreen water quality map ↗</a>
+        </div>
+      </div>
+    </section>
+    <section class="container about" id="about" aria-labelledby="about-title">
+      <div>
+        <div class="kicker">02 / The person behind it all</div>
+        <h2 id="about-title">Not one thing.<br>And that's the point.</h2>
+        <p>Educator. Scientist. Artist. Cyclist. Conservation advocate. Lifelong explorer.</p>
+        <p>I believe the best ideas happen when worlds overlap — when curiosity takes you from a microscope to a paintbrush, from a Florida waterway to a winding trail.</p>
+        <p><strong>Welcome to all the things that make me, me.</strong></p>
+      </div>
+      <div class="quote-graphic" aria-hidden="true"><strong>CREATE.<br>EXPLORE.<br>PROTECT.<br>REPEAT.</strong></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div><div class="kicker">Keep exploring</div><h2>SEE YOU<br>OUT THERE<span style="color:var(--mint)">.</span></h2><p>Made for a life that's too interesting to fit in one box.</p></div>
+        <div class="footer-links" aria-label="Quick links">
+          <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">Website ↗</a>
+          <a href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">Sketchfab ↗</a>
+          <a href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Strava ↗</a>
+          <a href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">TERAVARNA ↗</a>
+          <a href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">Calusa Waterkeeper ↗</a>
+          <a href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">Venmo ↗</a>
+        </div>
+      </div>
+      <div class="copyright"><span>© <span id="year">2026</span> Amanda Zirzow. All rights reserved.</span><a href="#top">Back to top ↑</a></div>
+    </div>
+  </footer>
+  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+</body>
+</html>
