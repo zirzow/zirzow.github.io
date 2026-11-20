@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071b25">
-  <meta name="description" content="Amanda Zirzow — where science, art, water, and life on two wheels collide. Discover paintings, 3D models, conservation, cycling, and triathlon adventures.">
+  <meta name="description" content="Explore Amanda Zirzow’s world of original artwork, painting timelapses, microscopy, 3D models, SCUBA diving, Southwest Florida water conservation, cycling, and triathlon adventures.">
   <meta property="og:title" content="ZIRZOW — Curious by Nature">
   <meta property="og:description" content="Science. Art. Wild places. Two wheels. One curious life.">
   <meta property="og:type" content="website">
@@ -18,8 +18,10 @@
     5. Animation speeds: find .orbit-ring, .satellite-track, and .orb.
     6. Mobile changes: find @media at the end of the CSS.
     7. Science links: search for "MICROSCOPE PLAYLIST" and "3D MODELS" below.
-    8. Cycling links: search for "CYCLING CARD" below.
-    9. Upload index.html and BOTH .webp files to the GitHub repository root.
+    8. Art links: search for "ART TIMELAPSE PLAYLIST" or "TERAVARNA".
+    9. Diving links: search for "SCUBA DIVING PLAYLIST".
+   10. Cycling links: search for "CYCLING CARD".
+   11. Upload index.html and BOTH .webp files to the GitHub repository root.
   -->
   <style>
     /* COLOR PALETTE: change --sky to change all former lime-green accents. Other variables control backgrounds and text. */
@@ -204,7 +206,7 @@
     .card.science::before { content:""; position:absolute; width:180px; aspect-ratio:1; right:-74px; top:-65px; border-radius:50%; border:1px solid #a1dfff66; box-shadow:0 0 0 28px #9bdcff10,0 0 0 60px #9bdcff09; animation:breath 7s ease-in-out infinite; pointer-events:none; }
     /* Keep the science card content above its decorative halo. */
     .card.science > * { position:relative; z-index:1; }
-    /* TWO-ACTION CARD LAYOUT, shared by Science and Cycling. */
+    /* RESOURCE LINK LAYOUT: used by Art, Science, and SCUBA; Cycling has its own equivalent style. */
     .resource-actions { display:grid; gap:10px; width:100%; margin-top:auto; }
     /* Reusable clickable link tile (blue label and a smaller explanatory line). */
     .resource-link { display:flex; flex-direction:column; gap:3px; border:1px solid rgba(155,220,255,.34); background:rgba(5,24,36,.46); border-radius:12px; padding:12px 14px; transition:background .2s,border-color .2s,transform .2s; }
@@ -214,6 +216,40 @@
     /* Small animated underline accent on science resource titles. */
     .science .resource-link-title::after { content:" ↗"; display:inline-block; transition:transform .2s; }
     .science .resource-link:hover .resource-link-title::after { transform:translate(2px,-2px); }
+    /* SCUBA CARD: deep-ocean blues and a soft glowing upper-right corner. */
+    .card.diving {
+      background:radial-gradient(circle at 95% 5%, #1e798c 0%, #164661 35%, #0a253c 78%);
+    }
+    /* SCUBA BUBBLES: decorative circles rise through the diving card. */
+    .card.diving::before,
+    .card.diving::after {
+      content:"";
+      position:absolute;
+      width:32px;
+      height:32px;
+      border:2px solid rgba(155,220,255,.35);
+      border-radius:50%;
+      pointer-events:none;
+      animation:dive-bubble 7s ease-in infinite;
+    }
+    .card.diving::before { right:25%; bottom:8%; }
+    .card.diving::after { right:13%; bottom:24%; width:17px; height:17px; animation-delay:-3.5s; }
+    /* Keep diving text and buttons above the bubble decoration. */
+    .card.diving > * { position:relative; z-index:1; }
+    /* BUBBLE MOVEMENT: travel upward and fade; change 7s above for speed. */
+    @keyframes dive-bubble {
+      0% { transform:translateY(25px) scale(.7); opacity:0; }
+      25% { opacity:.75; }
+      100% { transform:translateY(-190px) scale(1.25); opacity:0; }
+    }
+    /* MULTI-LINK CARDS: art and diving use the same clickable resource tiles as science.
+       The entire card is NOT a link: visitors decide which destination to visit. */
+    .card.art .resource-link-title::after,
+    .card.diving .resource-link-title::after { content:" ↗"; }
+    /* Keep the area behind the art links dark enough to read over the painting. */
+    .card.art { background-image:linear-gradient(130deg,rgba(8,15,31,.88),rgba(20,30,57,.73)),url('burrowing-owls.webp'); }
+    /* Make card sections easy to find after clicking a floating circle or nav link. */
+    #art, #diving { scroll-margin-top:28px; }
     /* TRIATHLON SUPPORT CARD background. */
     .card.give { background:radial-gradient(circle at 100% 0%,#6b4c35,#39332f 45%,#172730); }
     /* SMALL NUMBER LABEL on each card. */
@@ -304,6 +340,8 @@
         <div class="navlinks">
           <a href="#explore">Explore</a>
           <a href="#water-map">Water map</a>
+          <!-- SCUBA NAVIGATION: jumps to the diving card below. -->
+          <a href="#diving">SCUBA</a>
           <a href="#about">About</a>
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">My website</a>
           <a class="nav-cta" href="#cycling">My cycling adventures ↓</a>
@@ -350,16 +388,36 @@
     <section class="container" id="explore" aria-labelledby="explore-title">
       <div class="section-head">
         <div><div class="kicker">01 / The collection</div><h2 id="explore-title">Pick your adventure<span style="color:var(--sky)">.</span></h2></div>
-        <p class="section-description">Art, microscopes, waterways, and two wheels — choose a path and see where curiosity takes you.</p>
+        <p class="section-description">Art in motion, life under the microscope, underwater explorations, our waterways, and adventures on two wheels.</p>
       </div>
       <div class="grid">
         <a class="card feature" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">
           <span class="number">01 / Home base</span><span class="visual" aria-hidden="true">✺</span><h3>My website & creative universe</h3><p>A closer look at my work, projects, passions, and everything in between.</p><span class="go">Visit amandazirzow.com</span>
         </a>
-        <!-- SCROLL DESTINATION: change id="art" together with the circle href above. -->
-        <a id="art" class="card art" href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">
-          <span class="number">02 / Fine art</span><span class="visual" aria-hidden="true">🎨</span><h3>Paintings & color</h3><p>Explore my paintings on TERAVARNA.</p><span class="go">See my art</span>
-        </a>
+        <!-- ART SECTION: the floating 🎨 circle links here through id="art".
+             This is a DIV instead of an <a> so each option has its own destination. -->
+        <div id="art" class="card art">
+          <span class="number">02 / Fine art + creative process</span>
+          <span class="visual" aria-hidden="true">🎨</span>
+          <h3>Paintings in motion</h3>
+          <p>From the first brushstroke to the finished painting—see my artwork and watch how it comes to life.</p>
+          <div class="resource-actions">
+            <!-- ART TIMELAPSE PLAYLIST: replace the href below if your YouTube playlist changes. -->
+            <a class="resource-link"
+               href="https://www.youtube.com/playlist?list=PLCHVsPjwYEan3weAuxlgJUo5HKtEtCgcj"
+               target="_blank" rel="noopener noreferrer">
+              <span class="resource-link-title">▶ Watch art process &amp; timelapses</span>
+              <span class="resource-link-note">YouTube · Watch public videos without signing in</span>
+            </a>
+            <!-- TERAVARNA: link to your public paintings portfolio. -->
+            <a class="resource-link"
+               href="https://www.teravarna.com/artists/amanda-zirzow"
+               target="_blank" rel="noopener noreferrer">
+              <span class="resource-link-title">Explore my paintings</span>
+              <span class="resource-link-note">My artwork on TERAVARNA</span>
+            </a>
+          </div>
+        </div>
         <!-- SCIENCE CARD: the whole card is NOT a link, so people can choose either resource. -->
         <!-- SCROLL DESTINATION: the floating microscope icon uses href="#science". -->
         <div id="science" class="card science">
@@ -404,8 +462,25 @@
         <a class="card water" href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">
           <span class="number">05 / Protect what matters</span><span class="visual" aria-hidden="true">🌊</span><h3>Water is life.</h3><p>Discover Calusa Waterkeeper's work protecting Southwest Florida's waterways.</p><span class="go">Explore Calusa Waterkeeper</span>
         </a>
+        <!-- SCUBA DIVING SECTION: ocean-inspired animated bubbles and a diving-video link.
+             This is separate from the WATER MAP because those are different activities. -->
+        <div id="diving" class="card diving">
+          <span class="number">06 / Below the surface</span>
+          <span class="visual" aria-hidden="true">🤿</span>
+          <h3>Into the blue</h3>
+          <p>Join me beneath the surface to explore marine life and the underwater world.</p>
+          <div class="resource-actions">
+            <!-- SCUBA DIVING PLAYLIST: this is your supplied YouTube playlist URL. -->
+            <a class="resource-link"
+               href="https://www.youtube.com/playlist?list=PLCHVsPjwYEakkSDaDoLaerf2Oul5K3rrt"
+               target="_blank" rel="noopener noreferrer">
+              <span class="resource-link-title">▶ Watch my SCUBA dives</span>
+              <span class="resource-link-note">YouTube · Public videos can be viewed without an account</span>
+            </a>
+          </div>
+        </div>
         <a class="card give" href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">
-          <span class="number">06 / Fuel the journey</span><span class="visual" aria-hidden="true">🏊</span><h3>Support my triathlon journey</h3><p>Cheer on the training, races, and big goals ahead.</p><span class="go">Support via Venmo</span>
+          <span class="number">07 / Fuel the journey</span><span class="visual" aria-hidden="true">🏊</span><h3>Support my triathlon journey</h3><p>Cheer on the training, races, and big goals ahead.</p><span class="go">Support via Venmo</span>
         </a>
       </div>
     </section>
@@ -459,7 +534,11 @@
           <a href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Strava (free account required) ↗</a>
           <!-- YOUTUBE PLAYLIST: View public cycling videos without signing in. -->
           <a href="https://youtube.com/playlist?list=PLCHVsPjwYEanNvrUdv8dM_4r9Ri52yzUw" target="_blank" rel="noopener noreferrer">Cycling videos on YouTube ↗</a>
+          <!-- ART VIDEOS: art process and time-lapse playlist. -->
+          <a href="https://www.youtube.com/playlist?list=PLCHVsPjwYEan3weAuxlgJUo5HKtEtCgcj" target="_blank" rel="noopener noreferrer">Art process &amp; timelapses ↗</a>
           <a href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">TERAVARNA ↗</a>
+          <!-- SCUBA VIDEOS: diving playlist. -->
+          <a href="https://www.youtube.com/playlist?list=PLCHVsPjwYEakkSDaDoLaerf2Oul5K3rrt" target="_blank" rel="noopener noreferrer">SCUBA diving videos ↗</a>
           <a href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">Calusa Waterkeeper ↗</a>
           <a href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">Venmo ↗</a>
         </div>
