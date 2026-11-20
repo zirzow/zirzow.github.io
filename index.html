@@ -17,7 +17,9 @@
     4. Center portrait: replace amanda-portrait.webp or edit the <img> inside .center-mark.
     5. Animation speeds: find .orbit-ring, .satellite-track, and .orb.
     6. Mobile changes: find @media at the end of the CSS.
-    7. Upload index.html and BOTH .webp files to the GitHub repository root.
+    7. Science links: search for "MICROSCOPE PLAYLIST" and "3D MODELS" below.
+    8. Cycling links: search for "CYCLING CARD" below.
+    9. Upload index.html and BOTH .webp files to the GitHub repository root.
   -->
   <style>
     /* COLOR PALETTE: change --sky to change all former lime-green accents. Other variables control backgrounds and text. */
@@ -169,6 +171,8 @@
     .ticker .container { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
     /* STAR SYMBOL before each interest. */
     .ticker span::before { content:"✳"; margin-right:16px; color:var(--orange); }
+    /* SECTION NAVIGATION: anchors are visible to keyboard and touch users too. */
+    .card:target { border-color:var(--sky); box-shadow:0 0 0 2px #9bdcff33,0 0 60px #9bdcff16; }
     /* SPACE above the main content. */
     main { padding:100px 0 0; }
     /* SECTION HEADERS have title on left and explanatory text on right. */
@@ -188,13 +192,28 @@
     /* WIDE FEATURED CARD gradient. */
     .card.feature { grid-column:span 2; background:radial-gradient(circle at 90% 10%,#315f85 0%,#173a56 38%,#102733 75%); }
     /* ART CARD background. */
-    .card.art { background:radial-gradient(circle at 90% 0%,#644639,#2c3239 43%,#14242c); }
+    /* ART CARD: the provided owl painting appears subtly behind readable text. */
+    .card.art { background-image:linear-gradient(130deg,rgba(8,15,31,.80),rgba(20,30,57,.62)),url('burrowing-owls.webp'); background-size:cover; background-position:center; }
     /* CYCLING CARD background. */
     .card.ride { background:radial-gradient(circle at 90% 0%,#37526c,#20394e 43%,#132a30); }
     /* WATER CARD background. */
     .card.water { background:radial-gradient(circle at 100% 0%,#165869,#102f42 48%,#102733); }
-    /* 3D SCIENCE CARD background. */
-    .card.science { background:radial-gradient(circle at 100% 0%,#514b68,#293342 44%,#122833); }
+    /* SCIENCE CARD gradient: violet-blue contrasts with the warm artwork card. */
+    .card.science { background:radial-gradient(circle at 92% 2%,#5b4f89 0%,#293d67 43%,#122833 100%); }
+    /* A faint moving halo on the Science card suggests the view through a microscope. */
+    .card.science::before { content:""; position:absolute; width:180px; aspect-ratio:1; right:-74px; top:-65px; border-radius:50%; border:1px solid #a1dfff66; box-shadow:0 0 0 28px #9bdcff10,0 0 0 60px #9bdcff09; animation:breath 7s ease-in-out infinite; pointer-events:none; }
+    /* Keep the science card content above its decorative halo. */
+    .card.science > * { position:relative; z-index:1; }
+    /* TWO-ACTION CARD LAYOUT, shared by Science and Cycling. */
+    .resource-actions { display:grid; gap:10px; width:100%; margin-top:auto; }
+    /* Reusable clickable link tile (blue label and a smaller explanatory line). */
+    .resource-link { display:flex; flex-direction:column; gap:3px; border:1px solid rgba(155,220,255,.34); background:rgba(5,24,36,.46); border-radius:12px; padding:12px 14px; transition:background .2s,border-color .2s,transform .2s; }
+    .resource-link:hover,.resource-link:focus-visible { background:rgba(155,220,255,.14); border-color:var(--sky); transform:translateY(-2px); }
+    .resource-link-title { color:var(--sky); font-weight:850; font-size:.88rem; }
+    .resource-link-note { color:#d2e1e8; font-size:.75rem; line-height:1.4; }
+    /* Small animated underline accent on science resource titles. */
+    .science .resource-link-title::after { content:" ↗"; display:inline-block; transition:transform .2s; }
+    .science .resource-link:hover .resource-link-title::after { transform:translate(2px,-2px); }
     /* TRIATHLON SUPPORT CARD background. */
     .card.give { background:radial-gradient(circle at 100% 0%,#6b4c35,#39332f 45%,#172730); }
     /* SMALL NUMBER LABEL on each card. */
@@ -211,6 +230,16 @@
     .card .go { color:var(--sky); font-weight:900; font-size:.84rem; margin-top:auto; }
     /* DECORATIVE ARROW after card action text. */
     .card .go::after { content:" ↗"; font-size:1.1rem; }
+    /* CYCLING ACTIONS: This card has two separate links instead of making the entire card clickable. */
+    .cycling-actions { display:grid; gap:10px; width:100%; margin-top:auto; }
+    /* CYCLING LINK BUTTON: Edit border, background, padding and corners here. */
+    .cycling-link { display:flex; flex-direction:column; gap:3px; border:1px solid rgba(155,220,255,.34); background:rgba(5,24,36,.42); border-radius:12px; padding:12px 14px; transition:background .2s,border-color .2s,transform .2s; }
+    /* CYCLING LINK INTERACTION: Light-blue highlight on hover or keyboard focus. */
+    .cycling-link:hover,.cycling-link:focus-visible { background:rgba(155,220,255,.13); border-color:var(--sky); transform:translateY(-2px); }
+    /* MAIN ACTION LABEL. */
+    .cycling-link-title { color:var(--sky); font-weight:850; font-size:.88rem; }
+    /* IMPORTANT ACCOUNT NOTE visible before visitors click. */
+    .cycling-link-note { color:#d2e1e8; font-size:.75rem; line-height:1.4; }
     /* GAP before interactive map. */
     .water-map { margin-top:106px; }
     /* MAP INTRO WIDTH. */
@@ -277,7 +306,7 @@
           <a href="#water-map">Water map</a>
           <a href="#about">About</a>
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">My website</a>
-          <a class="nav-cta" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Follow along ↗</a>
+          <a class="nav-cta" href="#cycling">My cycling adventures ↓</a>
         </div>
       </nav>
       <!-- INTRODUCTION: edit headline and paragraphs here. -->
@@ -321,7 +350,7 @@
     <section class="container" id="explore" aria-labelledby="explore-title">
       <div class="section-head">
         <div><div class="kicker">01 / The collection</div><h2 id="explore-title">Pick your adventure<span style="color:var(--sky)">.</span></h2></div>
-        <p class="section-description">Different passions, one big world. Every card takes you somewhere real.</p>
+        <p class="section-description">Art, microscopes, waterways, and two wheels — choose a path and see where curiosity takes you.</p>
       </div>
       <div class="grid">
         <a class="card feature" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">
@@ -331,14 +360,47 @@
         <a id="art" class="card art" href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">
           <span class="number">02 / Fine art</span><span class="visual" aria-hidden="true">🎨</span><h3>Paintings & color</h3><p>Explore my paintings on TERAVARNA.</p><span class="go">See my art</span>
         </a>
-        <!-- SCROLL DESTINATION: change id="science" together with the circle href above. -->
-        <a id="science" class="card science" href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">
-          <span class="number">03 / Digital discovery</span><span class="visual" aria-hidden="true">🧬</span><h3>3D models</h3><p>Science, natural forms, and ideas brought to life in three dimensions.</p><span class="go">Explore Sketchfab</span>
-        </a>
+        <!-- SCIENCE CARD: the whole card is NOT a link, so people can choose either resource. -->
+        <!-- SCROLL DESTINATION: the floating microscope icon uses href="#science". -->
+        <div id="science" class="card science">
+          <span class="number">03 / Look closer</span>
+          <span class="visual" aria-hidden="true">🔬</span>
+          <h3>Science under the lens</h3>
+          <p>Discover a hidden world through microscopy videos, biological wonders, and interactive 3D models.</p>
+          <!-- SCIENCE LINKS: edit the href values below to change either destination. -->
+          <div class="resource-actions">
+            <!-- MICROSCOPE PLAYLIST: your supplied YouTube playlist link. -->
+            <a class="resource-link" href="https://www.youtube.com/playlist?list=PLbb-vFOS-524" target="_blank" rel="noopener noreferrer">
+              <span class="resource-link-title">▶ Under the Microscope</span>
+              <span class="resource-link-note">Watch my science videos on YouTube · Public videos can be viewed without signing in</span>
+            </a>
+            <!-- 3D MODELS: your Sketchfab creator page. -->
+            <a class="resource-link" href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">
+              <span class="resource-link-title">◈ Explore my 3D models</span>
+              <span class="resource-link-note">Browse interactive scientific and nature-inspired models on Sketchfab</span>
+            </a>
+          </div>
+        </div>
         <!-- SCROLL DESTINATION: change id="cycling" together with the circle href above. -->
-        <a id="cycling" class="card ride" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">
-          <span class="number">04 / In motion</span><span class="visual" aria-hidden="true">🚴</span><h3>Ride. Run. Repeat.</h3><p>Follow the miles, workouts, and adventures on Strava.</p><span class="go">Follow my training</span>
-        </a>
+        <!-- CYCLING CARD: This is a DIV, not a link, so visitors choose their destination. -->
+        <!-- EDIT LINKS: Update either href below if your Strava profile or YouTube playlist changes. -->
+        <div id="cycling" class="card ride">
+          <span class="number">04 / In motion</span>
+          <span class="visual" aria-hidden="true">🚴</span>
+          <h3>Ride. Run. Repeat.</h3>
+          <p>Follow my cycling adventures, from road rides and scenic trails to triathlon training.</p>
+          <!-- TWO CLEARLY LABELED OPTIONS: Both open in a new tab. -->
+          <div class="cycling-actions">
+            <a class="cycling-link" href="https://youtube.com/playlist?list=PLCHVsPjwYEanNvrUdv8dM_4r9Ri52yzUw" target="_blank" rel="noopener noreferrer">
+              <span class="cycling-link-title">▶ Watch my cycling videos ↗</span>
+              <span class="cycling-link-note">YouTube · No account needed for public videos</span>
+            </a>
+            <a class="cycling-link" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">
+              <span class="cycling-link-title">↗ Follow my training on Strava</span>
+              <span class="cycling-link-note">Free Strava account required to view my profile</span>
+            </a>
+          </div>
+        </div>
         <a class="card water" href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">
           <span class="number">05 / Protect what matters</span><span class="visual" aria-hidden="true">🌊</span><h3>Water is life.</h3><p>Discover Calusa Waterkeeper's work protecting Southwest Florida's waterways.</p><span class="go">Explore Calusa Waterkeeper</span>
         </a>
@@ -391,8 +453,12 @@
         <div><div class="kicker">Keep exploring</div><h2>SEE YOU<br>OUT THERE<span style="color:var(--sky)">.</span></h2><p>Made for a life that's too interesting to fit in one box.</p></div>
         <div class="footer-links" aria-label="Quick links">
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">Website ↗</a>
-          <a href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">Sketchfab ↗</a>
-          <a href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Strava ↗</a>
+          <a href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">Sketchfab 3D ↗</a>
+          <!-- The microscopy playlist is also directly available in the footer. -->
+          <a href="https://www.youtube.com/playlist?list=PLbb-vFOS-524" target="_blank" rel="noopener noreferrer">Under the Microscope ↗</a>
+          <a href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Strava (free account required) ↗</a>
+          <!-- YOUTUBE PLAYLIST: View public cycling videos without signing in. -->
+          <a href="https://youtube.com/playlist?list=PLCHVsPjwYEanNvrUdv8dM_4r9Ri52yzUw" target="_blank" rel="noopener noreferrer">Cycling videos on YouTube ↗</a>
           <a href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">TERAVARNA ↗</a>
           <a href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">Calusa Waterkeeper ↗</a>
           <a href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">Venmo ↗</a>
