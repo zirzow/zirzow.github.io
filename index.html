@@ -9,14 +9,33 @@
   <meta property="og:description" content="Science. Art. Wild places. Two wheels. One curious life.">
   <meta property="og:type" content="website">
   <title>ZIRZOW — Curious by Nature</title>
+  <!--
+    HOW TO EDIT THIS WEBSITE
+    1. Text and links: search for the visible wording or href="..." below.
+    2. Colors: find :root near the beginning of <style>; --sky is the main blue accent.
+    3. Main background painting: replace burrowing-owls.webp or edit the .top CSS.
+    4. Center portrait: replace amanda-portrait.webp or edit the <img> inside .center-mark.
+    5. Animation speeds: find .orbit-ring, .satellite-track, and .orb.
+    6. Mobile changes: find @media at the end of the CSS.
+    7. Upload index.html and BOTH .webp files to the GitHub repository root.
+  -->
   <style>
-    :root { color-scheme:dark; --bg:#06141c; --panel:#102733; --muted:#a7bdc5; --line:rgba(202,235,232,.14); --cream:#f2f1e7; --mint:#b5e89b; --aqua:#73dbd4; --orange:#ffad75; }
+    /* COLOR PALETTE: change --sky to change all former lime-green accents. Other variables control backgrounds and text. */
+    /* MAIN COLORS: edit --sky to change the light-blue accent throughout the site. */
+    :root { color-scheme:dark; --bg:#06141c; --panel:#102733; --muted:#a7bdc5; --line:rgba(202,235,232,.14); --cream:#f2f1e7; --sky:#9bdcff; --aqua:#73dbd4; --orange:#ffad75; }
+    /* LAYOUT RESET: make width and padding calculations predictable. */
     *,*::before,*::after { box-sizing:border-box; }
+    /* SMOOTH SCROLLING: anchor links slide to their sections. */
     html { scroll-behavior:smooth; }
+    /* BODY: base typography, background, and horizontal overflow protection. */
     body { margin:0; background:var(--bg); color:var(--cream); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.55; overflow-x:hidden; }
+    /* LINKS: remove default underline; custom links are styled below. */
     a { color:inherit; text-decoration:none; }
+    /* ACCESSIBILITY: keyboard users can see which item is focused. */
     a:focus-visible,button:focus-visible { outline:3px solid var(--aqua); outline-offset:5px; }
+    /* MAXIMUM SITE WIDTH: change 1170px to make content wider or narrower. */
     .container { width:min(1170px,calc(100% - 44px)); margin-inline:auto; }
+    /* HERO BACKGROUND: replace burrowing-owls.webp to use different artwork. */
     .top {
       position:relative;
       isolation:isolate;
@@ -30,6 +49,7 @@
       background-position:center center, center, center 30%;
       background-repeat:no-repeat;
     }
+    /* BACKGROUND OVERLAY: the lines and shading improve text contrast. */
     .top::before {
       content:"";
       position:absolute;
@@ -42,106 +62,206 @@
       mask-image:linear-gradient(90deg,transparent 0%, black 18%, black 100%);
       z-index:-2;
     }
+    /* HERO DECORATION: large glowing contour circles. */
     .top::after {
       content:"";
       position:absolute;
       width:850px;
       height:850px;
-      border:1px solid rgba(115,219,212,.18);
+      border:1px solid rgba(155,220,255,.18);
       border-radius:50%;
       top:80px;
       right:-325px;
-      box-shadow:0 0 0 105px rgba(115,219,212,.03),0 0 0 210px rgba(115,219,212,.018);
+      box-shadow:0 0 0 105px rgba(155,220,255,.03),0 0 0 210px rgba(155,220,255,.018);
       pointer-events:none;
       z-index:-1;
     }
+    /* TOP NAVIGATION: flex row on desktop. */
     nav { min-height:92px; display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:1px solid var(--line); }
+    /* WORDMARK: the ZIRZOW text at upper-left. */
     .brand { font-size:1.35rem; font-weight:950; letter-spacing:.22em; white-space:nowrap; }
-    .brand b { color:var(--mint); }
+    .brand b { color:var(--sky); }
+    /* NAV LINKS: spacing between navigation items. */
     .navlinks { display:flex; align-items:center; gap:clamp(12px,2.5vw,34px); font-size:.84rem; text-transform:uppercase; font-weight:800; letter-spacing:.09em; }
+    /* NAV LINK COLOR. */
     .navlinks a:not(.nav-cta) { color:#d0dfe0; transition:color .2s; }
-    .navlinks a:hover { color:var(--mint); }
-    .nav-cta { border:1px solid rgba(181,232,155,.65); border-radius:50px; padding:10px 17px; }
+    /* NAV LINK HOVER COLOR. */
+    .navlinks a:hover { color:var(--sky); }
+    /* NAV BUTTON: the rounded Follow along link. */
+    .nav-cta { border:1px solid rgba(155,220,255,.65); border-radius:50px; padding:10px 17px; }
+    /* INTRO PANEL: readable glass-like backdrop over the painting. */
     .hero-copy { max-width:690px; padding:34px 34px 30px; background:linear-gradient(180deg, rgba(7,23,32,.62), rgba(7,23,32,.45)); border:1px solid rgba(202,235,232,.15); backdrop-filter:blur(7px); border-radius:26px; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    /* HERO COLUMNS: text on left and circular portrait graphic on right. */
     .hero { display:grid; grid-template-columns:1.1fr .9fr; align-items:center; min-height:620px; gap:22px; padding:60px 0 100px; }
-    .eyebrow { display:inline-flex; align-items:center; gap:10px; font-weight:900; text-transform:uppercase; letter-spacing:.23em; font-size:.73rem; color:var(--mint); }
-    .eyebrow::before { content:""; width:27px; height:2px; background:var(--mint); }
+    /* SMALL INTRO LABEL above the headline. */
+    .eyebrow { display:inline-flex; align-items:center; gap:10px; font-weight:900; text-transform:uppercase; letter-spacing:.23em; font-size:.73rem; color:var(--sky); }
+    /* SHORT DECORATIVE LINE in the intro label. */
+    .eyebrow::before { content:""; width:27px; height:2px; background:var(--sky); }
+    /* HEADING AND PARAGRAPH MARGIN RESET. */
     h1,h2,h3,p { margin-top:0; }
+    /* BIG HEADLINE: desktop font size scales with the screen. */
     h1 { font-size:clamp(4.6rem,9.8vw,9.4rem); font-weight:950; letter-spacing:-.09em; line-height:.85; margin:30px 0 26px; }
+    /* OUTLINE LETTERING in CURIOUS. */
     h1 .outline { color:transparent; -webkit-text-stroke:1.5px rgba(244,244,233,.72); }
+    /* TAGLINE under the big headline. */
     .tagline { font-size:clamp(1.15rem,2.15vw,1.7rem); font-weight:750; max-width:630px; line-height:1.35; }
-    .tagline em { font-style:normal; color:var(--mint); }
+    /* HIGHLIGHT WORD in the tagline. */
+    .tagline em { font-style:normal; color:var(--sky); }
+    /* INTRO PARAGRAPH text and spacing. */
     .sub { color:var(--muted); max-width:540px; margin:16px 0 32px; }
+    /* HERO BUTTON CONTAINER. */
     .btns { display:flex; gap:12px; flex-wrap:wrap; }
+    /* BUTTON BASICS, including hover motion. */
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:12px; font-weight:850; border-radius:50px; padding:14px 23px; font-size:.9rem; transition:transform .2s,background .2s; }
+    /* HOVER MOTION on buttons and cards. */
     .btn:hover,.card:hover { transform:translateY(-4px); }
-    .btn-primary { background:var(--mint); color:#06221b; }
+    /* MAIN BLUE BUTTON; background comes from --sky. */
+    .btn-primary { background:var(--sky); color:#09283c; }
+    /* SECONDARY OUTLINE BUTTON. */
     .btn-secondary { border:1px solid rgba(224,245,234,.36); color:white; }
-    .orbit { aspect-ratio:1; width:min(100%,500px); position:relative; margin:auto; display:grid; place-items:center; }
-    .orbit-ring { position:absolute; width:90%; aspect-ratio:1; border-radius:50%; border:1px solid rgba(115,219,212,.35); }
-    .orbit-ring:nth-child(2) { width:70%; border-style:dashed; animation:spin 60s linear infinite; }
-    .orbit-ring:nth-child(3) { width:49%; border-color:rgba(181,232,155,.25); }
-    .center-mark { width:34%; aspect-ratio:1; display:grid; place-items:center; border:1px solid rgba(181,232,155,.75); border-radius:50%; background:radial-gradient(circle,#2a5860,#0d2a35); box-shadow:0 0 80px #75e0c52a; font-size:clamp(3rem,5vw,5.5rem); }
-    .orb { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:104px; aspect-ratio:1; border-radius:50%; background:#173744; border:1px solid rgba(160,237,221,.3); box-shadow:0 14px 30px #0004; text-align:center; font-size:1.9rem; }
+    /* ORBIT: the illustrated wheel to the right of the main headline. */
+    .orbit { aspect-ratio:1; width:min(100%,500px); position:relative; margin:auto; display:grid; place-items:center; isolation:isolate; }
+    /* Slow rings create motion without rotating your portrait. */
+    .orbit-ring { position:absolute; width:92%; aspect-ratio:1; border-radius:50%; border:1px solid rgba(155,220,255,.45); box-shadow:inset 0 0 34px #9bdcff0c,0 0 32px #9bdcff14; pointer-events:none; }
+    .orbit-ring:nth-child(1) { animation:spin 58s linear infinite; border-style:dashed; }
+    .orbit-ring:nth-child(2) { width:73%; border:2px dotted rgba(155,220,255,.55); animation:spin-reverse 38s linear infinite; }
+    .orbit-ring:nth-child(3) { width:51%; border:1px solid rgba(155,220,255,.55); animation:breath 5s ease-in-out infinite; }
+    /* Small orbiting blue points add an astronomical, starry-night feel. */
+    .satellite-track { position:absolute; width:85%; aspect-ratio:1; border-radius:50%; animation:spin 27s linear infinite; pointer-events:none; }
+    .satellite-track.reverse { width:65%; animation:spin-reverse 21s linear infinite; }
+    .satellite-track::before { content:""; position:absolute; left:50%; top:-5px; width:10px; height:10px; border-radius:50%; background:#d0edff; box-shadow:0 0 0 5px #9bdcff22,0 0 24px #9bdcff; }
+    .satellite-track.reverse::before { width:7px; height:7px; background:#58bbfa; }
+    /* PORTRAIT: this image remains still while the rings animate around it.
+       To use a different picture, upload that file and change the filename below in the HTML img tag. */
+    .center-mark { position:relative; z-index:2; width:37%; aspect-ratio:1; display:grid; place-items:center; overflow:hidden; border:4px solid #b5e6ff; border-radius:50%; background:#0d2a35; box-shadow:0 0 0 9px #9bdcff24,0 0 54px #9bdcff55,0 10px 32px #0006; }
+    .center-mark img { display:block; width:100%; height:100%; object-fit:cover; object-position:center center; }
+    /* The four interest badges are positioned around the portrait. */
+    .orb { position:absolute; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:104px; aspect-ratio:1; border-radius:50%; background:#173744ee; border:1px solid rgba(155,220,255,.5); box-shadow:0 14px 30px #0005; text-align:center; font-size:1.9rem; backdrop-filter:blur(6px); animation:float 5.6s ease-in-out infinite; }
     .orb small { font-size:.63rem; font-weight:900; text-transform:uppercase; letter-spacing:.11em; }
-    .orb.art { top:6%; right:10%; } .orb.water { left:0; top:34%; } .orb.ride { right:0; bottom:18%; } .orb.science { bottom:0; left:23%; }
+    .orb.art { top:6%; right:10%; animation-delay:-1s; }
+    .orb.water { left:0; top:34%; animation-delay:-2.2s; }
+    .orb.ride { right:0; bottom:18%; animation-delay:-3.4s; }
+    .orb.science { bottom:0; left:23%; animation-delay:-4.5s; }
+    /* Decorative sparkling dots fade in and out without obstructing buttons. */
+    .spark { position:absolute; z-index:1; width:5px; height:5px; border-radius:50%; background:#e2f5ff; box-shadow:0 0 12px #9bdcff; animation:twinkle 3s ease-in-out infinite; pointer-events:none; }
+    .spark.one { top:18%; left:25%; }
+    .spark.two { top:68%; right:17%; animation-delay:-1.4s; }
+    .spark.three { bottom:16%; left:15%; animation-delay:-2.1s; }
+    /* PROMPT below the hero. */
     .scroll-note { font-size:.74rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#b3c4ca; margin-top:-58px; padding-bottom:32px; }
+    /* MOTION: adjust durations on .orbit-ring, .satellite-track, and .orb above. */
     @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes spin-reverse { to { transform:rotate(-360deg); } }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-11px); } }
+    @keyframes twinkle { 0%,100% { opacity:.18; transform:scale(.65); } 50% { opacity:1; transform:scale(1.6); } }
+    @keyframes breath { 0%,100% { transform:scale(1); opacity:.7; } 50% { transform:scale(1.04); opacity:1; } }
+    /* INTERESTS STRIP beneath the hero. */
     .ticker { border-block:1px solid var(--line); padding:16px 0; background:#0a2029; color:var(--aqua); font-weight:900; text-transform:uppercase; letter-spacing:.17em; font-size:.75rem; }
+    /* INTEREST STRIP LAYOUT. */
     .ticker .container { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+    /* STAR SYMBOL before each interest. */
     .ticker span::before { content:"✳"; margin-right:16px; color:var(--orange); }
+    /* SPACE above the main content. */
     main { padding:100px 0 0; }
+    /* SECTION HEADERS have title on left and explanatory text on right. */
     .section-head { display:flex; justify-content:space-between; align-items:end; gap:22px; margin-bottom:28px; }
-    .kicker { color:var(--mint); text-transform:uppercase; font-size:.72rem; font-weight:900; letter-spacing:.2em; }
+    /* SMALL BLUE SECTION LABELS. */
+    .kicker { color:var(--sky); text-transform:uppercase; font-size:.72rem; font-weight:900; letter-spacing:.2em; }
+    /* LARGE SECTION HEADINGS. */
     h2 { font-size:clamp(2.4rem,5vw,4.6rem); letter-spacing:-.065em; line-height:1; margin:12px 0 0; }
+    /* SECTION INTRO PARAGRAPH. */
     .section-description { color:var(--muted); max-width:320px; margin-bottom:2px; }
+    /* CARDS GRID: 3 columns desktop, fewer on smaller screens. */
     .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; }
+    /* LINK CARDS BASE STYLING. */
     .card { position:relative; overflow:hidden; min-height:310px; padding:30px; background:var(--panel); border:1px solid var(--line); border-radius:18px; display:flex; flex-direction:column; align-items:flex-start; transition:transform .25s,border-color .25s; }
-    .card:hover { border-color:rgba(181,232,155,.6); }
-    .card.feature { grid-column:span 2; background:radial-gradient(circle at 90% 10%,#2c625d 0%,#173d42 38%,#102733 75%); }
+    /* LINK CARD HOVER BORDER. */
+    .card:hover { border-color:rgba(155,220,255,.6); }
+    /* WIDE FEATURED CARD gradient. */
+    .card.feature { grid-column:span 2; background:radial-gradient(circle at 90% 10%,#315f85 0%,#173a56 38%,#102733 75%); }
+    /* ART CARD background. */
     .card.art { background:radial-gradient(circle at 90% 0%,#644639,#2c3239 43%,#14242c); }
-    .card.ride { background:radial-gradient(circle at 90% 0%,#475b40,#253b37 43%,#132a30); }
+    /* CYCLING CARD background. */
+    .card.ride { background:radial-gradient(circle at 90% 0%,#37526c,#20394e 43%,#132a30); }
+    /* WATER CARD background. */
     .card.water { background:radial-gradient(circle at 100% 0%,#165869,#102f42 48%,#102733); }
+    /* 3D SCIENCE CARD background. */
     .card.science { background:radial-gradient(circle at 100% 0%,#514b68,#293342 44%,#122833); }
+    /* TRIATHLON SUPPORT CARD background. */
     .card.give { background:radial-gradient(circle at 100% 0%,#6b4c35,#39332f 45%,#172730); }
+    /* SMALL NUMBER LABEL on each card. */
     .card .number { font-size:.7rem; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:#cbddd9; }
+    /* LARGE ICON on each card. */
     .card .visual { font-size:3.5rem; align-self:flex-end; margin:auto 0 4px; filter:drop-shadow(0 8px 16px #0005); }
+    /* EXTRA LARGE ICON on first card. */
     .card.feature .visual { font-size:6rem; }
+    /* CARD TITLE. */
     .card h3 { font-size:clamp(1.25rem,2vw,1.75rem); line-height:1.12; letter-spacing:-.03em; margin:0 0 8px; }
+    /* CARD DESCRIPTION. */
     .card p { color:#bfd0d3; font-size:.89rem; margin-bottom:15px; max-width:390px; }
-    .card .go { color:var(--mint); font-weight:900; font-size:.84rem; margin-top:auto; }
+    /* BLUE ACTION TEXT at bottom of cards. */
+    .card .go { color:var(--sky); font-weight:900; font-size:.84rem; margin-top:auto; }
+    /* DECORATIVE ARROW after card action text. */
     .card .go::after { content:" ↗"; font-size:1.1rem; }
+    /* GAP before interactive map. */
     .water-map { margin-top:106px; }
+    /* MAP INTRO WIDTH. */
     .water-map .section-description { max-width:390px; }
+    /* LIGHT PANEL around the map. */
     .map-shell { padding:clamp(12px,2vw,20px); background:#e9f2ef; border:1px solid #b9d5d1; border-radius:24px; box-shadow:0 28px 70px #0003; }
+    /* MAP SIZE: 650px on desktop, reduced on mobile. */
     .map-frame { position:relative; width:100%; height:650px; min-height:600px; overflow:hidden; border-radius:16px; border:2px solid #cbd5e1; box-shadow:0 4px 16px rgba(0,0,0,.08); background:#dce8e9; }
+    /* IFRAME: external map fills its container. */
     .map-frame iframe { width:100%; height:100%; border:0; display:block; }
+    /* MAP FOOTER including fullscreen link. */
     .map-note { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin:15px 6px 3px; font-size:.86rem; color:#475569; }
+    /* FULLSCREEN MAP LINK. */
     .map-note a { color:#006d82; font-weight:850; text-decoration:underline; text-underline-offset:3px; }
+    /* MAP LINK hover. */
     .map-note a:hover { color:#024756; }
+    /* ABOUT SECTION with two columns on desktop. */
     .about { margin-top:106px; border-radius:24px; background:#e7ede4; color:#09232b; padding:clamp(30px,6vw,75px); display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; }
-    .about .kicker { color:#2a7065; }
+    /* ABOUT SECTION LABEL COLOR. */
+    .about .kicker { color:#226487; }
+    /* ABOUT SECTION HEADING. */
     .about h2 { max-width:650px; margin:20px 0 25px; }
+    /* ABOUT SECTION PARAGRAPHS. */
     .about p { font-size:1.05rem; max-width:620px; }
+    /* ABOUT PANEL: reuse owl painting under dark overlay. */
     .quote-graphic { min-height:280px; border-radius:18px; background-image:linear-gradient(rgba(10,30,37,.65), rgba(10,30,37,.72)), url('burrowing-owls.webp'); background-size:cover; background-position:center; color:#f0f5ed; display:grid; place-items:center; text-align:center; padding:24px; position:relative; overflow:hidden; }
-    .quote-graphic::before { content:""; position:absolute; width:300px; aspect-ratio:1; border:1px solid #c4edc57a; border-radius:50%; top:-100px; right:-80px; box-shadow:0 0 0 56px #c4edc51b,0 0 0 112px #c4edc510; }
+    /* DECORATIVE CONTOUR on about panel. */
+    .quote-graphic::before { content:""; position:absolute; width:300px; aspect-ratio:1; border:1px solid #b1e0ff7a; border-radius:50%; top:-100px; right:-80px; box-shadow:0 0 0 56px #b1e0ff1b,0 0 0 112px #b1e0ff10; }
+    /* BOLD PANEL PHRASE. */
     .quote-graphic strong { position:relative; font-size:clamp(1.9rem,3.5vw,3.4rem); letter-spacing:-.06em; line-height:1.08; }
+    /* FOOTER spacing and border. */
     .footer { padding:78px 0 30px; margin-top:90px; border-top:1px solid var(--line); }
+    /* FOOTER two-column layout. */
     .footer-inner { display:flex; justify-content:space-between; gap:25px; flex-wrap:wrap; align-items:end; }
+    /* FOOTER TITLE. */
     .footer h2 { font-size:clamp(3rem,7vw,6rem); }
+    /* FOOTER descriptive text. */
     .footer p { color:var(--muted); }
+    /* FOOTER quick-link layout. */
     .footer-links { display:flex; flex-wrap:wrap; gap:12px; max-width:420px; justify-content:flex-end; }
+    /* FOOTER LINK pills. */
     .footer-links a { border:1px solid var(--line); padding:9px 15px; border-radius:25px; font-weight:750; font-size:.83rem; }
+    /* FOOTER HOVER STYLE. */
     .footer-links a:hover { background:var(--panel); }
+    /* BOTTOM COPYRIGHT ROW. */
     .copyright { margin-top:65px; padding-top:22px; border-top:1px solid var(--line); color:#9fb4bd; font-size:.75rem; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    /* TABLETS: stack hero and about columns, cards become 2 columns. */
     @media (max-width:900px) { .hero { grid-template-columns:1fr; padding-top:65px; gap:20px; } .top { min-height:0; background-position:center center, center, 60% center; } .hero-copy { max-width:none; } .orbit { width:min(75%,390px); } .scroll-note { margin-top:0; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .about { grid-template-columns:1fr; } }
-    @media (max-width:620px) { .water-map { margin-top:70px; } .map-frame { height:66vh; min-height:480px; } .map-note { align-items:flex-start; flex-direction:column; } .container { width:min(100% - 32px,1170px); } nav { min-height:76px; align-items:flex-start; padding:21px 0; flex-direction:column; gap:12px; } .navlinks { gap:17px; flex-wrap:wrap; font-size:.72rem; } .nav-cta { padding:7px 11px; } .hero { padding:55px 0 50px; } .hero-copy { padding:24px 20px 22px; border-radius:20px; } h1 { font-size:clamp(4.1rem,17vw,7rem); } .orbit { width:min(100%,320px); } .orb { width:76px; font-size:1.45rem; } .orb small { font-size:.53rem; } .ticker .container { justify-content:flex-start; } main { padding-top:70px; } .section-head { display:block; } .section-description { margin-top:20px; } .grid { grid-template-columns:1fr; } .card,.card.feature { grid-column:span 1; min-height:265px; } .card.feature .visual { font-size:4rem; } .about { margin-top:70px; } .footer-links { justify-content:flex-start; } .copyright { margin-top:44px; } }
+    /* PHONES: single-column cards and a shorter map; smaller wheel and type. */
+    @media (max-width:620px) { .water-map { margin-top:70px; } .map-frame { height:66vh; min-height:480px; } .map-note { align-items:flex-start; flex-direction:column; } .container { width:min(100% - 32px,1170px); } nav { min-height:76px; align-items:flex-start; padding:21px 0; flex-direction:column; gap:12px; } .navlinks { gap:17px; flex-wrap:wrap; font-size:.72rem; } .nav-cta { padding:7px 11px; } .hero { padding:55px 0 50px; } .hero-copy { padding:24px 20px 22px; border-radius:20px; } h1 { font-size:clamp(4.1rem,17vw,7rem); } .orbit { width:min(100%,320px); } .orb { width:76px; font-size:1.45rem; } .center-mark { width:39%; border-width:3px; } .orb small { font-size:.53rem; } .ticker .container { justify-content:flex-start; } main { padding-top:70px; } .section-head { display:block; } .section-description { margin-top:20px; } .grid { grid-template-columns:1fr; } .card,.card.feature { grid-column:span 1; min-height:265px; } .card.feature .visual { font-size:4rem; } .about { margin-top:70px; } .footer-links { justify-content:flex-start; } .copyright { margin-top:44px; } }
+    /* ACCESSIBILITY: turn off motion for visitors requesting reduced motion. */
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }
   </style>
 </head>
 <body>
+  <!-- HERO: navigation, introductory message, background artwork, animated portrait wheel. -->
   <header class="top" id="top">
     <div class="container">
+      <!-- NAVIGATION: edit href to change destinations and anchor labels. -->
       <nav aria-label="Main navigation">
         <a href="#top" class="brand" aria-label="Zirzow home">ZIRZOW<b>.</b></a>
         <div class="navlinks">
@@ -152,20 +272,27 @@
           <a class="nav-cta" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">Follow along ↗</a>
         </div>
       </nav>
+      <!-- INTRODUCTION: edit headline and paragraphs here. -->
       <div class="hero">
         <div class="hero-copy">
           <span class="eyebrow">A little bit of everything wild</span>
           <h1>STAY<br><span class="outline">CURIOUS.</span></h1>
           <p class="tagline">Science-minded. Art-driven. <em>Always exploring.</em></p>
-          <p class="sub">I'm Amanda Zirzow. My world moves between the studio, the lab, Florida's waterways, and the open road. This homepage is now layered over details from my burrowing owl artwork — a little bit of my creative world woven into the experience.</p>
+          <p class="sub">I'm Amanda Zirzow. My world moves between the studio, the lab, Florida's waterways, and the open road. Come explore the connections between creativity, discovery, movement, and the natural world.</p>
           <div class="btns">
             <a class="btn btn-primary" href="#explore">Explore my world <span aria-hidden="true">↗</span></a>
             <a class="btn btn-secondary" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">Visit my website <span aria-hidden="true">↗</span></a>
           </div>
         </div>
-        <div class="orbit" aria-label="Illustration of science, art, water and cycling interests" role="img">
+        <!-- ANIMATED WHEEL: portrait in the middle, four interest icons around it. -->
+        <div class="orbit" aria-label="Amanda Zirzow portrait surrounded by art, water, cycling, and science icons">
           <div class="orbit-ring"></div><div class="orbit-ring"></div><div class="orbit-ring"></div>
-          <div class="center-mark" aria-hidden="true">✳</div>
+          <!-- Two dots orbit the center while the three rings spin or pulse. -->
+          <div class="satellite-track" aria-hidden="true"></div>
+          <div class="satellite-track reverse" aria-hidden="true"></div>
+          <!-- Change amanda-portrait.webp here to replace the center photo. -->
+          <div class="center-mark"><img src="amanda-portrait.webp" alt="Illustrated portrait of Amanda Zirzow with science, art, and ocean themes" width="720" height="720" fetchpriority="high"></div>
+          <span class="spark one" aria-hidden="true"></span><span class="spark two" aria-hidden="true"></span><span class="spark three" aria-hidden="true"></span>
           <div class="orb art" aria-hidden="true">🎨<small>Art</small></div>
           <div class="orb water" aria-hidden="true">🌊<small>Water</small></div>
           <div class="orb ride" aria-hidden="true">🚴<small>Cycling</small></div>
@@ -175,11 +302,13 @@
       <div class="scroll-note">↓ Discover what I'm into</div>
     </div>
   </header>
+  <!-- INTERESTS STRIP: change the four phrases below. -->
   <div class="ticker" aria-label="Interests"><div class="container"><span>Creative spirit</span><span>Endless curiosity</span><span>Wild Florida</span><span>Life in motion</span></div></div>
   <main>
+    <!-- EXTERNAL LINKS: change each card href to update an external website. -->
     <section class="container" id="explore" aria-labelledby="explore-title">
       <div class="section-head">
-        <div><div class="kicker">01 / The collection</div><h2 id="explore-title">Pick your adventure<span style="color:var(--mint)">.</span></h2></div>
+        <div><div class="kicker">01 / The collection</div><h2 id="explore-title">Pick your adventure<span style="color:var(--sky)">.</span></h2></div>
         <p class="section-description">Different passions, one big world. Every card takes you somewhere real.</p>
       </div>
       <div class="grid">
@@ -203,6 +332,7 @@
         </a>
       </div>
     </section>
+    <!-- WATER QUALITY MAP: the iframe src is the link to your live external map. -->
     <section class="container water-map" id="water-map" aria-labelledby="water-map-title">
       <div class="section-head">
         <div><div class="kicker">02 / Explore the waterways</div><h2 id="water-map-title">Know your water<span style="color:var(--aqua)">.</span></h2></div>
@@ -227,6 +357,7 @@
         </div>
       </div>
     </section>
+    <!-- ABOUT: edit this description of you and your interests. -->
     <section class="container about" id="about" aria-labelledby="about-title">
       <div>
         <div class="kicker">02 / The person behind it all</div>
@@ -238,10 +369,11 @@
       <div class="quote-graphic" aria-hidden="true"><strong>CREATE.<br>EXPLORE.<br>PROTECT.<br>REPEAT.</strong></div>
     </section>
   </main>
+  <!-- FOOTER: last message, social/site links, and copyright. -->
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
-        <div><div class="kicker">Keep exploring</div><h2>SEE YOU<br>OUT THERE<span style="color:var(--mint)">.</span></h2><p>Made for a life that's too interesting to fit in one box.</p></div>
+        <div><div class="kicker">Keep exploring</div><h2>SEE YOU<br>OUT THERE<span style="color:var(--sky)">.</span></h2><p>Made for a life that's too interesting to fit in one box.</p></div>
         <div class="footer-links" aria-label="Quick links">
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">Website ↗</a>
           <a href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">Sketchfab ↗</a>
@@ -254,6 +386,12 @@
       <div class="copyright"><span>© <span id="year">2026</span> Amanda Zirzow. All rights reserved.</span><a href="#top">Back to top ↑</a></div>
     </div>
   </footer>
-  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+  <script>
+    // COPYRIGHT YEAR:
+    // Find the element with id="year" in the footer and set it to today's year.
+    // This means you never need to update the year manually every January.
+    const yearElement = document.getElementById('year');
+    yearElement.textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
