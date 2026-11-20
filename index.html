@@ -26,6 +26,7 @@
     /* LAYOUT RESET: make width and padding calculations predictable. */
     *,*::before,*::after { box-sizing:border-box; }
     /* SMOOTH SCROLLING: anchor links slide to their sections. */
+    /* Change smooth to auto for instant jumps instead of gentle scrolling. */
     html { scroll-behavior:smooth; }
     /* BODY: base typography, background, and horizontal overflow protection. */
     body { margin:0; background:var(--bg); color:var(--cream); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.55; overflow-x:hidden; }
@@ -137,6 +138,13 @@
     .center-mark img { display:block; width:100%; height:100%; object-fit:cover; object-position:center center; }
     /* The four interest badges are positioned around the portrait. */
     .orb { position:absolute; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:104px; aspect-ratio:1; border-radius:50%; background:#173744ee; border:1px solid rgba(155,220,255,.5); box-shadow:0 14px 30px #0005; text-align:center; font-size:1.9rem; backdrop-filter:blur(6px); animation:float 5.6s ease-in-out infinite; }
+    /* CIRCLE LINKS: click/tap to scroll to the matching section. */
+    .orb { color:var(--cream); text-decoration:none; cursor:pointer;
+           transition:border-color .2s ease,box-shadow .2s ease; }
+    .orb:hover,.orb:focus-visible { border-color:var(--sky);
+      box-shadow:0 0 0 4px rgba(155,220,255,.15),0 15px 35px rgba(0,0,0,.42); }
+    /* SCROLL TARGETS: leave breathing room at the top after jumping. */
+    #art,#science,#cycling,#water-map { scroll-margin-top:28px; }
     .orb small { font-size:.63rem; font-weight:900; text-transform:uppercase; letter-spacing:.11em; }
     .orb.art { top:6%; right:10%; animation-delay:-1s; }
     .orb.water { left:0; top:34%; animation-delay:-2.2s; }
@@ -293,10 +301,14 @@
           <!-- Change amanda-portrait.webp here to replace the center photo. -->
           <div class="center-mark"><img src="amanda-portrait.webp" alt="Illustrated portrait of Amanda Zirzow with science, art, and ocean themes" width="720" height="720" fetchpriority="high"></div>
           <span class="spark one" aria-hidden="true"></span><span class="spark two" aria-hidden="true"></span><span class="spark three" aria-hidden="true"></span>
-          <div class="orb art" aria-hidden="true">🎨<small>Art</small></div>
-          <div class="orb water" aria-hidden="true">🌊<small>Water</small></div>
-          <div class="orb ride" aria-hidden="true">🚴<small>Cycling</small></div>
-          <div class="orb science" aria-hidden="true">🔬<small>Science</small></div>
+          <!-- LINK: this circle scrolls to the section whose ID matches its href. -->
+          <a class="orb art" href="#art" aria-label="Jump to art">🎨<small>Art</small></a>
+          <!-- LINK: this circle scrolls to the section whose ID matches its href. -->
+          <a class="orb water" href="#water-map" aria-label="Jump to water quality map">🌊<small>Water</small></a>
+          <!-- LINK: this circle scrolls to the section whose ID matches its href. -->
+          <a class="orb ride" href="#cycling" aria-label="Jump to cycling and training">🚴<small>Cycling</small></a>
+          <!-- LINK: this circle scrolls to the section whose ID matches its href. -->
+          <a class="orb science" href="#science" aria-label="Jump to science and 3D models">🔬<small>Science</small></a>
         </div>
       </div>
       <div class="scroll-note">↓ Discover what I'm into</div>
@@ -315,13 +327,16 @@
         <a class="card feature" href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">
           <span class="number">01 / Home base</span><span class="visual" aria-hidden="true">✺</span><h3>My website & creative universe</h3><p>A closer look at my work, projects, passions, and everything in between.</p><span class="go">Visit amandazirzow.com</span>
         </a>
-        <a class="card art" href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">
+        <!-- SCROLL DESTINATION: change id="art" together with the circle href above. -->
+        <a id="art" class="card art" href="https://www.teravarna.com/artists/amanda-zirzow" target="_blank" rel="noopener noreferrer">
           <span class="number">02 / Fine art</span><span class="visual" aria-hidden="true">🎨</span><h3>Paintings & color</h3><p>Explore my paintings on TERAVARNA.</p><span class="go">See my art</span>
         </a>
-        <a class="card science" href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">
+        <!-- SCROLL DESTINATION: change id="science" together with the circle href above. -->
+        <a id="science" class="card science" href="https://sketchfab.com/zirzow" target="_blank" rel="noopener noreferrer">
           <span class="number">03 / Digital discovery</span><span class="visual" aria-hidden="true">🧬</span><h3>3D models</h3><p>Science, natural forms, and ideas brought to life in three dimensions.</p><span class="go">Explore Sketchfab</span>
         </a>
-        <a class="card ride" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">
+        <!-- SCROLL DESTINATION: change id="cycling" together with the circle href above. -->
+        <a id="cycling" class="card ride" href="https://www.strava.com/athletes/48836977" target="_blank" rel="noopener noreferrer">
           <span class="number">04 / In motion</span><span class="visual" aria-hidden="true">🚴</span><h3>Ride. Run. Repeat.</h3><p>Follow the miles, workouts, and adventures on Strava.</p><span class="go">Follow my training</span>
         </a>
         <a class="card water" href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">
