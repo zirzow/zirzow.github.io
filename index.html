@@ -23,7 +23,7 @@
    10. Cycling links: search for "CYCLING CARD".
    11. Gift section: search for "GIFT WISH LISTS / SUPPORT MY WORK" in CSS or "GIFT WISH LISTS: SUPPORT MY WORK" in HTML.
    12. Nature videos: search for "NATURE & WILDLIFE CARD" or "NATURE PLAYLIST".
-    13. Upload index.html and BOTH .webp files to the GitHub repository root.
+    13. Upload index.html, BOTH .webp files, Caloosa-Riders-Logo.png, and caloosa_riders_mystery_jersey_teaser.png to the GitHub repository root.
   -->
   <style>
     /* COLOR PALETTE: change --sky to change all former lime-green accents. Other variables control backgrounds and text. */
@@ -150,7 +150,7 @@
     .orb:hover,.orb:focus-visible { border-color:var(--sky);
       box-shadow:0 0 0 4px rgba(155,220,255,.15),0 15px 35px rgba(0,0,0,.42); }
     /* SCROLL TARGETS: leave breathing room at the top after jumping. */
-    #art,#science,#nature,#cycling,#water-map,#wishlists { scroll-margin-top:28px; }
+    #art,#science,#nature,#cycling,#water-map,#about,#causes,#jersey-reveal,#wishlists { scroll-margin-top:28px; }
     .orb small { font-size:.63rem; font-weight:900; text-transform:uppercase; letter-spacing:.11em; }
     .orb.art { top:6%; right:10%; animation-delay:-1s; }
     .orb.water { left:0; top:34%; animation-delay:-2.2s; }
@@ -312,6 +312,44 @@
     .quote-graphic::before { content:""; position:absolute; width:300px; aspect-ratio:1; border:1px solid #b1e0ff7a; border-radius:50%; top:-100px; right:-80px; box-shadow:0 0 0 56px #b1e0ff1b,0 0 0 112px #b1e0ff10; }
     /* BOLD PANEL PHRASE. */
     .quote-graphic strong { position:relative; font-size:clamp(1.9rem,3.5vw,3.4rem); letter-spacing:-.06em; line-height:1.08; }
+    /* ================= CAUSES, COMMUNITIES & JERSEY TEASER ================= */
+    /* This section explains the organizations and communities Amanda supports,
+       and it introduces the upcoming cycling jersey reveal without giving away
+       the final design. */
+    .causes { margin-top:106px; }
+    .cause-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .cause-card { position:relative; overflow:hidden; min-height:340px; padding:32px; border:1px solid var(--line); border-radius:22px; background:var(--panel); }
+    .cause-card::before { content:""; position:absolute; width:260px; aspect-ratio:1; border-radius:50%; right:-90px; top:-90px; border:1px solid rgba(155,220,255,.16); box-shadow:0 0 0 44px rgba(155,220,255,.04),0 0 0 88px rgba(155,220,255,.02); pointer-events:none; }
+    .cause-card > * { position:relative; z-index:1; }
+    .cause-card.waterkeeper { background:radial-gradient(circle at 100% 0%, #1b5666 0%, #103244 46%, #0d2430 100%); }
+    .cause-card.riders { background:radial-gradient(circle at 100% 0%, #4f5f73 0%, #23384a 43%, #102733 100%); }
+    .cause-topline { color:#cbdadf; font-size:.7rem; font-weight:900; letter-spacing:.16em; text-transform:uppercase; margin-bottom:12px; }
+    .cause-icon { font-size:2.5rem; line-height:1; display:inline-block; margin-bottom:14px; }
+    .cause-card h3 { font-size:clamp(1.6rem,2.4vw,2.2rem); letter-spacing:-.04em; line-height:1.08; margin:0 0 14px; }
+    .cause-card p { color:#d4e3e6; font-size:.95rem; max-width:560px; margin:0 0 16px; }
+    .cause-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .cause-link { display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(155,220,255,.32); background:rgba(5,24,36,.36); color:var(--sky); border-radius:999px; padding:11px 16px; font-weight:850; font-size:.85rem; transition:transform .2s,background .2s,border-color .2s; }
+    .cause-link:hover,.cause-link:focus-visible { transform:translateY(-2px); background:rgba(155,220,255,.14); border-color:var(--sky); }
+    .cause-mini { color:#a6c0c8; font-size:.82rem; }
+    /* OFFICIAL RIDERS LOGO: scale to fit without cropping, white words remain legible. */
+    .riders-official-logo { display:block; width:min(100%,290px); height:auto; margin:0 0 19px; object-fit:contain; }
+    .jersey-teaser { margin-top:24px; display:grid; grid-template-columns:minmax(280px,420px) minmax(0,1fr); gap:26px; align-items:stretch; }
+    .jersey-visual { overflow:hidden; border-radius:24px; border:1px solid rgba(155,220,255,.18); background:#081a25; box-shadow:0 26px 60px rgba(0,0,0,.22); }
+    .jersey-visual img { display:block; width:100%; height:100%; object-fit:cover; }
+    .jersey-copy { position:relative; overflow:hidden; padding:clamp(28px,4vw,42px); border-radius:24px; border:1px solid rgba(155,220,255,.16); background:linear-gradient(135deg,#0f2a36,#091a24 70%); }
+    .jersey-copy::after { content:""; position:absolute; width:320px; aspect-ratio:1; right:-150px; top:-130px; border-radius:50%; border:1px solid rgba(155,220,255,.18); box-shadow:0 0 0 55px rgba(155,220,255,.04),0 0 0 110px rgba(155,220,255,.02); pointer-events:none; }
+    .jersey-copy > * { position:relative; z-index:1; }
+    .jersey-copy .kicker { margin-bottom:12px; }
+    .jersey-copy h3 { font-size:clamp(2rem,4.5vw,4rem); letter-spacing:-.06em; line-height:.98; margin:0 0 16px; }
+    .jersey-copy h3 span { color:var(--sky); }
+    .jersey-copy p { color:#d0e0e4; font-size:1rem; margin:0 0 16px; max-width:680px; }
+    .jersey-note { color:#a2bcc4; font-size:.87rem; }
+    .jersey-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+    .teaser-chip { display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border-radius:999px; background:rgba(155,220,255,.1); border:1px solid rgba(155,220,255,.22); color:#cfe8ef; font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+    @media (max-width:900px) { .causes { margin-top:90px; } .cause-grid { grid-template-columns:1fr; } .jersey-teaser { grid-template-columns:1fr; } .jersey-visual { max-width:520px; } }
+    @media (max-width:620px) { .causes { margin-top:70px; } .cause-card { min-height:0; padding:26px 22px; } .jersey-copy { padding:26px 22px; } }
+    /* =============== END CAUSES, COMMUNITIES & JERSEY TEASER =============== */
+
     /* ==================== GIFT WISH LISTS / SUPPORT MY WORK ==================== */
     /* DESIGN NOTE: This is a personal gift invitation, not a charity donation form.
        Warm cream and ocean-blue panels distinguish it from the adventure cards while
@@ -392,6 +430,10 @@
           <!-- SCUBA NAVIGATION: jumps to the diving card below. -->
           <a href="#diving">SCUBA</a>
           <a href="#about">About</a>
+          <!-- CAUSES NAVIGATION: jumps to the causes and communities section below. -->
+          <a href="#causes">Causes</a>
+          <!-- JERSEY NAVIGATION: jumps to the upcoming jersey teaser section. -->
+          <a href="#jersey-reveal">Jersey</a>
           <!-- GIFT NAVIGATION: jumps to the Amazon wish lists below. -->
           <a href="#wishlists">Support my work</a>
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">My website</a>
@@ -595,6 +637,65 @@
       <div class="quote-graphic" aria-hidden="true"><strong>CREATE.<br>EXPLORE.<br>PROTECT.<br>REPEAT.</strong></div>
     </section>
     <!-- =============================================================
+         CAUSES & COMMUNITIES: This section highlights a cause Amanda
+         believes in and a cycling community she values, followed by
+         a teaser for the upcoming special-edition jersey featuring her art.
+         ============================================================= -->
+    <section class="container causes" id="causes" aria-labelledby="causes-title">
+      <div class="section-head">
+        <div><div class="kicker">04 / Causes & communities close to my heart</div><h2 id="causes-title">What I believe in<span style="color:var(--sky)">.</span></h2></div>
+        <p class="section-description">The work, waterways, and cycling community that continue to inspire me far beyond the studio.</p>
+      </div>
+      <div class="cause-grid">
+        <article class="cause-card waterkeeper">
+          <div class="cause-topline">A cause I care deeply about</div>
+          <span class="cause-icon" aria-hidden="true">🌊</span>
+          <h3>Protecting the waters I love</h3>
+          <p>Clean water matters to me not just as a scientist, but as someone who treasures Southwest Florida's wild places and the life they support. I am proud to volunteer with Calusa Waterkeeper and to support their work in water-quality monitoring, environmental education, and advocacy.</p>
+          <p class="cause-mini">When you visit this site, you are also getting a window into the larger mission that helps guide so much of my teaching, outreach, and conservation work.</p>
+          <div class="cause-actions">
+            <a class="cause-link" href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">Learn about Calusa Waterkeeper ↗</a>
+            <a class="cause-link" href="https://calusawaterkeeper.org/support/" target="_blank" rel="noopener noreferrer">Support clean water ↗</a>
+          </div>
+        </article>
+        <article class="cause-card riders">
+          <div class="cause-topline">A cycling community I love</div>
+          <!-- Official club logo: use supplied PNG; the dark background matches its artwork. -->
+          <img class="riders-official-logo" src="Caloosa-Riders-Logo.png" alt="Caloosa Riders Bicycle Club logo" loading="lazy">
+          <h3>Riding farther together</h3>
+          <p>Caloosa Riders Bicycle Club is a year-round Southwest Florida cycling community that brings riders together for fitness, friendship, adventure, and advocacy. I love being part of a group that helps riders grow while also championing cyclist safety and enjoyment on the road.</p>
+          <p class="cause-mini">From beginner-friendly rides to endurance events and advocacy for safer cycling, the club reflects the sense of adventure and community that keeps me coming back to the bike.</p>
+          <div class="cause-actions">
+            <a class="cause-link" href="https://crbc.clubexpress.com/" target="_blank" rel="noopener noreferrer">Explore Caloosa Riders ↗</a>
+            <a class="cause-link" href="https://crbc.clubexpress.com/content.aspx?page_id=4001&club_id=787276" target="_blank" rel="noopener noreferrer">View the ride calendar ↗</a>
+          </div>
+        </article>
+      </div>
+
+      <!-- =============================================================
+           JERSEY TEASER: This uses the NEW opaque black silhouette image created
+           for the website. Keep the filename below in the same folder as
+           index.html unless you change the src path.
+           ============================================================= -->
+      <div class="jersey-teaser" id="jersey-reveal">
+        <div class="jersey-visual">
+          <img src="caloosa_riders_mystery_jersey_teaser.png" alt="Dark teaser image for an upcoming special-edition Caloosa Riders cycling jersey featuring original art by Amanda Zirzow">
+        </div>
+        <div class="jersey-copy">
+          <div class="kicker">05 / Coming soon</div>
+          <h3>Art meets the road<span>.</span></h3>
+          <p>I am excited to share that a special-edition Caloosa Riders cycling jersey featuring my original art is on the way. For now, I am keeping the final design under wraps — but a reveal is coming soon.</p>
+          <p>This collaboration brings together two things I love: creating art inspired by the natural world and being part of a vibrant cycling community here in Southwest Florida.</p>
+          <div class="jersey-actions">
+            <span class="teaser-chip">Special-edition design</span>
+            <span class="teaser-chip">Original art by Amanda Zirzow</span>
+            <span class="teaser-chip">Reveal coming soon</span>
+          </div>
+          <p class="jersey-note">Concept-only teaser: the jersey is shown as a solid black silhouette. No final artwork, colors, or graphic details are revealed. Release and ordering information will be shared after an official announcement.</p>
+        </div>
+      </div>
+    </section>
+    <!-- =============================================================
          GIFT WISH LISTS: SUPPORT MY WORK (REDESIGNED).
          PURPOSE: Connect a personal gift to Amanda's independent creative,
          educational, and outdoor projects without implying gifts are tax-
@@ -608,7 +709,7 @@
         <!-- PERSONAL STORY: First-person message emphasizes the work behind the wishes. -->
         <div class="gift-story">
           <div>
-            <div class="kicker">04 / Small gifts. Meaningful possibilities.</div>
+            <div class="kicker">06 / Small gifts. Meaningful possibilities.</div>
             <h2 id="wishlists-title">Help me make<br><em>more possible.</em></h2>
             <p class="gift-lead">A lot of what I love doing starts with curiosity—and a few simple tools. Whether I'm bringing the microscopic world to life, capturing a moment in Florida's wild places, or creating art inspired by nature, I want to make what I discover something I can share with others.</p>
           </div>
