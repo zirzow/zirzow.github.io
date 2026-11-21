@@ -21,7 +21,8 @@
     8. Art links: search for "ART TIMELAPSE PLAYLIST" or "TERAVARNA".
     9. Diving links: search for "SCUBA DIVING PLAYLIST".
    10. Cycling links: search for "CYCLING CARD".
-   11. Upload index.html and BOTH .webp files to the GitHub repository root.
+   11. Gift lists: search for "GIFT WISH LISTS" in HTML or CSS; edit the three Amazon links there.
+   12. Upload index.html and BOTH .webp files to the GitHub repository root.
   -->
   <style>
     /* COLOR PALETTE: change --sky to change all former lime-green accents. Other variables control backgrounds and text. */
@@ -148,7 +149,7 @@
     .orb:hover,.orb:focus-visible { border-color:var(--sky);
       box-shadow:0 0 0 4px rgba(155,220,255,.15),0 15px 35px rgba(0,0,0,.42); }
     /* SCROLL TARGETS: leave breathing room at the top after jumping. */
-    #art,#science,#cycling,#water-map { scroll-margin-top:28px; }
+    #art,#science,#cycling,#water-map,#wishlists { scroll-margin-top:28px; }
     .orb small { font-size:.63rem; font-weight:900; text-transform:uppercase; letter-spacing:.11em; }
     .orb.art { top:6%; right:10%; animation-delay:-1s; }
     .orb.water { left:0; top:34%; animation-delay:-2.2s; }
@@ -306,6 +307,35 @@
     .quote-graphic::before { content:""; position:absolute; width:300px; aspect-ratio:1; border:1px solid #b1e0ff7a; border-radius:50%; top:-100px; right:-80px; box-shadow:0 0 0 56px #b1e0ff1b,0 0 0 112px #b1e0ff10; }
     /* BOLD PANEL PHRASE. */
     .quote-graphic strong { position:relative; font-size:clamp(1.9rem,3.5vw,3.4rem); letter-spacing:-.06em; line-height:1.08; }
+    /* ========================== GIFT WISH LISTS ========================== */
+    /* This section is intentionally personal and welcoming, not a storefront.
+       It uses the SAME dark palette, blue accent, round cards, and typography as the rest of the site. */
+    .wishlists { margin-top:106px; position:relative; }
+    /* Soft aqua glow behind the invitation, matching existing science/ocean graphics. */
+    .wishlists-intro { position:relative; overflow:hidden; padding:clamp(28px,5vw,58px); border:1px solid rgba(155,220,255,.26); border-radius:24px; background:radial-gradient(circle at 95% 0%,rgba(37,107,137,.32),transparent 45%),linear-gradient(135deg,#132f3d,#0b202b 70%); }
+    .wishlists-intro::after { content:""; position:absolute; width:310px; aspect-ratio:1; right:-135px; top:-165px; border:1px solid rgba(155,220,255,.22); border-radius:50%; box-shadow:0 0 0 55px rgba(155,220,255,.04),0 0 0 110px rgba(155,220,255,.025); pointer-events:none; }
+    .wishlists-intro > * { position:relative; z-index:1; }
+    .wishlists-intro h2 { margin:14px 0 20px; }
+    .wishlists-lead { max-width:790px; font-size:clamp(1.05rem,1.7vw,1.22rem); line-height:1.75; color:#e0ecee; margin-bottom:13px; }
+    .wishlists-kindness { max-width:740px; margin:0; color:var(--muted); }
+    /* Three category cards, with consistent height and buttons anchored to the bottom. */
+    .wishlist-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; margin-top:20px; }
+    .wishlist-card { display:flex; flex-direction:column; align-items:flex-start; min-height:295px; padding:29px; border:1px solid var(--line); border-radius:18px; background:var(--panel); transition:transform .25s,border-color .25s,box-shadow .25s; }
+    .wishlist-card:hover { transform:translateY(-4px); border-color:rgba(155,220,255,.68); box-shadow:0 15px 36px rgba(0,0,0,.17); }
+    .wishlist-card.art-gifts { background:radial-gradient(circle at 100% 0%,#58475d,#2c304c 46%,#102733); }
+    .wishlist-card.science-gifts { background:radial-gradient(circle at 100% 0%,#315477,#203d60 43%,#102733); }
+    .wishlist-card.cycling-gifts { background:radial-gradient(circle at 100% 0%,#4b5b65,#263d4a 43%,#102733); }
+    .wishlist-card .gift-icon { font-size:2.9rem; line-height:1.25; margin:13px 0 12px; filter:drop-shadow(0 7px 15px rgba(0,0,0,.22)); }
+    .wishlist-card h3 { font-size:clamp(1.25rem,2vw,1.7rem); line-height:1.18; letter-spacing:-.03em; margin:0 0 12px; }
+    .wishlist-card p { font-size:.9rem; color:#c8dadd; margin:0 0 25px; }
+    /* The button opens Amazon in a new tab; no checkout happens on this website. */
+    .wishlist-button { display:inline-flex; justify-content:center; align-items:center; gap:8px; margin-top:auto; padding:12px 17px; border-radius:50px; background:var(--sky); color:#09283c; font-size:.85rem; font-weight:900; transition:background .2s,transform .2s; }
+    .wishlist-button:hover,.wishlist-button:focus-visible { background:#c3edff; transform:translateY(-2px); }
+    .wishlists-thank-you { text-align:center; color:var(--muted); font-style:italic; margin:25px 0 0; font-size:.95rem; }
+    /* Responsive gift cards: two across on tablets, single column on phones. */
+    @media (max-width:900px) { .wishlist-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:620px) { .wishlists { margin-top:70px; } .wishlist-grid { grid-template-columns:1fr; } .wishlist-card { min-height:240px; } .wishlists-intro { padding:28px 22px; } }
+    /* ======================== END GIFT WISH LISTS ======================== */
     /* FOOTER spacing and border. */
     .footer { padding:78px 0 30px; margin-top:90px; border-top:1px solid var(--line); }
     /* FOOTER two-column layout. */
@@ -343,6 +373,8 @@
           <!-- SCUBA NAVIGATION: jumps to the diving card below. -->
           <a href="#diving">SCUBA</a>
           <a href="#about">About</a>
+          <!-- GIFT NAVIGATION: jumps to the Amazon wish lists below. -->
+          <a href="#wishlists">Gift wish lists</a>
           <a href="https://amandazirzow.com/" target="_blank" rel="noopener noreferrer">My website</a>
           <a class="nav-cta" href="#cycling">My cycling adventures ↓</a>
         </div>
@@ -512,13 +544,59 @@
     <!-- ABOUT: edit this description of you and your interests. -->
     <section class="container about" id="about" aria-labelledby="about-title">
       <div>
-        <div class="kicker">02 / The person behind it all</div>
+        <div class="kicker">03 / The person behind it all</div>
         <h2 id="about-title">Not one thing.<br>And that's the point.</h2>
         <p>Educator. Scientist. Artist. Cyclist. Conservation advocate. Lifelong explorer.</p>
         <p>I believe the best ideas happen when worlds overlap — when curiosity takes you from a microscope to a paintbrush, from a Florida waterway to a winding trail.</p>
         <p><strong>Welcome to all the things that make me, me.</strong></p>
       </div>
       <div class="quote-graphic" aria-hidden="true"><strong>CREATE.<br>EXPLORE.<br>PROTECT.<br>REPEAT.</strong></div>
+    </section>
+    <!-- =============================================================
+         GIFT WISH LISTS: Three personal Amazon wish lists.
+         DESIGN: Uses existing --sky, --panel, --muted, and --line colors.
+         EDIT: Replace the href for a list if its share URL ever changes.
+         PRIVACY: Before publishing, check the delivery address and sharing
+         settings for each PUBLIC Amazon Wish List.
+         ============================================================= -->
+    <section class="container wishlists" id="wishlists" aria-labelledby="wishlists-title">
+      <div class="wishlists-intro">
+        <div class="kicker">04 / A little something from you</div>
+        <h2 id="wishlists-title">Want to make my day<span style="color:var(--sky)">?</span></h2>
+        <p class="wishlists-lead">I'm happiest when I'm making something, learning something, or finding a new adventure. If you've enjoyed my art, science videos, wildlife discoveries, or rides and feel like sending a little surprise, I've gathered a few things I would genuinely love to put to use.</p>
+        <p class="wishlists-kindness">From a fresh set of art supplies to gear for my next outing, every gift is a thoughtful encouragement to keep creating and exploring. Absolutely no pressure — I'm simply glad you're here. 💙</p>
+      </div>
+
+      <!-- CATEGORY CARDS: each card has one distinct shopping link. -->
+      <div class="wishlist-grid">
+        <!-- SCIENCE LIST: Shared Amazon link supplied by Amanda. -->
+        <article class="wishlist-card science-gifts">
+          <span class="number">01 / Curiosity in action</span>
+          <span class="gift-icon" aria-hidden="true">🔬</span>
+          <h3>Science &amp; nature</h3>
+          <p>Little tools and big ideas for exploring wild places, capturing incredible discoveries, and sharing what I learn.</p>
+          <a class="wishlist-button" href="https://www.amazon.com/hz/wishlist/ls/1CUZFLEADLJX1?ref_=wl_share" target="_blank" rel="noopener noreferrer" aria-label="Shop my science and nature Amazon wish list">Shop my wish list <span aria-hidden="true">↗</span></a>
+        </article>
+
+        <!-- ART LIST: Shared Amazon link supplied by Amanda. -->
+        <article class="wishlist-card art-gifts">
+          <span class="number">02 / Made with love</span>
+          <span class="gift-icon" aria-hidden="true">🎨</span>
+          <h3>Art studio</h3>
+          <p>Paint, paper, printer ink, and the little essentials that turn inspiration into a finished piece of art.</p>
+          <a class="wishlist-button" href="https://www.amazon.com/hz/wishlist/ls/155S3LQVEMNQG?ref_=wl_share" target="_blank" rel="noopener noreferrer" aria-label="Shop my art studio Amazon wish list">Shop my wish list <span aria-hidden="true">↗</span></a>
+        </article>
+
+        <!-- CYCLING LIST: Third shared Amazon link supplied by Amanda. -->
+        <article class="wishlist-card cycling-gifts">
+          <span class="number">03 / Always moving</span>
+          <span class="gift-icon" aria-hidden="true">🚴</span>
+          <h3>Cycling &amp; adventure</h3>
+          <p>Practical favorites and dream gear for the miles, trails, training days, and adventures still ahead.</p>
+          <a class="wishlist-button" href="https://www.amazon.com/hz/wishlist/ls/KLCFSDDA3HWK?ref_=wl_share" target="_blank" rel="noopener noreferrer" aria-label="Shop my cycling and adventure Amazon wish list">Shop my wish list <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+      <p class="wishlists-thank-you">Thank you for cheering on all the things that make me curious. Every thoughtful gesture means a lot! ✨</p>
     </section>
   </main>
   <!-- FOOTER: last message, social/site links, and copyright. -->
@@ -540,6 +618,8 @@
           <!-- SCUBA VIDEOS: diving playlist. -->
           <a href="https://www.youtube.com/playlist?list=PLCHVsPjwYEakkSDaDoLaerf2Oul5K3rrt" target="_blank" rel="noopener noreferrer">SCUBA diving videos ↗</a>
           <a href="https://calusawaterkeeper.org/" target="_blank" rel="noopener noreferrer">Calusa Waterkeeper ↗</a>
+          <!-- GIFT FOOTER: quick jump to the new personal wish lists. -->
+          <a href="#wishlists">Gift wish lists ↗</a>
           <a href="https://venmo.com/u/zirzow" target="_blank" rel="noopener noreferrer">Venmo ↗</a>
         </div>
       </div>
