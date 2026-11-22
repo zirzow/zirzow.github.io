@@ -354,6 +354,8 @@
     /* =============== END CAUSES, COMMUNITIES & JERSEY TEASER =============== */
 
     /* ==================== GIFT WISH LISTS / SUPPORT MY WORK ==================== */
+    /* SPARKLE & ORBIT EDITING: search for gift-orbit below. The ring speeds
+       (22s, 15s) and twinkle durations can be adjusted there. */
     /* DESIGN NOTE: This is a personal gift invitation, not a charity donation form.
        Warm cream and ocean-blue panels distinguish it from the adventure cards while
        keeping the website's existing colors, typography, and rounded corners. */
@@ -376,12 +378,33 @@
     .gift-choices-head h3 { font-size:clamp(1.6rem,3vw,2.4rem); letter-spacing:-.045em; margin:0; }
     .gift-choices-head p { margin:0; color:var(--muted); max-width:340px; font-size:.91rem; }
     .wishlist-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
-    .wishlist-card { display:flex; flex-direction:column; align-items:stretch; min-height:320px; padding:26px; background:#132f3d; border:1px solid rgba(155,220,255,.2); border-radius:18px; transition:transform .22s,border-color .22s,box-shadow .22s; }
+    .wishlist-card { position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; align-items:stretch; min-height:320px; padding:26px; background:#132f3d; border:1px solid rgba(155,220,255,.2); border-radius:18px; transition:transform .22s,border-color .22s,box-shadow .22s; }
     .wishlist-card:hover,.wishlist-card:focus-within { transform:translateY(-4px); border-color:var(--sky); box-shadow:0 15px 30px rgba(0,0,0,.23); }
     .wishlist-card.science-gifts { background:radial-gradient(circle at 105% -8%,rgba(105,186,202,.22),transparent 55%),#132f3d; }
     .wishlist-card.art-gifts { background:radial-gradient(circle at 105% -8%,rgba(205,150,170,.2),transparent 55%),#132f3d; }
     .wishlist-card.cycling-gifts { background:radial-gradient(circle at 105% -8%,rgba(244,175,113,.15),transparent 55%),#132f3d; }
-    .gift-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:19px; }
+    .gift-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:22px; min-height:92px; }
+    /* ANIMATED WISH LIST ORBITS: miniature versions of the spinning hero rings.
+       All moving decorations are pointer-events:none, so the Amazon links remain
+       fully clickable. Each orbit uses CSS only; no scripts or external assets. */
+    .gift-orbit { position:relative; flex:0 0 104px; height:104px; display:grid; place-items:center; pointer-events:none; }
+    .gift-orbit-ring { position:absolute; inset:6px; border-radius:50%; border:1px dashed rgba(155,220,255,.62); animation:spin 22s linear infinite; }
+    .gift-orbit-ring:nth-child(2) { inset:19px; border-style:dotted; border-width:2px; border-color:rgba(115,219,212,.62); animation:spin-reverse 15s linear infinite; }
+    .gift-orbit-ring:nth-child(3) { inset:31px; border-style:solid; border-color:rgba(255,255,255,.27); animation:breath 4s ease-in-out infinite; }
+    /* Each sparkle gently twinkles around the orbit, like the hero stars. */
+    .gift-spark { position:absolute; width:5px; height:5px; border-radius:50%; background:#e3f6ff; box-shadow:0 0 10px 3px rgba(155,220,255,.65); animation:twinkle 2.8s ease-in-out infinite; }
+    .gift-spark.one { top:5px; left:24px; }
+    .gift-spark.two { bottom:17px; right:3px; animation-delay:-1.15s; }
+    .gift-spark.three { bottom:4px; left:23px; animation-delay:-2s; }
+    /* A subtle pulsing pool of light adds energy without flashing. */
+    .gift-orbit::before { content:""; position:absolute; inset:18px; border-radius:50%; background:radial-gradient(circle,rgba(155,220,255,.16),transparent 72%); box-shadow:0 0 30px rgba(155,220,255,.09); animation:breath 5.8s ease-in-out infinite; }
+    .gift-orbit .gift-icon { position:relative; z-index:1; filter:drop-shadow(0 0 10px rgba(155,220,255,.35)); }
+    /* Tiny star dust in the corners of each wish list card. */
+    .wishlist-card::after { content:"✦"; position:absolute; right:20px; bottom:75px; color:rgba(155,220,255,.38); font-size:16px; pointer-events:none; animation:twinkle 4.4s ease-in-out infinite; }
+    .wishlist-card.art-gifts .gift-orbit-ring:first-child { border-color:rgba(238,176,210,.70); }
+    .wishlist-card.cycling-gifts .gift-orbit-ring:first-child { border-color:rgba(255,188,128,.7); }
+    /* Provide a consistent stacking context, so decoration never covers copy. */
+    .wishlist-card > * { position:relative; z-index:1; }
     .gift-card-tag { color:#b4ced4; font-weight:850; letter-spacing:.14em; font-size:.68rem; text-transform:uppercase; }
     .gift-icon { font-size:2.5rem; line-height:1; }
     .wishlist-card h4 { font-size:clamp(1.25rem,2vw,1.65rem); line-height:1.15; letter-spacing:-.035em; margin:0 0 12px; }
@@ -727,7 +750,7 @@
           <div class="wishlist-grid">
             <!-- SCIENCE AMAZON LIST: Supports exploration and independent educational content. -->
             <article class="wishlist-card science-gifts">
-              <div class="gift-card-top"><span class="gift-card-tag">01 / Discover &amp; share</span><span class="gift-icon" aria-hidden="true">🔬</span></div>
+              <div class="gift-card-top"><span class="gift-card-tag">01 / Discover &amp; share</span><span class="gift-orbit" aria-hidden="true"><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-spark one"></span><span class="gift-spark two"></span><span class="gift-spark three"></span><span class="gift-icon">🔬</span></span></div>
               <h4>Science &amp; nature</h4>
               <p>Help me document wildlife, explore fascinating biology, and turn the things I discover into engaging videos and learning moments.</p>
               <div class="gift-impact">Your gift helps curiosity become something I can share.</div>
@@ -735,7 +758,7 @@
             </article>
             <!-- ART AMAZON LIST: Supplies used to make original creative work. -->
             <article class="wishlist-card art-gifts">
-              <div class="gift-card-top"><span class="gift-card-tag">02 / Create &amp; inspire</span><span class="gift-icon" aria-hidden="true">🎨</span></div>
+              <div class="gift-card-top"><span class="gift-card-tag">02 / Create &amp; inspire</span><span class="gift-orbit" aria-hidden="true"><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-spark one"></span><span class="gift-spark two"></span><span class="gift-spark three"></span><span class="gift-icon">🎨</span></span></div>
               <h4>Art studio</h4>
               <p>From printer ink and paper to paints and brushes, help me turn inspiration from the natural world into artwork I can create and share.</p>
               <div class="gift-impact">Your gift helps an idea become a finished piece.</div>
@@ -743,7 +766,7 @@
             </article>
             <!-- CYCLING AMAZON LIST: Personal gear for rides, safety and outdoor storytelling. -->
             <article class="wishlist-card cycling-gifts">
-              <div class="gift-card-top"><span class="gift-card-tag">03 / Move &amp; explore</span><span class="gift-icon" aria-hidden="true">🚴</span></div>
+              <div class="gift-card-top"><span class="gift-card-tag">03 / Move &amp; explore</span><span class="gift-orbit" aria-hidden="true"><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-orbit-ring"></span><span class="gift-spark one"></span><span class="gift-spark two"></span><span class="gift-spark three"></span><span class="gift-icon">🚴</span></span></div>
               <h4>Cycling &amp; adventure</h4>
               <p>Support the miles, outdoor discoveries, and stories I capture along the way—with practical cycling gear and adventure essentials.</p>
               <div class="gift-impact">Your gift helps keep the next adventure moving.</div>
