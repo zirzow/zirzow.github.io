@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<!--
+  CALUSA WATERKEEPER MONITORING MAP — MAINTENANCE GUIDE
+  ======================================================
+  Publish this ENTIRE file as water-map.html on GitHub Pages or another HTTPS server.
+  No locally installed JS/CSS is required. Leaflet, Esri basemaps, and Google Fonts
+  load from third-party CDNs; live CSV is requested from ArcGIS. Internet required.
+  To change the dataset, edit CONFIG.DATA_URL in the inline script below. The
+  expected CSV headers and their meaning are documented next to parseRecords().
+  IMPORTANT: The map is informational, not an official beach advisory system.
+  Review comparison thresholds, source data schema, and health wording with CWK
+  before public deployment. See also README_CWK_MAP.md supplied with this file.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calusa Waterkeeper — Bacteria Monitoring Map &amp; Site Trends</title>
+  <meta name="description" content="Calusa Waterkeeper monitoring data: interactive Leaflet station map, indicator-specific sample histories and downloadable CSV records. Results are not official swimming advisories." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+  <style>
+    :root {
+      --bg-canvas: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --border-hairline: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #64748B;
+      --navy: #0B2D5B;
+      --teal: #007799;
+      --teal-dark: #005B75;
+      --safe: #16A34A;
+      --moderate: #CA8A04;
+      --high: #DC2626;
+      --critical: #8B0000;
+      --historic: #6B7280;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font-family: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+    /* Top Bar */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      height: 64px;
+    }
+    .brand-wordmark {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--navy);
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .brand-wordmark:hover { text-decoration: none; color: var(--teal); }
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .site-nav a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 150ms ease;
+    }
+    .site-nav a:hover { color: var(--navy); text-decoration: underline; text-underline-offset: 4px; }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--navy);
+      background: var(--navy);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .btn-primary:hover { background: var(--teal-dark); border-color: var(--teal-dark); text-decoration: none; }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+    .btn-secondary:hover { border-color: var(--teal); color: var(--teal); background: #FFFFFF; text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      padding: 40px 0 28px;
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+      gap: 40px;
+      align-items: end;
+    }
+    .hero-kicker {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      color: var(--navy);
+      margin: 0 0 14px;
+      text-wrap: balance;
+    }
+    .hero-lead {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 68ch;
+    }
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-hairline);
+    }
+    .metric-cell .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .metric-cell .metric-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--navy);
+      line-height: 1.1;
+    }
+    .metric-cell .metric-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Sections */
+    .section { padding: 36px 0; }
+    .section-bordered { border-top: 1px solid var(--border-hairline); }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--navy);
+      margin: 0 0 4px;
+    }
+    .section-sub {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 72ch;
+    }
+
+    /* Interactive Map Stage */
+    .map-frame {
+      position: relative;
+      width: 100%;
+      height: 620px;
+      min-height: 520px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      background: #E6F2F9;
+    }
+    #cwk-map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+    .map-frame img.leaflet-tile { max-width: none !important; max-height: none !important; }
+
+    .map-status-bar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 500;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    }
+    .map-status-meta { color: var(--text-muted); font-size: 12px; }
+
+    .map-top-tools {
+      position: absolute;
+      top: 14px;
+      right: 54px;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .map-tool-btn {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      transition: border-color 150ms ease, color 150ms ease;
+    }
+    .map-tool-btn:hover { border-color: var(--teal); color: var(--teal); background: #FFFFFF; }
+
+    /* Bottom-Right Controls */
+    .map-bottom-right {
+      position: absolute;
+      bottom: 22px;
+      right: 14px;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .hist-toggle-btn {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+    }
+    .hist-toggle-btn:hover { background: #FFFFFF; color: var(--navy); border-color: #6B7280; }
+    .hist-toggle-btn.is-on { background: #4B5563; border-color: #374151; color: #FFFFFF; }
+    .hist-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #6B7280;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 0 0 1px #9CA3AF;
+      flex-shrink: 0;
+    }
+    .hist-toggle-btn.is-on .hist-dot { background: #E5E7EB; box-shadow: none; }
+
+    .bacteria-segmented {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .seg-btn {
+      border: 0;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .seg-btn:hover { background: var(--bg-subtle); color: var(--navy); }
+    .seg-btn.active-both { background: var(--navy); color: #FFFFFF; }
+    .seg-btn.active-single { background: var(--teal); color: #FFFFFF; }
+
+    /* Bottom-Left Collapsible Legend */
+    .map-legend-wrap {
+      position: absolute;
+      bottom: 22px;
+      left: 14px;
+      z-index: 500;
+      max-width: 340px;
+    }
+    .legend-trigger {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      white-space: nowrap;
+    }
+    .legend-panel {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 14px;
+      width: 320px;
+      max-width: calc(100vw - 44px);
+      font-size: 12px;
+      color: var(--text-primary);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+    }
+    .legend-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-hairline);
+      gap: 8px;
+    }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-canvas);
+    }
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+      flex-shrink: 0;
+    }
+    .legend-historic-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      font-size: 11.5px;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    /* Usage Guide */
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .guide-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .guide-step {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+    .guide-card h3 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 8px;
+    }
+    .guide-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    .guide-action-row { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+
+    /* Site Trend Workspace */
+    .trend-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .trend-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .station-picker-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      flex: 1 1 360px;
+    }
+    .station-picker-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+    .station-select {
+      flex: 1 1 260px;
+      max-width: 440px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+    }
+    .trend-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .scale-segmented {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hairline);
+    }
+    .scale-btn {
+      border: 0;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .scale-btn.active { background: #FFFFFF; color: var(--navy); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
+
+    .trend-station-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 18px 0 14px;
+    }
+    .trend-station-name {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+    .trend-meta-line {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 4px 0 0;
+    }
+
+    .trend-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .kpi-val {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .kpi-unit {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .kpi-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      display: block;
+    }
+
+    .chart-shell {
+      position: relative;
+      width: 100%;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 22px;
+    }
+    .chart-svg-wrap { width: 100%; overflow-x: auto; }
+    .chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      background: rgba(15, 23, 42, 0.95);
+      color: #FFFFFF;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      z-index: 20;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+    }
+    .chart-caption {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Sample History Table */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    table.data-table th {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      white-space: nowrap;
+    }
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    table.data-table tr:last-child td { border-bottom: 0; }
+    .status-text-safe { color: #15803D; font-weight: 600; }
+    .status-text-moderate { color: #A16207; font-weight: 600; }
+    .status-text-high { color: #B91C1C; font-weight: 600; }
+    .status-text-critical { color: #7F1D1D; font-weight: 700; }
+
+    /* Download Section */
+    .download-strip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 28px;
+      align-items: center;
+    }
+    .download-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+      padding: 28px 0;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid, .guide-grid, .download-strip { grid-template-columns: 1fr; }
+      .trend-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .download-buttons { justify-content: flex-start; }
+      .site-nav { display: none; }
+      .map-frame { height: 540px; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0 16px; }
+      .hero-metrics { grid-template-columns: 1fr; gap: 12px; }
+      .map-status-bar { max-width: calc(100% - 28px); }
+      .map-top-tools { top: 62px; right: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#top" class="brand-wordmark">Calusa Waterkeeper</a>
+      <nav class="site-nav" aria-label="Page sections">
+        <a href="#live-map">Live Map</a>
+        <a href="#how-to-use">How to Use</a>
+        <a href="#site-trends">Site Trends</a>
+        <a href="#download-data">Download Data</a>
+      </nav>
+      <button type="button" class="btn-primary" id="header-download-btn">Download CSV</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="hero-kicker">Southwest Florida Fecal Indicator Bacteria Monitoring · Live ArcGIS Dataset</p>
+          <h1>45-Day Active &amp; Historic Water Quality Sampling Map</h1>
+          <p class="hero-lead">
+            This page displays Calusa Waterkeeper monitoring sites sampled within the <strong>last 45 days</strong> alongside historically sampled data collection sites across Southwest Florida waterways. Use the map controls below to toggle historic stations on or off, inspect trends over time at any site, and download clean CSV datasets for Enterococcus and <em>E. coli</em>.
+          </p>
+        </div>
+        <div class="hero-metrics" aria-label="Dataset summary">
+          <div class="metric-cell">
+            <span class="metric-label">Sampled Last 45 Days</span>
+            <span class="metric-value" id="metric-active">--</span>
+            <span class="metric-sub">Active monitoring sites</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">Historic Collection Sites</span>
+            <span class="metric-value" id="metric-historic">--</span>
+            <span class="metric-sub">&gt; 45 days · toggleable</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">Latest Sample Run</span>
+            <span class="metric-value" id="metric-latest" style="font-size:20px;">--</span>
+            <span class="metric-sub" id="metric-total-records">Loading records...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="live-map">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Interactive Sampling Map</h2>
+            <p class="section-sub">
+              Colored markers compare the latest available measurement of the selected bacteria indicator with an EPA Beach Action Value. Historic measurements are shown in gray. Click a marker to inspect the results and trends.
+            </p>
+          </div>
+          <div class="mono" style="font-size:12px;color:var(--text-muted);" id="map-window-note">
+            Active window: rolling 45 days
+          </div>
+        </div>
+
+        <div class="map-frame">
+          <div id="cwk-map" role="region" aria-label="Calusa Waterkeeper interactive Leaflet map"></div>
+
+          <div class="map-status-bar">
+            <strong id="cwk-pin-count">Loading Calusa Waterkeeper sites...</strong>
+            <span aria-hidden="true" style="color:#CBD5E1;">·</span>
+            <span class="map-status-meta" id="cwk-scope-label">Last 45 days only</span>
+          </div>
+
+          <div class="map-top-tools">
+            <button type="button" class="map-tool-btn" id="btn-basemap">Satellite</button>
+            <button type="button" class="map-tool-btn" id="btn-reset-view">Reset View</button>
+          </div>
+
+          <div class="map-legend-wrap">
+            <button type="button" class="legend-trigger" id="btn-legend-open">Map Legend &#9652;</button>
+            <div class="legend-panel" id="legend-panel" style="display:none;">
+              <div class="legend-head">
+                <strong id="legend-title" style="color:var(--navy);">Indicator Results vs. EPA Beach Action Values</strong>
+                <button type="button" id="btn-legend-close" style="border:0;background:transparent;color:var(--teal);font-weight:600;font-size:12px;">Hide &#9662;</button>
+              </div>
+              <div class="mono" id="legend-bav" style="margin-top:8px;font-size:11px;color:var(--text-secondary);"></div>
+              <div class="legend-grid" id="legend-grid"></div>
+              <div class="legend-historic-row">
+                <span class="hist-dot"></span>
+                <span><strong>Historic Site (&gt; 45 days):</strong> Gray point and station code; age is based on the selected indicator</span>
+              </div>
+              <div id="legend-note" style="font-size:11.5px;color:var(--text-secondary);line-height:1.45;"></div>
+            </div>
+          </div>
+
+          <div class="map-bottom-right">
+            <button type="button" class="hist-toggle-btn" id="btn-toggle-historic" aria-pressed="false" title="Show stations with no samples of the selected indicator in the last 45 days">
+              <span class="hist-dot"></span>
+              <span id="lbl-historic">Historic Sites OFF</span>
+            </button>
+            <div class="bacteria-segmented" role="group" aria-label="Filter bacteria indicator">
+              <button type="button" class="seg-btn active-both" data-filter="both" id="lbl-both">Both</button>
+              <button type="button" class="seg-btn" data-filter="entero" id="lbl-entero">Entero</button>
+              <button type="button" class="seg-btn" data-filter="ecoli" id="lbl-ecoli"><em>E. coli</em></button>
+            </div>
+          </div>
+        </div>
+        <p id="map-error" role="alert" style="display:none;color:#991B1B;margin:10px 0;font-size:13px;"></p>
+        <p style="margin:10px 0 0;font-size:12px;color:var(--text-secondary);">These measurements compare fecal indicator bacteria with selected EPA 2012 Beach Action Values (70 enterococci or 235 E. coli per 100 mL). The values are reference levels, not official water-quality standards or swimming advisories. Check current local health-department notices before entering the water.</p>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="how-to-use">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">How to Use This Monitoring Page</h2>
+            <p class="section-sub">
+              Data are requested from the configured Calusa Waterkeeper ArcGIS endpoint when the page loads. Availability depends on public access to that dataset.
+            </p>
+          </div>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">01. Toggle Historic Sites</div>
+              <h3>Compare 45-Day Active vs. Past Locations</h3>
+              <p>
+                By default, the map highlights only sites sampled within the <strong>last 45 days</strong>. Click <strong>Historic Sites OFF / ON</strong> at the bottom right of the map (or use the button below) to display historically sampled collection sites as small grey points labeled with their site codes.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <button type="button" class="btn-secondary" id="guide-toggle-historic-btn">Show Historic Sites on Map</button>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">02. Explore Trends Over Time</div>
+              <h3>Explore Indicator-Specific Results</h3>
+              <p>
+                Click any active or historic pin on the map—or choose a station from the dropdown in <strong>Site Trends Over Time</strong> below—to select an indicator and plot its historical samples against that indicator’s EPA Beach Action Value reference line.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <a href="#site-trends" class="btn-secondary">Jump to Site Trends</a>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">03. Download Open Data</div>
+              <h3>Export CSV Spreadsheets</h3>
+              <p>
+                Download the complete Calusa Waterkeeper bacteria record, export only the active 45-day snapshot, or download the complete chronological history for a single selected monitoring site directly to CSV.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <a href="#download-data" class="btn-secondary">Go to CSV Downloads</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="site-trends">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Site Trends Over Time</h2>
+            <p class="section-sub">
+              Select any active or historic station (or click a marker on the map above) to inspect indicator-specific bacteria levels, comparisons with EPA Beach Action Values, and full sample records.
+            </p>
+          </div>
+        </div>
+
+        <div class="trend-panel">
+          <div class="trend-controls">
+            <div class="station-picker-group">
+              <label for="station-select">Monitoring Site</label>
+              <select id="station-select" class="station-select" aria-label="Select a monitoring site to inspect trends">
+                <option value="">Loading stations...</option>
+              </select>
+            </div>
+            <div class="trend-actions">
+              <!-- Separate indicator picker prevents combining E. coli with enterococci in one trend/statistic. -->
+              <label for="trend-indicator" style="font-size:12px;font-weight:600;color:var(--navy);">Indicator</label>
+              <select id="trend-indicator" class="station-select" style="flex:0 1 160px;max-width:180px;" aria-label="Bacteria indicator for chart and statistics">
+                <option value="entero">Enterococcus</option>
+                <option value="ecoli">E. coli</option>
+              </select>
+              <div class="scale-segmented" role="group" aria-label="Y-axis scale">
+                <button type="button" class="scale-btn active" data-scale="linear">Linear Scale</button>
+                <button type="button" class="scale-btn" data-scale="log">Log Scale</button>
+              </div>
+              <button type="button" class="btn-secondary" id="btn-download-site-csv">Download Site CSV</button>
+            </div>
+          </div>
+
+          <p id="data-warning" role="status" aria-live="polite" style="font-size:12px;color:#92400E;margin:10px 0;display:none;"></p>
+          <p style="font-size:12px;color:var(--text-secondary);margin:12px 0;">*The historical geometric mean is descriptive only, not the EPA rolling assessment statistic. Results flagged &lt; or &gt; are excluded from geometric mean calculations because their exact values are unknown. Comparisons are informational and do not replace official public-health advisories.</p>
+          <div class="trend-station-meta">
+            <div>
+              <h3 class="trend-station-name" id="trend-station-title">Select a site to view trends</h3>
+              <p class="trend-meta-line" id="trend-station-subtitle">Waiting for live Calusa Waterkeeper data...</p>
+            </div>
+            <button type="button" class="btn-secondary" id="btn-focus-on-map" style="font-size:12px;padding:7px 12px;">Locate Site on Map</button>
+          </div>
+
+          <div class="trend-kpis">
+            <div class="kpi-box">
+              <span class="kpi-label">Latest Indicator Reading</span>
+              <div><span class="kpi-val" id="kpi-latest">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-latest-date">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Historical Geometric Mean*</span>
+              <div><span class="kpi-val" id="kpi-geomean">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-sample-count">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Peak Recorded Value</span>
+              <div><span class="kpi-val" id="kpi-peak">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-peak-date">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Samples Above BAV</span>
+              <div><span class="kpi-val" id="kpi-exceed">--</span><span class="kpi-unit">%</span></div>
+              <span class="kpi-note" id="kpi-bav-note">--</span>
+            </div>
+          </div>
+
+          <div class="chart-shell">
+            <div id="chart-tooltip" class="chart-tooltip"></div>
+            <div class="chart-svg-wrap" id="trend-chart-container">
+              <div style="padding:48px 16px;text-align:center;color:var(--text-muted);font-size:14px;">Loading time-series chart...</div>
+            </div>
+            <div class="chart-caption">
+              <span id="chart-threshold-caption">Dashed line shows an EPA Beach Action Value (BAV) reference; it is not a determination of swimming safety.</span>
+              <span>Hover or tap any point to inspect sample details.</span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sample Date</th>
+                  <th>Site Code</th>
+                  <th>Indicator</th>
+                  <th>Result (MPN/100mL)</th>
+                  <th>BAV Comparison</th>
+                  <th>Depth</th>
+                  <th>Water Temp (&deg;C)</th>
+                </tr>
+              </thead>
+              <tbody id="trend-table-body">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">Loading sample history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="download-data">
+      <div class="container">
+        <div class="download-strip">
+          <div>
+            <h2 class="section-title">Download Calusa Waterkeeper Data</h2>
+            <p class="section-sub">
+              Export live Enterococcus and <em>E. coli</em> measurements directly as CSV spreadsheets for analysis in Excel, R, Python, or GIS tools. Exports include station codes, waterbody names, coordinates, sample dates, indicator names, result values, comparison with EPA Beach Action Value, sample depth, and water temperature.
+            </p>
+          </div>
+          <div class="download-buttons">
+            <button type="button" class="btn-primary" id="btn-download-all">Download All Records (CSV)</button>
+            <button type="button" class="btn-secondary" id="btn-download-active">Download All Samples in Last 45 Days (CSV)</button>
+            <a class="btn-secondary" href="https://experience.arcgis.com/experience/425e2b218b544225a5bba653ac1a8d90" target="_blank" rel="noopener noreferrer">Official ArcGIS Portal &#8599;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Calusa Waterkeeper · Southwest Florida Fecal Indicator Bacteria Monitoring</span>
+      <span>Data: Calusa Waterkeeper ArcGIS · EPA 2012 BAV references · Not official swimming advisories</span>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <script>
+    /* ========================================================================
+       CWK MAP APPLICATION — ANNOTATED, VANILLA JAVASCRIPT (NO BUILD STEP)
+       ------------------------------------------------------------------------
+       Sections: configuration, parsing, station index, map markers, trends,
+       CSV downloads, UI events, initialization and operational diagnostics.
+       The entire application lives here; Leaflet itself is loaded separately.
+       ======================================================================== */
+    (function () {
+      "use strict";
+
+      // 1. CENTRAL CONFIGURATION: update this object rather than hunting for URLs.
+      var CONFIG = {
+        DATA_URL: "https://calusawk.maps.arcgis.com/sharing/rest/content/items/2544102a6a3746d6be8b10ed26b91851/data",
+        PORTAL_URL: "https://experience.arcgis.com/experience/425e2b218b544225a5bba653ac1a8d90",
+        ACTIVE_DAYS: 45,
+        // Reference values from EPA's 2012 recreational criteria, BAV option
+        // associated with estimated 36 gastrointestinal illnesses/1,000 users.
+        // BAVs are advisory tools, not regulatory limits or safety guarantees.
+        BAV: { entero: 70, ecoli: 235 },
+        INITIAL_CENTER: [26.58, -81.92],
+        INITIAL_ZOOM: 10
+      };
+      var DAY_MS = 86400000;
+      var state = {
+        records: [],                  // Every valid bacteria sample, latest first
+        stations: {},                 // Station -> {records, byIndicator, latest, ...}
+        map: null, layer: null, markers: {},
+        filter: "both", historic: false,
+        selected: "", trendIndicator: "entero", scale: "linear"
+      };
+
+      // 2. SMALL HELPERS: escape external strings before writing them into HTML.
+      function el(id) { return document.getElementById(id); }
+      function htmlSafe(v) {
+        return String(v == null ? "" : v).replace(/&/g,"&amp;")
+          .replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      }
+      function label(ind) { return ind === "ecoli" ? "E. coli" : "Enterococcus"; }
+      function fmt(v) { return Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 }); }
+      function daysAgo(iso) {
+        // Date-only UTC days prevent time-zone offset drift at midnight.
+        var today = new Date().toISOString().slice(0,10);
+        return Math.floor((Date.parse(today + "T00:00:00Z") - Date.parse(iso + "T00:00:00Z")) / DAY_MS);
+      }
+      function withinWindow(r) {
+        var d = daysAgo(r.iso);
+        return d >= 0 && d < CONFIG.ACTIVE_DAYS; // Today's date through 44 days ago
+      }
+      function statusOf(r) {
+        if (!r) return { text: "No measurement", color: "#6B7280", cat: "none", above: false };
+        var bav = CONFIG.BAV[r.indicator];
+        // Censored measurements have an uncertain exact value: only determine
+        // BAV comparison when the entire reported interval falls on one side.
+        var above = (r.qualifier === ">" && r.val >= bav) ||
+          (r.qualifier !== "<" && r.qualifier !== ">" && r.val > bav);
+        var below = (r.qualifier === "<" && r.val <= bav) ||
+          (r.qualifier !== "<" && r.qualifier !== ">" && r.val <= bav);
+        if (!above && !below) return { text: "Indeterminate vs. BAV", color: "#64748B", cat: "unknown", above: false };
+        return above ? { text: "Above EPA BAV", color: "#DC2626", cat: "above", above: true }
+          : { text: "At/below EPA BAV", color: "#16A34A", cat: "below", above: false };
+      }
+      function resultText(r) { return r.qualifier + fmt(r.val) + " " + r.unit; }
+      function dateOf(r) { return Date.parse(r.iso + "T12:00:00Z"); }
+
+      /* 3. STANDALONE CSV PARSER
+         WHY: A plain string.split(',') fails on quoted names and commas; a
+         simple split('\n') fails when a quoted text cell contains newlines.
+         This parser follows RFC4180-style double-quoted values and escaped "".
+         It is intended for CSV input (not ArcGIS JSON / FeatureServer output). */
+      function csvRows(text) {
+        var rows = [], row = [], field = "", quoted = false;
+        text = text.replace(/^\uFEFF/, "");
+        for (var i=0; i<text.length; i++) {
+          var c = text[i];
+          if (c === '"') {
+            if (quoted && text[i+1] === '"') { field += '"'; i++; }
+            else if (quoted) quoted = false;
+            else if (field === "") quoted = true;
+            else field += c;
+          } else if (c === "," && !quoted) { row.push(field); field = ""; }
+          else if ((c === "\n" || c === "\r") && !quoted) {
+            if (c === "\r" && text[i+1] === "\n") i++;
+            row.push(field); field = "";
+            if (row.some(function(x){return x.trim() !== "";})) rows.push(row);
+            row = [];
+          } else field += c;
+        }
+        if (quoted) throw new Error("CSV has an unmatched quotation mark.");
+        row.push(field);
+        if (row.some(function(x){return x.trim() !== "";})) rows.push(row);
+        return rows;
+      }
+      function isoDate(raw) {
+        var v = String(raw || "").trim(), match, out;
+        if ((match = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(v)))
+          out = match[1] + "-" + match[2].padStart(2,"0") + "-" + match[3].padStart(2,"0");
+        else if ((match = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(v))) {
+          var yr = match[3].length === 2 ? "20" + match[3] : match[3];
+          out = yr + "-" + match[1].padStart(2,"0") + "-" + match[2].padStart(2,"0");
+        } else return null;
+        var ms = Date.parse(out + "T00:00:00Z");
+        return Number.isFinite(ms) && new Date(ms).toISOString().slice(0,10) === out ? out : null;
+      }
+      function parseRecords(text) {
+        if (/^\s*[{\[]/.test(text))
+          throw new Error("ArcGIS returned JSON, not the CSV schema expected by this page. Set DATA_URL to a public CSV export.");
+        if (/^\s*</.test(text))
+          throw new Error("The dataset URL returned HTML rather than CSV (possibly a sign-in page or error page).");
+        var rows = csvRows(text);
+        if (rows.length < 2) throw new Error("The dataset response contains no CSV sample rows.");
+        var headers = rows[0].map(function(h){return h.trim().replace(/^\uFEFF/,"");});
+        // Required input columns: station identifier, location, date, indicator and
+        // concentration. Optional: waterbody, units, depth and water temperature.
+        var required = ["StationID", "Latitude", "Longitude", "SampleDate", "Characteristic", "ResultValue"];
+        var missing = required.filter(function(k){return headers.indexOf(k) < 0;});
+        if (missing.length) throw new Error("CSV is missing required columns: " + missing.join(", ") + ". Found: " + headers.join(", "));
+        function at(row, key) { var i = headers.indexOf(key); return i < 0 ? "" : String(row[i] || "").trim(); }
+        var data=[], skipped=0, qualified=0;
+        rows.slice(1).forEach(function(row) {
+          var rawChar = at(row,"Characteristic").toLowerCase();
+          // Total coliform is NOT E. coli; do not silently classify it as such.
+          var ind = /enterococc/.test(rawChar) ? "entero" :
+            (/e\s*\.?\s*coli|escherichia\s+coli/.test(rawChar) && !/total/.test(rawChar) ? "ecoli" : "");
+          if (!ind) return; // ignore non-target analytes, not counted as malformed
+          var lat=Number(at(row,"Latitude")), lon=Number(at(row,"Longitude"));
+          var date=isoDate(at(row,"SampleDate"));
+          var original=at(row,"ResultValue").replace(/,/g,"");
+          // Remove units only when unit lives in its own column. Accept < and >
+          // qualifiers but do not invent exact values or include them in geomeans.
+          var match = /^\s*([<>]?)\s*(\d+(?:\.\d+)?)\s*$/.exec(original);
+          var val=match ? Number(match[2]) : NaN;
+          var sid=at(row,"StationID");
+          if (!sid || !Number.isFinite(lat) || !Number.isFinite(lon) ||
+              Math.abs(lat)>90 || Math.abs(lon)>180 || (lat===0 && lon===0) ||
+              !date || !Number.isFinite(val) || val<0) { skipped++; return; }
+          var unit=at(row,"ResultUnit") || "MPN/100mL";
+          var qualifier=match[1];
+          if (qualifier) qualified++;
+          data.push({ stationId:sid, waterbody:at(row,"WaterbodyName") || sid,
+            lat:lat, lon:lon, iso:date, indicator:ind, characteristic:at(row,"Characteristic"),
+            val:val, qualifier:qualifier, unit:unit,
+            depth: [at(row,"ActivityDepth"),at(row,"ActivityDepthUnit")].filter(Boolean).join(" ") || "Not recorded",
+            waterTempC:at(row,"SiteWaterTemp_C") });
+        });
+        if (!data.length) throw new Error("No valid Enterococcus or E. coli sample rows were found. Check column names and values.");
+        // Preserve input order within same-date samples; no invented timestamps.
+        data.sort(function(a,b){return b.iso.localeCompare(a.iso);});
+        return { records:data, skipped:skipped, qualified:qualified };
+      }
+
+      /* 4. STATION INDEX
+         WHY: A station may measure both indicators, on DIFFERENT dates.
+         Keep every record, plus separate latest-by-indicator observations.
+         A station is active in filtered views only when THAT indicator is recent. */
+      function processRecords(parsed) {
+        state.records=parsed.records; state.stations={};
+        parsed.records.forEach(function(r){
+          var st=state.stations[r.stationId];
+          if (!st) st=state.stations[r.stationId]={ id:r.stationId, waterbody:r.waterbody,
+            lat:r.lat, lon:r.lon, records:[], byIndicator:{entero:[],ecoli:[]}, latest:null };
+          st.records.push(r);
+          st.byIndicator[r.indicator].push(r);
+          if (!st.latest) st.latest=r; // sorted newest first
+        });
+        var stations=Object.values(state.stations);
+        var active=stations.filter(function(st){return withinWindow(st.latest);});
+        el("metric-active").textContent=String(active.length);
+        el("metric-historic").textContent=String(stations.length-active.length);
+        el("metric-latest").textContent=parsed.records[0].iso;
+        el("metric-total-records").textContent=parsed.records.length.toLocaleString()+" valid bacteria samples";
+        if (parsed.skipped || parsed.qualified) {
+          el("data-warning").style.display="block";
+          el("data-warning").textContent=parsed.skipped+" malformed target-indicator rows omitted; "+
+            parsed.qualified+" censored readings retained with < or > qualifiers and excluded from geometric means.";
+        }
+        populateStations();
+        var initial=active[0] || stations[0];
+        if (initial) selectStation(initial.id,false);
+      }
+      function stationView(st) {
+        var choices=state.filter === "both" ? ["entero","ecoli"] : [state.filter];
+        var records=choices.map(function(ind){return st.byIndicator[ind][0];}).filter(Boolean);
+        if (!records.length) return null;
+        records.sort(function(a,b){return b.iso.localeCompare(a.iso);});
+        var recent=records.filter(withinWindow), chosen=recent[0] || records[0];
+        return { station:st, record:chosen, historic:!recent.length };
+      }
+      function visibleStations() {
+        return Object.values(state.stations).map(stationView).filter(function(v){
+          return v && (state.historic || !v.historic);
+        });
+      }
+
+      /* 5. MARKERS AND POPUPS — build visible markers from *selected* indicator.
+         Both mode draws one marker per station, with both latest results in popup.
+         A historic point remains gray even when its older result was above BAV. */
+      function iconMarkup(view) {
+        var r=view.record, s=statusOf(r), color=view.historic ? "#6B7280" : s.color;
+        return '<div style="text-align:center;min-width:48px;cursor:pointer;">'+
+          '<div style="font:600 11px IBM Plex Mono,monospace;color:#0F172A;text-shadow:0 0 3px white;">'+htmlSafe(r.stationId)+'</div>'+
+          '<div style="width:'+(view.historic?13:26)+'px;height:'+(view.historic?13:26)+'px;border-radius:50%;border:3px solid white;background:'+color+';box-shadow:0 1px 6px #3341558c;margin:auto;"></div></div>';
+      }
+      function popupMarkup(view) {
+        var st=view.station, r=view.record;
+        var lines=["entero","ecoli"].map(function(ind) {
+          var sample=st.byIndicator[ind][0];
+          if (!sample) return '<div><b>'+label(ind)+':</b> No measurements</div>';
+          var stat=statusOf(sample);
+          return '<div style="border-top:1px solid #E2E8F0;padding:7px 0;">'+
+            '<b>'+label(ind)+':</b> '+htmlSafe(resultText(sample))+'<div>'+htmlSafe(sample.iso)+
+            ' · <span style="color:'+stat.color+'">'+htmlSafe(stat.text)+'</span> (BAV '+CONFIG.BAV[ind]+'/100 mL)</div></div>';
+        }).join("");
+        return '<div style="font:13px/1.5 IBM Plex Sans,system-ui;min-width:235px;max-width:295px;">'+
+          '<b>'+htmlSafe(st.id)+' — '+htmlSafe(st.waterbody)+'</b>'+
+          '<div style="color:#64748B;font-size:11px;">'+(view.historic?'Historical site':'Recently sampled')+
+          ' · '+st.records.length+' total records</div>'+lines+
+          '<div style="font-size:11px;color:#64748B;">Measurements are not official swimming advisories.</div>'+
+          '<button type="button" data-view-trend="'+htmlSafe(st.id)+'" data-view-indicator="'+htmlSafe(state.filter === "both"?r.indicator:state.filter)+'" style="margin-top:8px;background:#0B2D5B;color:white;border:0;border-radius:6px;padding:7px;cursor:pointer;">View selected trend</button> '+
+          '<a href="'+CONFIG.PORTAL_URL+'" target="_blank" rel="noopener noreferrer">ArcGIS portal</a></div>';
+      }
+      function updateLegend() {
+        var names=state.filter === "both" ? "Enterococcus and E. coli" : label(state.filter);
+        el("legend-title").textContent="BAV comparison: "+names;
+        el("legend-bav").textContent="Enterococcus: 70 · E. coli: 235 (per 100 mL)";
+        el("legend-grid").innerHTML=[
+          ['#16A34A','At/below BAV','Indicator-specific'],
+          ['#DC2626','Above BAV','Indicator-specific'],
+          ['#64748B','Indeterminate','Censored measurement'],
+          ['#6B7280','Historic','No selected-indicator result in 45 days']
+        ].map(function(item){return '<div class="legend-item"><span class="legend-swatch" style="background:'+item[0]+'"></span><div><b>'+item[1]+'</b><div style="font-size:10px;">'+item[2]+'</div></div></div>';}).join('');
+        el("legend-note").textContent="Color is a comparison to a reference BAV, not a determination of safe swimming. Historic sites are gray.";
+      }
+      function renderPins(fit) {
+        if (!state.layer) return;
+        state.layer.clearLayers(); state.markers={};
+        var displayed=visibleStations(), coords=[];
+        displayed.forEach(function(v){
+          var marker=L.marker([v.station.lat,v.station.lon],{
+            icon:L.divIcon({className:'cwk-marker',html:iconMarkup(v),iconSize:[60,45],iconAnchor:[30,30]}),
+            zIndexOffset:v.historic ? 100 : 500
+          }).bindPopup(popupMarkup(v),{maxWidth:330});
+          marker.on('click',function(){
+            if (state.filter!=="both") state.trendIndicator=state.filter;
+            else state.trendIndicator=v.record.indicator;
+            selectStation(v.station.id,false);
+          });
+          state.layer.addLayer(marker); state.markers[v.station.id]=marker;
+          coords.push([v.station.lat,v.station.lon]);
+        });
+        var count=function(ind){return Object.values(state.stations).filter(function(st){
+          var r=st.byIndicator[ind][0]; return !!r && (state.historic || withinWindow(r));
+        }).length;};
+        el("lbl-both").textContent="Both ("+displayed.length+")";
+        el("lbl-entero").textContent="Entero ("+count('entero')+")";
+        el("lbl-ecoli").textContent="E. coli ("+count('ecoli')+")";
+        el("cwk-pin-count").textContent=displayed.length+(displayed.length===1?' site shown':' sites shown');
+        el("lbl-historic").textContent='Historic Sites '+(state.historic?'ON':'OFF');
+        el("btn-toggle-historic").classList.toggle('is-on',state.historic);
+        el("btn-toggle-historic").setAttribute('aria-pressed',String(state.historic));
+        el("guide-toggle-historic-btn").textContent=(state.historic?'Hide':'Show')+' Historic Sites on Map';
+        el("cwk-scope-label").textContent=state.historic?'Active + historic':'Selected indicator · last 45 days';
+        updateLegend();
+        if(fit && coords.length) state.map.fitBounds(coords,{padding:[40,40],maxZoom:12});
+      }
+      function populateStations(){
+        var select=el('station-select'); select.innerHTML='';
+        var all=Object.values(state.stations).sort(function(a,b){return a.id.localeCompare(b.id);});
+        ['Active','Historical'].forEach(function(group){
+          var arr=all.filter(function(st){return withinWindow(st.latest)===(group==='Active');});
+          if(!arr.length) return;
+          var og=document.createElement('optgroup'); og.label=group+' stations ('+arr.length+')';
+          arr.forEach(function(st){
+            var option=document.createElement('option'); option.value=st.id;
+            option.textContent=st.id+' — '+st.waterbody+' ('+st.records.length+' samples)';
+            og.appendChild(option);
+          });
+          select.appendChild(og);
+        });
+      }
+
+      /* 6. INDICATOR-SPECIFIC TRENDS AND METRICS
+         Never average E. coli and enterococci. Historical geomean is a
+         descriptive all-time summary, not EPA's rolling 30-day regulatory GM.
+         Zero values require special handling: no arbitrary substitution of 1.
+         We display 'not calculated' if an exact zero or no uncensored positives. */
+      function selectStation(id,scroll){
+        var st=state.stations[id]; if(!st) return;
+        state.selected=id; el('station-select').value=id;
+        var arr=st.byIndicator[state.trendIndicator];
+        if(!arr.length){
+          state.trendIndicator=st.byIndicator.entero.length?'entero':'ecoli';
+          arr=st.byIndicator[state.trendIndicator];
+        }
+        el('trend-indicator').value=state.trendIndicator;
+        el('trend-indicator').querySelector('[value="entero"]').disabled=!st.byIndicator.entero.length;
+        el('trend-indicator').querySelector('[value="ecoli"]').disabled=!st.byIndicator.ecoli.length;
+        var r=arr[0], bav=CONFIG.BAV[state.trendIndicator], latest=statusOf(r);
+        el('trend-station-title').textContent=st.id+' — '+st.waterbody;
+        el('trend-station-subtitle').textContent=label(state.trendIndicator)+' · latest '+r.iso+
+          ' · '+st.lat.toFixed(4)+', '+st.lon.toFixed(4);
+        el('kpi-latest').textContent=r.qualifier+fmt(r.val);
+        el('kpi-latest-date').textContent=r.iso+' · '+latest.text;
+        var exact=arr.filter(function(p){return !p.qualifier && p.val>0;});
+        var hasExactZero=arr.some(function(p){return !p.qualifier && p.val===0;});
+        var geo=hasExactZero ? 0 : (exact.length ? Math.exp(exact.reduce(function(n,p){return n+Math.log(p.val);},0)/exact.length) : null);
+        el('kpi-geomean').textContent=geo===null?'N/A':fmt(geo);
+        el('kpi-sample-count').textContent=exact.length+' exact positive of '+arr.length+' records'+(hasExactZero?' · exact zero present':'');
+        var peak=arr.reduce(function(a,b){return a.val>=b.val?a:b;});
+        el('kpi-peak').textContent=peak.qualifier+fmt(peak.val);
+        el('kpi-peak-date').textContent='Recorded '+peak.iso;
+        var classified=arr.filter(function(p){return statusOf(p).cat!=='unknown';});
+        var above=classified.filter(function(p){return statusOf(p).above;}).length;
+        el('kpi-exceed').textContent=classified.length ? (100*above/classified.length).toFixed(0):'N/A';
+        el('kpi-bav-note').textContent=above+' of '+classified.length+' classifiable samples above BAV '+bav;
+        renderTrendChart(arr.slice().reverse(),bav);
+        renderHistoryTable(arr);
+        if(scroll) el('site-trends').scrollIntoView({behavior:'smooth'});
+      }
+      function renderTrendChart(points,bav){
+        var target=el('trend-chart-container'), tip=el('chart-tooltip'); tip.style.display='none';
+        el('chart-threshold-caption').textContent='Dashed line: EPA BAV '+bav+' per 100 mL for '+label(state.trendIndicator)+'. Not a swimming advisory.';
+        if(!points.length){target.textContent='No records for selected indicator.';return;}
+        var W=940,H=290,p={top:25,right:25,bottom:42,left:70}, pw=W-p.left-p.right,ph=H-p.top-p.bottom;
+        var times=points.map(dateOf), minT=Math.min.apply(null,times),maxT=Math.max.apply(null,times);
+        if(minT===maxT){minT-=15*DAY_MS;maxT+=15*DAY_MS;}
+        var maxV=Math.max(bav*1.3,Math.max.apply(null,points.map(function(a){return a.val;}))*1.15,1);
+        var maxLog=Math.pow(10,Math.ceil(Math.log10(Math.max(10,maxV))));
+        var x=function(t){return p.left+(t-minT)/(maxT-minT)*pw;};
+        var y=function(v){return state.scale==='log'?
+          p.top+ph*(1-Math.log10(Math.max(v,1))/Math.log10(maxLog)):
+          p.top+ph*(1-v/maxV);};
+        var parts=['<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:560px;height:auto;display:block;" role="img" aria-label="'+label(state.trendIndicator)+' values and BAV trend">'];
+        var ticks=state.scale==='log' ? (function(){var a=[];for(var k=1;k<=maxLog;k*=10)a.push(k);return a;})() : [0,.25,.5,.75,1].map(function(v){return maxV*v;});
+        ticks.forEach(function(t){var yy=y(t);parts.push('<line x1="'+p.left+'" y1="'+yy+'" x2="'+(W-p.right)+'" y2="'+yy+'" stroke="#E2E8F0"/><text x="'+(p.left-9)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="#475569">'+fmt(t)+'</text>');});
+        for(var i=0;i<5;i++){
+          var t=minT+(maxT-minT)*i/4, d=new Date(t).toISOString().slice(0,10);
+          parts.push('<text x="'+x(t)+'" y="'+(H-12)+'" text-anchor="middle" font-size="11" fill="#475569">'+d.slice(0,7)+'</text>');
+        }
+        parts.push('<line x1="'+p.left+'" y1="'+y(bav)+'" x2="'+(W-p.right)+'" y2="'+y(bav)+'" stroke="#DC2626" stroke-width="2" stroke-dasharray="6,4"/><text x="'+(W-p.right-4)+'" y="'+(y(bav)-7)+'" text-anchor="end" font-size="11" fill="#B91C1C">BAV '+bav+'</text>');
+        // Lines connect chronological observations but do not imply measurements
+        // or interpolated safe conditions between sampling dates.
+        if(points.length>1) parts.push('<path d="'+points.map(function(r,i){return (i?'L':'M')+x(times[i]).toFixed(2)+','+y(r.val).toFixed(2);}).join(' ')+'" fill="none" stroke="#007799" stroke-width="2"/>');
+        points.forEach(function(r,i){var st=statusOf(r);parts.push('<circle class="cwk-pt" tabindex="0" role="button" aria-label="'+htmlSafe(r.iso+' '+resultText(r))+'" data-idx="'+i+'" cx="'+x(times[i])+'" cy="'+y(r.val)+'" r="5" fill="'+st.color+'" stroke="white" stroke-width="2"/>');});
+        parts.push('</svg>'); target.innerHTML=parts.join('');
+        target.querySelectorAll('.cwk-pt').forEach(function(dot){
+          function show(event){var r=points[Number(dot.getAttribute('data-idx'))];
+            tip.textContent=r.iso+' · '+resultText(r)+' · '+statusOf(r).text;
+            tip.style.display='block';
+            var b=target.parentElement.getBoundingClientRect();
+            var xx=event.clientX?event.clientX-b.left:15, yy=event.clientY?event.clientY-b.top:15;
+            tip.style.left=Math.max(8,Math.min(xx+12,b.width-250))+'px';
+            tip.style.top=Math.max(8,yy-48)+'px';
+          }
+          dot.addEventListener('mouseenter',show);dot.addEventListener('mousemove',show);
+          dot.addEventListener('focus',show);dot.addEventListener('click',show);
+          dot.addEventListener('mouseleave',function(){tip.style.display='none';});
+          dot.addEventListener('blur',function(){tip.style.display='none';});
+        });
+      }
+      function renderHistoryTable(records){
+        el('trend-table-body').innerHTML=records.map(function(r){
+          var st=statusOf(r);
+          return '<tr><td>'+htmlSafe(r.iso)+'</td><td>'+htmlSafe(r.stationId)+'</td><td>'+label(r.indicator)+'</td>'+
+            '<td>'+htmlSafe(resultText(r))+'</td><td style="color:'+st.color+'">'+htmlSafe(st.text)+'</td>'+
+            '<td>'+htmlSafe(r.depth)+'</td><td>'+htmlSafe(r.waterTempC||'—')+'</td></tr>';
+        }).join('');
+      }
+
+      /* 7. CSV EXPORTS
+         IMPORTANT: 45-day export filters ALL source records, not one marker
+         per station. Site export uses the selected indicator's full history. */
+      function csvCell(v){var s=String(v==null?'':v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+      function downloadCsv(rows,filename){
+        if(!rows.length){alert('There are no records for this export.');return;}
+        var headers=['StationID','WaterbodyName','Latitude','Longitude','SampleDate','Indicator','ResultValue','ResultQualifier','ResultUnit','BAV_Comparison','EPA_BAV_Reference','ActivityDepth','WaterTemp_C'];
+        var output=[headers.join(',')];
+        rows.forEach(function(r){
+          output.push([r.stationId,r.waterbody,r.lat,r.lon,r.iso,label(r.indicator),r.val,r.qualifier,
+            r.unit,statusOf(r).text,CONFIG.BAV[r.indicator],r.depth,r.waterTempC].map(csvCell).join(','));
+        });
+        // UTF-8 BOM helps Excel recognize non-ASCII characters in station names.
+        var blob=new Blob(['\uFEFF'+output.join('\r\n')],{type:'text/csv;charset=utf-8'});
+        var url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(function(){URL.revokeObjectURL(url);},1500);
+      }
+
+      /* 8. PAGE EVENTS AND LEAFLET INITIALIZATION
+         Tile layers are remote Esri services, not map images stored in HTML. */
+      function initMap(){
+        if(typeof L==='undefined'){
+          showError('Leaflet library did not load. Check internet access or the unpkg.com CDN.');return;
+        }
+        state.map=L.map('cwk-map',{center:CONFIG.INITIAL_CENTER,zoom:CONFIG.INITIAL_ZOOM,zoomControl:false});
+        L.control.zoom({position:'topright'}).addTo(state.map);
+        var bases=[
+          {name:'Street',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',maxZoom:18},
+          {name:'Satellite',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',maxZoom:18},
+          {name:'Ocean',url:'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',maxZoom:16}
+        ].map(function(b){b.layer=L.tileLayer(b.url,{attribution:'Tiles &copy; Esri',maxZoom:b.maxZoom});return b;});
+        var baseIndex=0;bases[0].layer.addTo(state.map);
+        state.layer=L.layerGroup().addTo(state.map);
+        el('btn-basemap').addEventListener('click',function(){
+          state.map.removeLayer(bases[baseIndex].layer);
+          baseIndex=(baseIndex+1)%bases.length;
+          bases[baseIndex].layer.addTo(state.map);
+          // Keep measurement markers above newly added base tiles.
+          state.layer.bringToFront && state.layer.bringToFront();
+          el('btn-basemap').textContent=bases[(baseIndex+1)%bases.length].name;
+        });
+        el('btn-reset-view').addEventListener('click',function(){renderPins(true);});
+        function toggleHistoric(){state.historic=!state.historic;renderPins(false);}
+        el('btn-toggle-historic').addEventListener('click',toggleHistoric);
+        el('guide-toggle-historic-btn').addEventListener('click',function(){toggleHistoric();el('live-map').scrollIntoView({behavior:'smooth'});});
+        document.querySelectorAll('[data-filter]').forEach(function(b){
+          b.addEventListener('click',function(){
+            state.filter=b.getAttribute('data-filter');
+            if(state.filter!=='both') state.trendIndicator=state.filter;
+            document.querySelectorAll('[data-filter]').forEach(function(x){x.className='seg-btn';});
+            b.className='seg-btn '+(state.filter==='both'?'active-both':'active-single');
+            renderPins(false);
+            if(state.selected) selectStation(state.selected,false);
+          });
+        });
+        el('btn-legend-open').addEventListener('click',function(){el('btn-legend-open').style.display='none';el('legend-panel').style.display='block';});
+        el('btn-legend-close').addEventListener('click',function(){el('legend-panel').style.display='none';el('btn-legend-open').style.display='inline-block';});
+        document.addEventListener('click',function(event){
+          var t=event.target.closest&&event.target.closest('[data-view-trend]');
+          if(t){state.trendIndicator=t.getAttribute('data-view-indicator')||state.trendIndicator;selectStation(t.getAttribute('data-view-trend'),true);}
+        });
+        el('station-select').addEventListener('change',function(){selectStation(this.value,false);});
+        el('trend-indicator').addEventListener('change',function(){state.trendIndicator=this.value;if(state.selected)selectStation(state.selected,false);});
+        document.querySelectorAll('[data-scale]').forEach(function(b){b.addEventListener('click',function(){
+          state.scale=b.getAttribute('data-scale');
+          document.querySelectorAll('[data-scale]').forEach(function(x){x.classList.remove('active');});
+          b.classList.add('active');if(state.selected)selectStation(state.selected,false);
+        });});
+        el('btn-focus-on-map').addEventListener('click',function(){
+          var st=state.stations[state.selected];if(!st)return;
+          state.filter=state.trendIndicator;
+          state.historic=true; // show site even if selected indicator hasn't been tested recently
+          document.querySelectorAll('[data-filter]').forEach(function(b){b.className='seg-btn'+(b.getAttribute('data-filter')===state.filter?' active-single':'');});
+          renderPins(false);el('live-map').scrollIntoView({behavior:'smooth'});
+          state.map.setView([st.lat,st.lon],13);
+          if(state.markers[st.id])state.markers[st.id].openPopup();
+        });
+        var all=function(){downloadCsv(state.records,'calusa-waterkeeper-all-bacteria-data.csv');};
+        el('header-download-btn').addEventListener('click',all);
+        el('btn-download-all').addEventListener('click',all);
+        el('btn-download-active').addEventListener('click',function(){
+          downloadCsv(state.records.filter(withinWindow),'calusa-waterkeeper-all-samples-last-45-days.csv');
+        });
+        el('btn-download-site-csv').addEventListener('click',function(){
+          var st=state.stations[state.selected];if(!st)return;
+          downloadCsv(st.byIndicator[state.trendIndicator], 'calusa-waterkeeper-'+st.id.replace(/[^a-z0-9_-]/gi,'_').toLowerCase()+'-'+state.trendIndicator+'-history.csv');
+        });
+        loadDataset();
+      }
+
+      /* 9. NETWORK DIAGNOSTICS
+         fetch() requires a public URL AND CORS permission for browser clients.
+         An item may be private, redirect to login, return JSON, or be moved.
+         Any such condition should surface as a visible, actionable error. */
+      function showError(message){
+        el('cwk-pin-count').textContent='Water-quality data unavailable';
+        el('map-error').style.display='block';
+        el('map-error').textContent='Map data could not load: '+message+' Open your browser console for details.';
+        el('trend-station-subtitle').textContent='No monitoring data loaded.';
+      }
+      async function loadDataset(){
+        try {
+          var response=await fetch(CONFIG.DATA_URL,{method:'GET',mode:'cors',cache:'no-store'});
+          if(!response.ok)throw new Error('HTTP '+response.status+' from ArcGIS data URL.');
+          var text=await response.text();
+          var parsed=parseRecords(text);
+          processRecords(parsed);renderPins(true);
+          el('map-error').style.display='none';
+        } catch(err){
+          console.error('Calusa Waterkeeper data load error:',err);
+          showError(err && err.message ? err.message : 'Browser request blocked (possibly CORS).');
+        }
+      }
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMap);
+      else initMap();
+    })();
+
+  </script>
+</body>
+</html>
