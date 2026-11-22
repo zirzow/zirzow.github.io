@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071b25">
+  <meta name="description" content="Amanda Zirzow on cycling, Caloosa Riders Bicycle Club, safer roads, and an upcoming special-edition jersey featuring her art.">
+  <title>Caloosa Riders & Cycling — Amanda Zirzow</title>
+  <!--
+    INTERNAL STORY PAGE
+    This file is linked from index.html. Save in the SAME repository directory.
+    Visitors remain on amandazirzow.com until they choose an external link.
+    Text sections are directly editable. Style is self-contained below.
+  -->
+  <style>
+/* SECONDARY PAGE DESIGN TOKENS: keep aligned with the main homepage. */
+:root { color-scheme: dark; --bg:#06141c; --panel:#102733; --cream:#f2f1e7; --sky:#9bdcff; --aqua:#73dbd4; --muted:#a7bdc5; --line:rgba(202,235,232,.14); }
+*,*::before,*::after { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--bg); color:var(--cream); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.68; }
+a { color:inherit; text-decoration:none; }
+a:focus-visible { outline:3px solid var(--aqua); outline-offset:4px; }
+.container { width:min(1040px,calc(100% - 42px)); margin-inline:auto; }
+.header { border-bottom:1px solid var(--line); background:#091d28; }
+.nav { min-height:88px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.brand { font-size:1.35rem; font-weight:950; letter-spacing:.22em; }
+.brand b { color:var(--sky); }
+.navlinks { display:flex; gap:22px; flex-wrap:wrap; font-size:.82rem; text-transform:uppercase; letter-spacing:.07em; font-weight:800; }
+.navlinks a:hover,.text-link:hover { color:var(--sky); }
+.hero { padding:clamp(70px,11vw,130px) 0 78px; background:radial-gradient(circle at 75% 10%,rgba(66,140,155,.22),transparent 46%),linear-gradient(145deg,#0e2935,#06141c); }
+.kicker { color:var(--sky); letter-spacing:.18em; font-weight:900; text-transform:uppercase; font-size:.74rem; }
+h1 { font-size:clamp(3.2rem,8vw,6.5rem); line-height:.99; letter-spacing:-.07em; max-width:850px; margin:18px 0 24px; }
+h2 { font-size:clamp(1.7rem,3.7vw,2.7rem); letter-spacing:-.05em; line-height:1.1; margin:0 0 17px; }
+h3 { font-size:1.3rem; margin:0 0 10px; }
+p { margin:0 0 19px; }
+.lead { max-width:800px; color:#d4e6e9; font-size:clamp(1.08rem,2vw,1.35rem); }
+.story { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(255px,.85fr); gap:32px; padding:75px 0; }
+.story p,.story li { color:#c5d6db; }
+.side { align-self:start; border:1px solid var(--line); background:var(--panel); padding:27px; border-radius:21px; }
+.side-logo { display:block; width:min(290px,100%); height:auto; margin-bottom:23px; }
+.fact { margin-top:8px; border-top:1px solid var(--line); padding-top:15px; color:#c6d6dc; font-size:.92rem; }
+.link-row { display:flex; flex-wrap:wrap; gap:12px; margin-top:25px; }
+.button { display:inline-flex; align-items:center; padding:13px 20px; border:1px solid rgba(155,220,255,.55); color:var(--sky); border-radius:30px; font-weight:850; transition:transform .2s,background .2s; }
+.button.primary { background:var(--sky); color:#09283c; }
+.button:hover { transform:translateY(-2px); background:rgba(155,220,255,.15); }
+.button.primary:hover { background:#c8ecff; }
+.strip { padding:40px 0; border-top:1px solid var(--line); background:#0b202b; }
+.strip p { color:var(--muted); max-width:800px; }
+footer { border-top:1px solid var(--line); padding:30px 0; color:var(--muted); font-size:.83rem; }
+.footer-row { display:flex; gap:22px; flex-wrap:wrap; justify-content:space-between; }
+@media(max-width:720px) { .story { grid-template-columns:1fr; padding:45px 0; } .hero { padding:70px 0 55px; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
+</style>
+</head>
+<body>
+  <!-- NAV: site-relative links go back to the main homepage. -->
+  <header class="header"><nav class="container nav" aria-label="Main navigation">
+    <a class="brand" href="index.html" aria-label="Back to Amanda Zirzow home">ZIRZOW<b>.</b></a>
+    <div class="navlinks"><a href="index.html#explore">Explore</a><a href="index.html#about">My story</a><a href="index.html#causes">My causes</a><a href="index.html#wishlists">Support</a></div>
+  </nav></header>
+  <main>
+    <!-- PAGE INTRO: one clear idea, rather than a second homepage. -->
+    <section class="hero"><div class="container">
+      <div class="kicker">A community I value</div>
+      <h1>A better ride, together.</h1>
+      <p class="lead">The miles matter—but so do the friendships, shared experiences, and people who make every ride more meaningful.</p>
+      <a class="button" href="index.html#causes">← Back to my causes</a>
+    </div></section>
+    <!-- PERSONAL STORY: context stays here; external links are optional. -->
+    <section class="container story"><div>
+<h2>Why I ride</h2>
+<p>Cycling brings together movement, adventure, discovery, and a wonderful change of perspective. Some rides are about challenging myself. Others are about enjoying the landscape or catching a small wildlife moment along the way.</p>
+<p><strong>Caloosa Riders Bicycle Club</strong> makes it possible to share that joy. Founded in 1988, the club brings together Southwest Florida cyclists with a broad range of abilities and interests through group rides, events, and advocacy for safer cycling.</p>
+<h2>Where art meets the road</h2>
+<p>My art and cycling worlds are coming together in a new way: a <strong>special-edition Caloosa Riders cycling jersey featuring my original artwork</strong>. The final design remains a surprise, and I’m excited to reveal it when the time comes.</p>
+<p>Being part of the community is about more than putting miles on a bike. It is about connecting, supporting each other, and making Southwest Florida a better place to ride.</p>
+</div><aside class="side">
+<!-- Official logo: supplied by the website owner. -->
+<img class="side-logo" src="Caloosa-Riders-Logo.png" alt="Caloosa Riders Bicycle Club logo">
+<h3>Discover the club</h3>
+<p>See the official information on group rides, membership, events, and cycling advocacy.</p>
+<div class="link-row">
+  <a class="button primary" href="https://crbc.clubexpress.com/" target="_blank" rel="noopener noreferrer">Official club website ↗</a>
+  <a class="button" href="https://crbc.clubexpress.com/content.aspx?page_id=4001&amp;club_id=787276" target="_blank" rel="noopener noreferrer">Ride calendar ↗</a>
+</div>
+</aside></section>
+    <section class="strip"><div class="container"><h2>Something special is coming.</h2><p>See the mystery jersey teaser on my homepage. The actual design remains under wraps.</p><a class="button" href="index.html#jersey-reveal">See the teaser →</a></div></section>
+  </main>
+  <footer><div class="container footer-row"><span>© <span id="year">2026</span> Amanda Zirzow</span><a href="index.html">Back to homepage ↑</a></div></footer>
+  <script>/* Automatically update the year in the footer. */ document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body></html>
