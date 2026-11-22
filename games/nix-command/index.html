@@ -1,1 +1,302 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090f15">
+<meta name="description" content="NiX COMMAND — an original, free, turn-based tactical strategy game. Give orders, watch the battle unfold, and outmaneuver a computer commander.">
+<title>NiX COMMAND | Tactical Operations</title>
+<style>
+/* ===== NiX COMMAND / SINGLE-FILE EDITION =====
+   Everything needed for the game—layout, art, animation, rules and persistence—lives in this file.
+   No third-party libraries, images, accounts, AI endpoints or payments are required.
+   Save as nix-command.html and publish under /games/ on a static web host.
+*/
+:root{color-scheme:dark;--bg:#080d12;--panel:#121b23;--panel2:#18242c;--edge:#34454b;--text:#edf1e9;--muted:#9aa9a9;--lime:#bde77c;--orange:#f0ab65;--blue:#70b9ca;--red:#ef8b76;--gold:#eacb8f;--shadow:0 18px 50px #0007;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;color:var(--text);background:radial-gradient(ellipse at 50% -10%,#293b32 0,transparent 45%),linear-gradient(130deg,#090f14,#10151a 65%,#0a1216);min-height:100vh}button{font:inherit;cursor:pointer}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,a:focus-visible{outline:2px solid var(--lime);outline-offset:3px}a{color:var(--lime)}.shell{width:min(1400px,100%);margin:auto;padding:18px clamp(12px,2.2vw,32px) 30px}.eyebrow,.mono,.section-label,.turn-stamp,.tiny{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.1em}.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #45554e;padding:0 0 13px}.brand{display:flex;align-items:center;gap:13px}.brandmark{width:45px;height:45px;display:grid;place-items:center;border:1px solid #bde77c89;color:var(--lime);background:linear-gradient(145deg,#182b26,#0e1b20);clip-path:polygon(50% 0,96% 24%,96% 76%,50% 100%,4% 76%,4% 24%);font-size:20px;font-weight:1000}.brandtitle{font-weight:950;font-size:clamp(19px,2vw,27px);letter-spacing:.08em;line-height:1}.brandtitle em{font-style:normal;color:var(--lime)}.brandtitle small{display:block;font-weight:650;color:var(--muted);font-size:10px;letter-spacing:.23em;margin-top:7px}.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.ghost,.solid,.bare{border:1px solid #445c58;background:#18242a;color:#e8eee6;border-radius:9px;padding:10px 14px;min-height:42px;font-weight:750;transition:background .15s,transform .15s}.ghost:hover,.bare:hover{background:#26383b}.solid{color:#09120e;border-color:#c8eb96;background:linear-gradient(135deg,#daf49a,#9fc56b)}.solid:hover{filter:brightness(1.08)}.ghost:active,.solid:active{transform:scale(.98)}.tiny{font-size:10px;color:var(--muted)}.status-pill{border:1px solid #516754;border-radius:100px;color:var(--lime);font-size:11px;font-weight:850;padding:7px 11px;white-space:nowrap}.hero{padding:20px 0 16px;display:flex;justify-content:space-between;align-items:end;gap:14px}.eyebrow{font-size:11px;color:var(--lime);font-weight:750}.hero h1{font-size:clamp(26px,3.6vw,46px);line-height:1.07;letter-spacing:-.035em;margin:8px 0 8px;font-weight:950}.hero h1 span{color:var(--lime)}.hero p{margin:0;color:var(--muted);font-size:14px;max-width:680px;line-height:1.55}.scorebox{display:flex;gap:20px;text-align:right}.scorebox strong{font-size:22px;color:#d7ecd2}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:15px}.panel{background:linear-gradient(145deg,#172129f5,#111920f5);border:1px solid #3b4b4e;border-radius:15px;box-shadow:var(--shadow)}.board-panel{padding:13px;min-width:0}.board-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 4px 12px}.board-header h2{margin:0;font-size:13px;letter-spacing:.1em}.board-header .tiny{color:var(--lime)}.battleframe{position:relative;overflow:hidden;border:1px solid #5a645c;border-radius:11px;background:#111c18;isolation:isolate}.battleframe:after{pointer-events:none;content:"";position:absolute;inset:0;border:1px solid #ffffff14;box-shadow:inset 0 0 75px #0007}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:manipulation}.overlay-center{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:#050b0de3;backdrop-filter:blur(7px);padding:20px;text-align:center}.overlay-center.hidden{display:none}.splash-logo{font-size:clamp(36px,6vw,67px);font-weight:1000;letter-spacing:.14em;color:#e9f7d3;text-shadow:0 0 30px #bce77955}.splash-logo span{color:var(--lime)}.splash-sub{font-size:12px;letter-spacing:.26em;color:#afc6b8;margin:6px 0 25px;font-weight:800}.overlay-center p{max-width:420px;margin:12px auto 20px;color:#b7c8c8;line-height:1.6;font-size:14px}.splash-buttons{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.battle-tape{position:absolute;left:10px;top:10px;pointer-events:none;color:#e5f8df;font:700 11px ui-monospace,monospace;letter-spacing:.14em;background:#071013b8;border:1px solid #9ecb8f77;padding:7px 10px;border-radius:5px}.battle-legend{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);padding:10px 4px 0;font-size:11px}.battle-legend b{color:#d4e2d6}.unitsbar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:14px 0}.army{padding:13px;border-radius:12px;border:1px solid #37575d;background:#14222b}.army.rival{border-color:#664e48;background:#281d21;text-align:right}.army-name{display:flex;justify-content:space-between;font-weight:850;font-size:12px;letter-spacing:.07em}.army.rival .army-name{flex-direction:row-reverse}.army .sub{color:var(--muted);font-size:11px;margin-top:7px}.bar{background:#060d14;border-radius:100px;height:11px;border:1px solid #384a49;overflow:hidden;margin-top:10px}.bar-fill{height:100%;background:linear-gradient(90deg,#5194a4,#b3e1df);transition:width .65s}.rival .bar-fill{background:linear-gradient(90deg,#d46a5a,#f0af77)}.vs{font-family:ui-monospace,monospace;font-weight:950;color:#81918b}.bottom-board{display:grid;grid-template-columns:1fr 1fr;gap:12px}.section-label{font-weight:850;font-size:11px;color:#b7d0c0;margin:0 0 10px}.orders{padding:14px}.order-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.order{border-radius:10px;border:1px solid #405254;background:#1a282e;color:#e7eee8;padding:11px 4px 8px;min-height:79px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}.order .symbol{font-size:24px;line-height:1.1}.order b{font-size:11px}.order small{font-size:9px;color:var(--muted)}.order[aria-pressed=true]{border-color:var(--lime);background:#35462d;box-shadow:0 0 0 1px #bbdb84 inset,0 0 17px #bde77c22}.order:hover{border-color:#97af83}.action-row{display:flex;align-items:center;gap:9px;margin-top:12px}.action-row .solid{flex:1;min-height:49px}.hintline{font-size:12px;line-height:1.45;color:#b5c3c2;min-height:34px;margin-top:8px}.report{padding:14px;min-width:0}.report-body{color:#c8d6d2;font-size:12px;line-height:1.6;min-height:82px}.report-body strong{color:var(--lime)}.report-badge{color:#f0cb91;font-size:10px;font-family:monospace;letter-spacing:.12em}.side{display:flex;flex-direction:column;gap:15px;min-width:0}.side .panel{padding:16px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}.section-head h3{font-size:12px;letter-spacing:.12em;margin:0}.detail-card{border:1px solid #364c4d;background:#101c21;border-radius:11px;padding:12px;margin-bottom:8px}.detail-card h4{margin:0 0 6px;font-size:13px}.detail-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.55}.select-row{display:flex;gap:7px}.diff{flex:1;border:1px solid #3a504c;border-radius:8px;background:#1b2b30;color:#bbc7c4;min-height:42px;font-size:11px;font-weight:850}.diff[aria-pressed=true]{border-color:var(--lime);color:#0d190f;background:#c1e78a}.diff:disabled{opacity:.6}.guide-link{border:none;background:none;color:var(--lime);font-size:12px;font-weight:800;padding:3px 0;text-decoration:underline;text-decoration-color:#79995d}.intelligence{display:flex;align-items:center;gap:12px}.commander-icon{font-size:27px;min-width:52px;height:52px;border:1px solid #657c6a;border-radius:12px;display:grid;place-items:center;background:#28382d}.intel-main{font-size:13px;font-weight:850}.intel-sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px}.history{margin:0;padding-left:20px;color:#bbc9c6;font-size:11px;line-height:1.7;max-height:145px;overflow:auto}.history li{padding-bottom:4px}.history strong{color:#d9e6d7}.footer{color:#687b7b;text-align:center;font-size:11px;padding:24px 0 0}.footer a{color:#9fb59c}.modal-bg{position:fixed;inset:0;z-index:20;background:#030707cf;display:none;justify-content:center;align-items:center;padding:12px;backdrop-filter:blur(5px)}.modal-bg.open{display:flex}.modal{position:relative;width:min(790px,100%);max-height:min(90vh,900px);overflow:auto;border-radius:17px;border:1px solid #709578;background:#122027;box-shadow:0 25px 95px #000e;padding:25px}.modal h2{font-size:25px;margin:0 36px 8px 0}.modal p{color:#b8c7c2;font-size:13px;line-height:1.7}.close{position:absolute;right:15px;top:14px;border-radius:8px;border:1px solid #567063;background:#223631;color:white;font-size:23px;width:38px;height:38px}.guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:16px 0}.guide-item{display:flex;gap:13px;align-items:flex-start;border:1px solid #3a5551;background:#1a2c31;border-radius:10px;padding:12px}.guide-item .gi{font-size:28px;min-width:36px;text-align:center}.guide-item b{font-size:12px}.guide-item p{font-size:11px;margin:4px 0 0}.divider{height:1px;background:#39504b;margin:18px 0}.shortcuts{font-size:12px;color:#b6c8c1;line-height:1.9}.shortcuts kbd{font-family:monospace;background:#273d3c;padding:2px 6px;border:1px solid #48615a;border-radius:5px;color:white}.notice{color:#a4b6ae;font-size:11px;line-height:1.55}.field-report{color:#c6e7aa;background:#1e3028;border:1px solid #476845;border-radius:9px;padding:10px;margin-top:8px;font-size:11px}.skip{font-size:11px;white-space:nowrap}.overlay-victory{font-size:12px;color:var(--gold);letter-spacing:.18em;font-weight:850}.loading-lines{pointer-events:none;position:absolute;inset:0;opacity:.1;background:repeating-linear-gradient(0deg,#000 0,#000 2px,transparent 2px,transparent 6px)}
+@media(max-width:1080px){.layout{grid-template-columns:minmax(0,1fr)}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.side .panel:last-child{grid-column:1/-1}.hero{align-items:flex-start}.scorebox{min-width:110px}}@media(max-width:680px){.shell{padding:12px 10px 25px}.topbar{align-items:start}.top-actions{gap:5px}.top-actions .ghost{padding:7px 8px;min-height:36px;font-size:11px}.status-pill{display:none}.brandmark{width:36px;height:36px}.brandtitle{font-size:18px}.brandtitle small{font-size:8px}.hero{padding:16px 3px 12px}.hero h1{font-size:28px}.hero p{font-size:12px}.scorebox{display:none}.board-panel{padding:8px}.battle-tape{font-size:8px;padding:5px;top:5px;left:5px}.board-header .tiny{font-size:8px}.unitsbar{gap:5px;margin:10px 0}.army{padding:9px}.army-name{font-size:9px}.army .sub{font-size:9px}.bar{height:8px;margin-top:7px}.vs{font-size:12px}.bottom-board{grid-template-columns:1fr}.orders,.report{padding:12px}.order-grid{gap:5px}.order{min-height:73px}.order .symbol{font-size:22px}.order b{font-size:10px}.order small{font-size:8px}.side{grid-template-columns:1fr}.side .panel:last-child{grid-column:auto}.guide-grid{grid-template-columns:1fr}.modal{padding:18px}.battle-legend{font-size:9px}}@media(prefers-reduced-motion:reduce){.ghost,.solid,.bar-fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+ <header class="topbar">
+  <div class="brand"><div class="brandmark" aria-hidden="true">N×</div><div class="brandtitle">Ni<span style="color:#bde77c">X</span> <em>COMMAND</em><small>TACTICAL OPERATIONS // FIELD HQ</small></div></div>
+  <div class="top-actions"><span class="status-pill">● SYSTEM ONLINE</span><button class="ghost" id="guideTop">? FIELD MANUAL</button><button class="ghost" id="soundToggle" aria-pressed="false">♪ SOUND OFF</button></div>
+ </header>
+ <section class="hero"><div><div class="eyebrow">OPERATIONS CENTER / SECTOR 07</div><h1>Every order <span>counts.</span></h1><p>Lead your unit. Read the enemy. Choose one simple command each turn, then watch your troops carry it out against a cunning computer rival.</p></div><div class="scorebox"><div><div class="tiny">WINS</div><strong id="wins">0</strong></div><div><div class="tiny">LOSSES</div><strong id="losses">0</strong></div></div></section>
+ <div class="layout">
+  <main class="panel board-panel">
+   <div class="board-header"><h2>◈ LIVE TACTICAL DISPLAY</h2><span class="tiny" id="roundLabel">OPERATION STANDBY</span></div>
+   <div class="battleframe" id="battleframe"><canvas id="battle" width="1280" height="720" aria-label="Animated top-down tactical battlefield showing two armies"></canvas><div class="loading-lines"></div><div class="battle-tape" id="battleTape">■ SECURE SIMULATION</div>
+    <div class="overlay-center" id="startOverlay"><div><div class="eyebrow">TACTICAL SIMULATION // 01</div><div class="splash-logo">Ni<span>X</span></div><div class="splash-sub">C O M M A N D</div><p>Five orders. Two commanders. One battlefield.<br>Make a call. See what happens. Adapt.</p><div class="splash-buttons"><button class="solid" id="startButton">▶ BEGIN OPERATION</button><button class="ghost" id="splashGuide">? HOW TO PLAY</button></div></div></div>
+    <div class="overlay-center hidden" id="endOverlay"><div><div class="eyebrow" id="endOverline">OPERATION COMPLETE</div><div class="splash-logo" id="endHeading" style="font-size:clamp(32px,5vw,60px)">VICTORY</div><p id="endText">Your orders carried the day.</p><div class="splash-buttons"><button class="solid" id="rematchButton">↻ NEW OPERATION</button><button class="ghost" id="endGuide">? FIELD MANUAL</button></div></div></div>
+   </div>
+   <div class="battle-legend"><span><b style="color:var(--blue)">■</b> YOUR UNIT <span style="color:#607475"> / </span> <b style="color:var(--orange)">■</b> RIVAL UNIT</span><span>WHITE FLASH = HIT · GOLD RING = SHIELD · GREEN + = HEAL</span></div>
+   <div class="unitsbar"><div class="army"><div class="army-name"><span>◈ YOUR TASK FORCE</span><span id="friendlyCount">12/12</span></div><div class="bar"><div class="bar-fill" id="friendlyBar" style="width:100%"></div></div><div class="sub" id="friendlyStatus">Awaiting deployment</div></div><div class="vs">VS</div><div class="army rival"><div class="army-name"><span>✕ RIVAL FORCE</span><span id="rivalCount">12/12</span></div><div class="bar"><div class="bar-fill" id="rivalBar" style="width:100%"></div></div><div class="sub" id="rivalStatus">Enemy position unknown</div></div></div>
+   <div class="bottom-board"><section class="panel orders"><h3 class="section-label">01 / ISSUE YOUR ORDER</h3><div class="order-grid" id="orderGrid">
+    <button class="order" data-order="charge" aria-pressed="true"><span class="symbol">⚔️</span><b>CHARGE</b><small>Attack</small></button>
+    <button class="order" data-order="defend" aria-pressed="false"><span class="symbol">🛡️</span><b>DEFEND</b><small>Protect</small></button>
+    <button class="order" data-order="flank" aria-pressed="false"><span class="symbol">↗️</span><b>FLANK</b><small>Outsmart</small></button>
+    <button class="order" data-order="volley" aria-pressed="false"><span class="symbol">🎯</span><b>VOLLEY</b><small>Ranged</small></button>
+    <button class="order" data-order="regroup" aria-pressed="false"><span class="symbol">✚</span><b>REGROUP</b><small>Recover</small></button>
+   </div><div class="hintline" id="orderHint">CHARGE — Powerful direct attack. Strong against regrouping troops.</div><div class="action-row"><button class="solid" id="executeButton" disabled>▶ EXECUTE ORDER</button><button class="ghost skip" id="speedButton" title="Fast-forward the current turn">2× SPEED</button></div><div class="notice" style="margin-top:9px">Tip: Tap an order, then Execute. On a computer, press 1–5 and Enter.</div></section>
+   <section class="panel report" aria-live="polite" aria-atomic="true"><div class="section-head"><h3>02 / AFTER-ACTION REPORT</h3><span class="report-badge" id="reportStamp">NO ORDERS ISSUED</span></div><div class="report-body" id="reportBody"><strong>Commander, you're in control.</strong><br>Pick your difficulty, begin the operation, and choose your first order. The rival commander is controlled by the computer.</div><div class="field-report" id="nextTip">FIELD TIP / On Easy, your troops take less damage and start with more reserves.</div></section></div>
+  </main>
+  <aside class="side">
+   <section class="panel"><div class="section-head"><h3>◉ MISSION SETTINGS</h3><span class="tiny">PRE-DEPLOYMENT</span></div><p class="tiny" style="margin:0 0 10px">SELECT YOUR CHALLENGE</p><div class="select-row" id="difficultyControls"><button class="diff" data-difficulty="easy" aria-pressed="true">EASY</button><button class="diff" data-difficulty="normal" aria-pressed="false">NORMAL</button><button class="diff" data-difficulty="hard" aria-pressed="false">HARD</button></div><p class="notice" id="difficultyInfo">EASY: More troops, gentler enemy attacks, and clearer hints. A great place to begin.</p><button class="guide-link" id="guideSide">View complete field manual ↗</button></section>
+   <section class="panel"><div class="section-head"><h3>◈ OPPOSING COMMANDER</h3><span class="tiny">SIMULATED AI</span></div><div class="intelligence"><div class="commander-icon" aria-hidden="true">♜</div><div><div class="intel-main" id="rivalName">COMMANDER ROOK</div><div class="intel-sub" id="rivalThought">Analyzing your formation...<br>Opponent: computer controlled</div></div></div><div class="detail-card" style="margin:12px 0 0"><h4 style="color:var(--gold)">INTELLIGENCE BRIEF</h4><p id="intelBrief">The opposing force can charge, defend, flank, volley, or regroup. Watch its patterns to anticipate the next move.</p></div></section>
+   <section class="panel"><div class="section-head"><h3>◷ BATTLE HISTORY</h3><span class="tiny" id="historyStamp">0 TURNS</span></div><ol class="history" id="history"><li>Awaiting the first order.</li></ol><div class="divider"></div><div class="tiny">SPECIAL RECOGNITION</div><div class="detail-card" style="margin:9px 0 0"><h4>★ THE QUIET PROFESSIONAL</h4><p>A tribute to those whose strength is measured by the people they protect. Earned after 5 victories.</p><p id="achievementText" style="margin-top:7px;color:var(--lime)">Locked · 0/5 wins</p></div></section>
+  </aside>
+ </div>
+ <footer class="footer">NiX COMMAND is an original fictional tactical game. The opposing commander is computer-controlled; there are no real opponents or online accounts. <span aria-hidden="true">·</span> <a href="https://amandazirzow.com/">Back to Amanda's website</a></footer>
+</div>
+<!-- The field manual is accessible from the opening screen, game controls and keyboard H. -->
+<div class="modal-bg" id="manualBackdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="manualTitle" tabindex="-1" id="manual"><button class="close" id="closeManual" aria-label="Close field manual">×</button><div class="eyebrow">OFFICIAL FIELD MANUAL // NiX COMMAND</div><h2 id="manualTitle">Command made simple.</h2><p>You don't steer individual soldiers. You are the commander. Each turn, choose <strong>one order</strong>. Your troops and the computer rival carry out their orders at the same time. Watch the result, then make your next decision.</p><div class="guide-grid">
+ <div class="guide-item"><span class="gi">⚔️</span><div><b>CHARGE</b><p>Strong forward assault. Especially effective against an opponent that is regrouping. Vulnerable to concentrated ranged fire.</p></div></div>
+ <div class="guide-item"><span class="gi">🛡️</span><div><b>DEFEND</b><p>Greatly reduces damage. Helps your troops recover their footing and counters enemy charges. Deals a little return fire.</p></div></div>
+ <div class="guide-item"><span class="gi">↗️</span><div><b>FLANK</b><p>Moves around the enemy's defenses. Very effective against Defend, but vulnerable when the enemy anticipates it with a Volley.</p></div></div>
+ <div class="guide-item"><span class="gi">🎯</span><div><b>VOLLEY</b><p>Ranged attack from cover. Especially good against a Charge or Flank. Less effective against a well-prepared defense.</p></div></div>
+ <div class="guide-item"><span class="gi">✚</span><div><b>REGROUP</b><p>Restore a few troops to your force. Excellent after taking losses, but risky if the opposing commander chooses Charge.</p></div></div>
+ <div class="guide-item"><span class="gi">◈</span><div><b>FIELD SYMBOLS</b><p>Blue markers = your troops. Orange markers = rival troops. Health bars show soldiers remaining. Gold circles = defending. Green plus signs = recovered troops. Glowing trails = attacks.</p></div></div>
+ </div><div class="divider"></div><h3 style="font-size:14px">How to win</h3><p>Reduce the rival force to zero before it does the same to yours. You can take as much time as you like to pick an order. On Easy, you start with extra troops and the rival makes more forgiving choices.</p><div class="shortcuts"><strong>Keyboard:</strong> <kbd>1</kbd> Charge · <kbd>2</kbd> Defend · <kbd>3</kbd> Flank · <kbd>4</kbd> Volley · <kbd>5</kbd> Regroup · <kbd>Enter</kbd> Execute · <kbd>H</kbd> Guide · <kbd>Esc</kbd> Close guide</div><p class="notice">The rival commander is simulated in your browser and does not connect to real players. Difficulty and battle decisions are calculated locally. Progress stores win/loss totals on this browser only.</p><div style="text-align:right"><button class="solid" id="manualGotIt">GOT IT — LET'S PLAY</button></div></div></div>
+<script>
+"use strict";
+/* ==============================================================
+   NiX COMMAND / GAME ENGINE — Annotated for future maintainers
+   --------------------------------------------------------------
+   Design goals:
+   1. One-action-per-turn tactical combat with no timers.
+   2. An opponent that SEEMS thoughtful via tactical adaptation,
+      but is honestly labeled as a computer-controlled rival.
+   3. Offline-capable code: no servers, libraries, AI keys, or accounts.
+   4. Visual feedback: Canvas renders all soldiers, terrain,
+      attacks, shields, smoke, sparks, movement and after-action text.
+   5. Fair, accessible gameplay; no paid advantages.
+   ============================================================== */
+(() => {
+ const $=id=>document.getElementById(id);
+ const canvas=$("battle"),ctx=canvas.getContext("2d");
+ const W=1280,H=720,TAU=Math.PI*2;
+ const ORDER_KEYS=["charge","defend","flank","volley","regroup"];
+ const COMMANDS={charge:{label:"CHARGE",help:"Powerful direct attack. Strong against regrouping troops."},defend:{label:"DEFEND",help:"Fortify your position and reduce incoming damage. Counters charges."},flank:{label:"FLANK",help:"Outmaneuver defenses. Strong against Defend, weaker against Volley."},volley:{label:"VOLLEY",help:"Ranged fire. Strong against Charge and Flank; weaker against Defend."},regroup:{label:"REGROUP",help:"Recover troops, but you'll be exposed to a direct assault."}};
+ /* Fixed difficulty settings are the sole source of balance parameters.
+    A single config object reduces accidental inconsistencies between
+    UI promises and the actual combat rules. */
+ const DIFF={
+  easy:{player:18,enemy:12,enemyScale:.67,playerScale:1.15,rivalSkill:.25,description:"EASY: More troops, gentler enemy attacks, and clearer hints. A great place to begin."},
+  normal:{player:15,enemy:15,enemyScale:1,playerScale:1,rivalSkill:.55,description:"NORMAL: Even forces and a rival that learns from your favorite commands."},
+  hard:{player:14,enemy:17,enemyScale:1.16,playerScale:.97,rivalSkill:.82,description:"HARD: Enemy reinforcements, tougher hits, and a rival that predicts your moves."}
+ };
+ let difficulty="easy",selected="charge",phase="start",soundOn=false,fast=false;
+ let round=0,playerMax=18,enemyMax=12,playerHP=18,enemyHP=12,lastPlayerOrders=[],lastEnemyOrder="",reportHistory=[];
+ let activeTurn=null,sceneTime=0,lastTime=0,raf=0,roundNonce=0;
+ let particles=[],units=[],cameraShake=0,flash=0,score={wins:0,losses:0};
+ const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+ const rand=(a,b)=>a+Math.random()*(b-a);
+ const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+ const safeStore=(fn,fallback)=>{try{return fn()}catch(e){return fallback}};
+ const saved=safeStore(()=>JSON.parse(localStorage.getItem("nix-command-v1")||"null"),null);
+ if(saved&&Number.isFinite(saved.wins)&&Number.isFinite(saved.losses))score={wins:clamp(saved.wins,0,999999),losses:clamp(saved.losses,0,999999)};
+ function persist(){safeStore(()=>localStorage.setItem("nix-command-v1",JSON.stringify(score)),null);}
+ function refreshScore(){ $("wins").textContent=score.wins;$("losses").textContent=score.losses;$("achievementText").textContent=score.wins>=5?"UNLOCKED · Veteran commander":"Locked · "+Math.min(5,score.wins)+"/5 wins"; }
+ refreshScore();
+ /* Small synthesized UI tones are generated locally when enabled. This
+    avoids external sound downloads and respects mobile autoplay rules. */
+ let audio=null;
+ function beep(f=500,d=.07,type="sine",volume=.05){if(!soundOn)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(f,audio.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(90,f*.6),audio.currentTime+d);g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch(e){}}
+ function setDifficulty(d){if(phase!=="start"&&phase!=="end")return;difficulty=d;document.querySelectorAll("[data-difficulty]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.difficulty===d)));$("difficultyInfo").textContent=DIFF[d].description;beep(440,.04);}
+ document.querySelectorAll("[data-difficulty]").forEach(b=>b.addEventListener("click",()=>setDifficulty(b.dataset.difficulty)));
+ function setOrder(order){if(!ORDER_KEYS.includes(order)||phase!=="choose")return;selected=order;$("orderHint").textContent=COMMANDS[order].label+" — "+COMMANDS[order].help;document.querySelectorAll("[data-order]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.order===order)));beep(500,.035);}
+ document.querySelectorAll("[data-order]").forEach(b=>b.addEventListener("click",()=>setOrder(b.dataset.order)));
+ /* The rival chooses among meaningful tactical actions. It considers the
+    player's recent commands and troop counts, with random variation.
+    Easy mode deliberately sometimes ignores the best counter. */
+ function enemyOrder(){
+  const weights={charge:1,defend:1,flank:1,volley:1,regroup:1};
+  if(enemyHP<=enemyMax*.43)weights.regroup+=2.5;
+  if(playerHP<=playerMax*.4)weights.charge+=1;
+  const freq={};lastPlayerOrders.forEach(o=>freq[o]=(freq[o]||0)+1);
+  let favorite=Object.keys(freq).sort((a,b)=>freq[b]-freq[a])[0];
+  const counter={charge:"defend",defend:"flank",flank:"volley",volley:"defend",regroup:"charge"};
+  const skill=DIFF[difficulty].rivalSkill;
+  if(favorite)weights[counter[favorite]]+=5*skill;
+  if(lastEnemyOrder)weights[lastEnemyOrder]*=.65;
+  if(difficulty==="easy"){weights.regroup+=1.4;weights.defend+=.6;}
+  const sum=Object.values(weights).reduce((a,b)=>a+b,0);let roll=Math.random()*sum;
+  for(const [key,weight] of Object.entries(weights)){roll-=weight;if(roll<=0)return key;}
+  return "charge";
+ }
+ /* Tactical matchup modifiers provide decisions with consequences.
+    Values above 1 favor the attacking order against the defender's order.
+    This is NOT random winner selection; the same order combinations have
+    consistent advantages, moderated by small, bounded randomness. */
+ const matchup={
+  charge:{charge:1,defend:.58,flank:1.15,volley:.75,regroup:1.65},
+  defend:{charge:1.25,defend:.7,flank:.55,volley:.72,regroup:.55},
+  flank:{charge:1.08,defend:1.75,flank:1,volley:.65,regroup:1.22},
+  volley:{charge:1.43,defend:.55,flank:1.38,volley:1,regroup:1.16},
+  regroup:{charge:.12,defend:.2,flank:.15,volley:.16,regroup:.2}
+ };
+ const attackBase={charge:3.9,defend:1.1,flank:3.2,volley:3.3,regroup:.55};
+ const defenseBonus={charge:1,defend:.53,flank:.97,volley:1,regroup:1.12};
+ function calculate(pOrder,eOrder){
+  const oldP=playerHP,oldE=enemyHP;
+  let damageToE=attackBase[pOrder]*matchup[pOrder][eOrder]*defenseBonus[eOrder]*DIFF[difficulty].playerScale*rand(.85,1.12);
+  let damageToP=attackBase[eOrder]*matchup[eOrder][pOrder]*defenseBonus[pOrder]*DIFF[difficulty].enemyScale*rand(.85,1.12);
+  let healP=pOrder==="regroup"?rand(2.4,4.2):0;
+  let healE=eOrder==="regroup"?rand(2.3,3.8):0;
+  /* Defend is a strong defensive move, but neither army can regenerate
+     indefinitely from it. Regroup provides the primary recovery path. */
+  damageToE=Math.max(0,Math.round(damageToE));damageToP=Math.max(0,Math.round(damageToP));
+  const nextP=clamp(oldP-damageToP+Math.round(healP),0,playerMax);
+  const nextE=clamp(oldE-damageToE+Math.round(healE),0,enemyMax);
+  return {pOrder,eOrder,damageToP,damageToE,healP:Math.max(0,nextP-Math.max(0,oldP-damageToP)),healE:Math.max(0,nextE-Math.max(0,oldE-damageToE)),oldP,oldE,nextP,nextE};
+ }
+ function countLive(side){return units.filter(u=>u.side===side&&u.hp>0).length;}
+ /* One marker per soldier. Their positions and movement are animated in
+    Canvas; strategy values are stored separately in playerHP/enemyHP,
+    never inferred from animation frames. */
+ function createUnits(){units=[];for(const side of ["player","enemy"]){const n=side==="player"?playerMax:enemyMax;for(let i=0;i<n;i++){const cols=4,row=Math.floor(i/cols),col=i%cols;const x=(side==="player"?235:1045)+(col-1.5)*38;const y=270+(row-1.5)*42;units.push({side,index:i,x:x+rand(-5,5),y:y+rand(-5,5),homeX:x,homeY:y,hp:1,bob:rand(0,TAU),angle:side==="player"?0:Math.PI,shield:0,shake:0});}}}
+ function applyUnitCounts(){for(const side of ["player","enemy"]){const army=units.filter(u=>u.side===side);const count=side==="player"?playerHP:enemyHP;army.forEach((u,i)=>u.hp=i<count?1:0);}}
+ function updateStats(){
+  $("friendlyCount").textContent=playerHP+"/"+playerMax;$("rivalCount").textContent=enemyHP+"/"+enemyMax;
+  $("friendlyBar").style.width=(100*playerHP/playerMax)+"%";$("rivalBar").style.width=(100*enemyHP/enemyMax)+"%";
+  $("friendlyStatus").textContent=playerHP<=playerMax*.35?"CRITICAL · Regroup recommended":playerHP<=playerMax*.7?"Taking casualties":"Combat capable";
+  $("rivalStatus").textContent=enemyHP<=enemyMax*.35?"Rival under pressure":enemyHP<=enemyMax*.7?"Enemy force weakened":"Enemy force operational";
+ }
+ function startGame(){
+  const d=DIFF[difficulty];playerMax=d.player;enemyMax=d.enemy;playerHP=playerMax;enemyHP=enemyMax;round=0;lastPlayerOrders=[];lastEnemyOrder="";reportHistory=[];particles=[];activeTurn=null;roundNonce++;selected="charge";phase="choose";
+  $("startOverlay").classList.add("hidden");$("endOverlay").classList.add("hidden");$("executeButton").disabled=false;
+  $("reportBody").innerHTML="<strong>Mission begins.</strong><br>Choose an order and press Execute. Watch how the opposing commander responds.";
+  $("reportStamp").textContent="READY FOR ORDER";$("nextTip").textContent="FIELD TIP / Try VOLLEY against a charging force, or FLANK against a defending force.";
+  $("history").innerHTML="<li>Operation launched. Awaiting orders.</li>";
+  $("historyStamp").textContent="0 TURNS";$("rivalThought").innerHTML="Signals detected across the field.<br>Opponent: computer controlled";
+  $("intelBrief").textContent="Commander Rook is examining your formation. Your next move will be met by a computer-selected order.";
+  $("roundLabel").textContent="ROUND 01 / AWAITING ORDER";$("battleTape").textContent="■ TACTICAL LINK ESTABLISHED";
+  document.querySelectorAll("[data-difficulty]").forEach(b=>b.disabled=true);
+  createUnits();setOrder("charge");updateStats();beep(610,.13,"triangle");
+ }
+ function execute(){if(phase!=="choose")return;phase="animating";$("executeButton").disabled=true;round++;roundNonce++;
+  const eOrder=enemyOrder();const r=calculate(selected,eOrder);
+  lastPlayerOrders.push(selected);if(lastPlayerOrders.length>5)lastPlayerOrders.shift();lastEnemyOrder=eOrder;
+  activeTurn={...r,elapsed:0,duration:fast?1.2:3.2,nonce:roundNonce,visualImpact:false};
+  $("roundLabel").textContent="ROUND "+String(round).padStart(2,"0")+" / ENGAGED";$("battleTape").textContent="● LIVE ENGAGEMENT / ROUND "+round;
+  $("reportStamp").textContent="RESOLVING ROUND "+round;
+  $("reportBody").innerHTML="<strong>Orders transmitted.</strong><br>Your troops: "+COMMANDS[selected].label+". Rival force is executing a maneuver...";
+  units.forEach(u=>{u.shield=(u.side==="player"?selected:eOrder)==="defend"?1:0;});beep(320,.09,"sawtooth");
+ }
+ function finishTurn(){if(!activeTurn)return;const r=activeTurn;activeTurn=null;
+  playerHP=r.nextP;enemyHP=r.nextE;applyUnitCounts();updateStats();cameraShake=0;
+  const actionTip=r.pOrder==="regroup"?"You recovered troops. Regroup is safest when the opponent is not charging.":
+    r.eOrder==="defend"&&r.pOrder==="flank"?"Great read! Flanking is strong against a prepared defense.":
+    r.eOrder==="volley"&&r.pOrder==="charge"?"Enemy ranged fire punished the charge. Try Defend or Volley next time.":
+    r.eOrder==="regroup"&&r.pOrder==="charge"?"Excellent timing! You attacked while the enemy was regrouping.":
+    r.pOrder==="defend"?"You reduced incoming damage. Next consider Flank or Volley to press the advantage.":
+    r.pOrder==="flank"?"Your troops maneuvered around the field. Keep reading your opponent's pattern.":
+    "Look at the rival's order and adapt. No single command wins every battle.";
+  $("reportStamp").textContent="ROUND "+round+" COMPLETE";
+  $("reportBody").innerHTML="<strong>You chose "+COMMANDS[r.pOrder].label+".</strong> Commander Rook chose <strong>"+COMMANDS[r.eOrder].label+"</strong>.<br>Enemy lost "+r.damageToE+" troops"+(r.healE?" and recovered "+r.healE:"")+". You lost "+r.damageToP+""+(r.healP?" and recovered "+r.healP:"")+".";
+  $("nextTip").textContent="FIELD TIP / "+actionTip;
+  reportHistory.unshift({round,p:r.pOrder,e:r.eOrder,pLost:r.damageToP,eLost:r.damageToE});reportHistory=reportHistory.slice(0,9);
+  $("history").innerHTML=reportHistory.map(h=>"<li><strong>R"+h.round+":</strong> "+COMMANDS[h.p].label+" vs "+COMMANDS[h.e].label+" · −"+h.eLost+" enemy / −"+h.pLost+" yours</li>").join("");
+  $("historyStamp").textContent=round+" TURN"+(round!==1?"S":"");
+  $("rivalThought").innerHTML=pick(["Reassessing your tactics...","Monitoring your previous orders...","Preparing another maneuver...","Watching your troop movements..."])+"<br>Opponent: computer controlled";
+  $("intelBrief").textContent="Last enemy order: "+COMMANDS[r.eOrder].label+". "+(enemyHP<enemyMax*.5?"Rook's force is weakened and may attempt to regroup.":"Rook may change tactics in response to your recent commands.");
+  if(playerHP<=0||enemyHP<=0||round>=35){endGame();return;}
+  phase="choose";$("executeButton").disabled=false;$("roundLabel").textContent="ROUND "+String(round+1).padStart(2,"0")+" / AWAITING ORDER";$("battleTape").textContent="■ AWAITING COMMAND INPUT";
+ }
+ function endGame(){phase="end";const draw=playerHP===0&&enemyHP===0||round>=35&&playerHP===enemyHP;
+  const win=draw?false:playerHP>enemyHP;
+  if(!draw){score[win?"wins":"losses"]++;persist();refreshScore();}
+  $("endOverline").textContent=draw?"ENGAGEMENT INCONCLUSIVE":win?"MISSION ACCOMPLISHED":"MISSION UNSUCCESSFUL";
+  $("endHeading").textContent=draw?"DRAW":win?"VICTORY":"DEFEAT";
+  $("endHeading").style.color=draw?"#f1d292":win?"#bde77c":"#ef9a86";
+  $("endText").textContent=draw?"Both forces held their ground. New operation?":win?"Outstanding command. Your troops secured the sector in "+round+" turns.":"The rival won this engagement. Study the orders and come back stronger.";
+  $("endOverlay").classList.remove("hidden");$("executeButton").disabled=true;$("roundLabel").textContent="OPERATION COMPLETE";$("battleTape").textContent="■ SIMULATION ENDED";document.querySelectorAll("[data-difficulty]").forEach(b=>b.disabled=false);
+  beep(win?690:200,.36,"triangle",.04);
+ }
+ /* ------------------- VISUAL ENGINE / CANVAS ------------------- */
+ /* Deterministic terrain objects (fixed seed) keep each game visually
+    coherent; particles and projectiles are generated at runtime. */
+ const terrain=[];let seed=77441;
+ function seeded(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
+ for(let i=0;i<92;i++){const x=25+seeded()*(W-50),y=35+seeded()*(H-70);terrain.push({x,y,r:3+seeded()*10,type:seeded()>.53?"scrub":"stone",angle:seeded()*TAU});}
+ const craters=[{x:570,y:235,r:31},{x:720,y:520,r:39},{x:640,y:410,r:16}];
+ function circle(x,y,r,fill){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=fill;ctx.fill();}
+ function line(x,y,x2,y2,color,width=1){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();}
+ function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
+ function drawTerrain(){
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#263931");bg.addColorStop(.53,"#263b34");bg.addColorStop(1,"#26322d");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  /* Checker-free tactical grid is subtle enough not to compete with troops. */
+  ctx.save();ctx.globalAlpha=.13;for(let x=0;x<W;x+=64)line(x,0,x,H,"#87bda7");for(let y=0;y<H;y+=64)line(0,y,W,y,"#87bda7");ctx.restore();
+  ctx.save();ctx.globalAlpha=.6;ctx.strokeStyle="#d6d2ab";ctx.lineWidth=65;ctx.beginPath();ctx.moveTo(0,560);ctx.bezierCurveTo(330,520,480,250,700,320);ctx.bezierCurveTo(940,370,1070,150,1280,145);ctx.stroke();ctx.strokeStyle="#8d9679";ctx.lineWidth=59;ctx.stroke();ctx.restore();
+  craters.forEach(c=>{circle(c.x,c.y,c.r,"#17272288");ctx.strokeStyle="#59625399";ctx.lineWidth=5;ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,TAU);ctx.stroke()});
+  terrain.forEach(t=>{ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.angle);if(t.type==="scrub"){line(-t.r,0,t.r,0,"#1b2c1d",3);line(0,-t.r,0,t.r,"#5e7347",3);line(-t.r*.7,-t.r*.7,t.r*.7,t.r*.7,"#2d4b30",2);}else{ctx.fillStyle="#6a786d";ctx.beginPath();ctx.moveTo(-t.r,0);ctx.lineTo(-t.r*.45,-t.r*.75);ctx.lineTo(t.r*.65,-t.r*.5);ctx.lineTo(t.r,t.r*.45);ctx.lineTo(-t.r*.4,t.r*.8);ctx.closePath();ctx.fill()}ctx.restore()});
+  /* Map markings, objective flags, and a tiny N/A easter egg. */
+  ctx.setLineDash([10,8]);ctx.strokeStyle="#b7cb9588";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(650,360,85,58,0,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  circle(650,360,13,"#d4d69b55");line(650,335,650,388,"#d4d9b6",3);ctx.fillStyle="#dae6c3";ctx.font="700 17px monospace";ctx.fillText("OBJ",631,319);
+  rounded(26,646,146,39,5,"#0b1818aa","#82978a55");ctx.font="11px monospace";ctx.fillStyle="#c8e4b8";ctx.fillText("GRID  N/A - 07",39,670);
+  rounded(1110,34,143,36,5,"#0b1818aa","#82978a55");ctx.fillText("SECTOR 07  ◈",1122,57);
+  const vig=ctx.createRadialGradient(W/2,H/2,200,W/2,H/2,780);vig.addColorStop(0,"#00000000");vig.addColorStop(1,"#00000099");ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+ }
+ function drawUnit(u,t){if(u.hp<=0)return;const sideColor=u.side==="player"?"#75cfe3":"#ff9d79";const edge=u.side==="player"?"#2f8796":"#ba6152";
+  let x=u.x,y=u.y+Math.sin(t*2.5+u.bob)*1.8,move=0;
+  if(activeTurn){let p=clamp(activeTurn.elapsed/activeTurn.duration,0,1);let attack=u.side==="player"?activeTurn.pOrder:activeTurn.eOrder;const dir=u.side==="player"?1:-1;
+   if(attack==="charge")move=Math.sin(p*Math.PI)*120*dir;
+   else if(attack==="flank"){move=Math.sin(p*Math.PI)*86*dir;y+=Math.sin(p*Math.PI)*(u.index%2?110:-95);}
+   else if(attack==="regroup")move=-Math.sin(p*Math.PI)*42*dir;
+   else if(attack==="volley")move=-Math.sin(p*Math.PI)*18*dir;
+   x+=move;
+  }
+  ctx.save();ctx.translate(x,y);ctx.rotate(u.side==="player"?Math.PI/2:-Math.PI/2);
+  ctx.shadowColor="#000";ctx.shadowBlur=7;circle(5,5,15,"#09120b77");ctx.shadowBlur=0;
+  if(u.shield&&activeTurn){ctx.strokeStyle="#f5d88f";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,23+Math.sin(t*10+u.bob)*2,0,TAU);ctx.stroke();}
+  /* Soldier = tiny rotated body, helmet, rifle and light marker. */
+  rounded(-11,-11,22,26,5,edge,"#071419");rounded(-8,-4,16,13,3,sideColor);circle(0,-10,8,"#dfcf9e");rounded(-8,-16,16,8,4,u.side==="player"?"#437e87":"#87614f");rounded(9,-13,6,25,2,"#182726");circle(-6,5,2,"#f3ddbc");
+  ctx.restore();
+  /* Friendly marker rings make it easy to locate troops at a glance. */
+  ctx.strokeStyle=u.side==="player"?"#68c8dd77":"#ff987f88";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,20,0,TAU);ctx.stroke();
+ }
+ function addParticle(p){particles.push(p);if(particles.length>270)particles.shift();}
+ function burst(x,y,color,n=10){for(let i=0;i<n;i++){const a=rand(0,TAU),s=rand(25,145);addParticle({type:"spark",x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:rand(2,5),life:rand(.25,.75),max:.75,color});}}
+ function projectile(side){const own=units.filter(u=>u.side===side&&u.hp>0),opp=units.filter(u=>u.side!==side&&u.hp>0);if(!own.length||!opp.length)return;const a=pick(own),b=pick(opp);addParticle({type:"shot",x:a.x,y:a.y,tx:b.x,ty:b.y,life:.38,max:.38,color:side==="player"?"#98eafa":"#ffae80"});beep(side==="player"?360:240,.055,"triangle",.016);}
+ function particleTick(dt){for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=dt;if(p.life<=0){particles.splice(i,1);continue;}if(p.type==="spark"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.975;p.vy*=.975;}else if(p.type==="text"){p.y-=dt*42;}}}
+ function drawParticles(){particles.forEach(p=>{const a=clamp(p.life/p.max,0,1);ctx.save();ctx.globalAlpha=a;if(p.type==="spark"){ctx.shadowColor=p.color;ctx.shadowBlur=12;circle(p.x,p.y,p.r*a,p.color);}else if(p.type==="shot"){const k=1-a;const x=p.x+(p.tx-p.x)*k,y=p.y+(p.ty-p.y)*k;ctx.strokeStyle=p.color;ctx.lineWidth=4;ctx.shadowColor=p.color;ctx.shadowBlur=15;ctx.beginPath();ctx.moveTo(x-(p.tx-p.x)*.035,y-(p.ty-p.y)*.035);ctx.lineTo(x,y);ctx.stroke();}else if(p.type==="text"){ctx.font="bold 26px monospace";ctx.fillStyle=p.color;ctx.textAlign="center";ctx.shadowBlur=10;ctx.shadowColor=p.color;ctx.fillText(p.text,p.x,p.y);}ctx.restore()})}
+ function frame(now){const dt=clamp((now-lastTime)/1000||.016,0,.06);lastTime=now;sceneTime+=dt;ctx.save();if(cameraShake>0){ctx.translate(rand(-cameraShake,cameraShake),rand(-cameraShake,cameraShake));cameraShake=Math.max(0,cameraShake-dt*20);}drawTerrain();
+  /* When a battle is active, spawn projectiles in rhythm and resolve the
+     game outcome only after the animation completes. Game logic does not
+     depend on frame rate or on the number of visible projectiles. */
+  if(activeTurn){const tr=activeTurn;tr.elapsed+=dt*(fast?2:1);const k=clamp(tr.elapsed/tr.duration,0,1);
+   if((Math.floor(tr.elapsed*4)!==Math.floor((tr.elapsed-dt*(fast?2:1))*4))&&k<.83){projectile("player");projectile("enemy");}
+   if(!tr.visualImpact&&k>.58){tr.visualImpact=true;cameraShake=7;flash=.14;
+    const victimsP=units.filter(u=>u.side==="player"&&u.hp>0),victimsE=units.filter(u=>u.side==="enemy"&&u.hp>0);
+    for(let i=0;i<Math.min(tr.damageToP,victimsP.length);i++){let v=victimsP[victimsP.length-1-i];burst(v.x,v.y,"#8cdee0",6)}
+    for(let i=0;i<Math.min(tr.damageToE,victimsE.length);i++){let v=victimsE[victimsE.length-1-i];burst(v.x,v.y,"#ffad8e",6)}
+    addParticle({type:"text",x:980,y:158,life:1.05,max:1.05,color:"#ffb59b",text:"−"+tr.damageToE});
+    addParticle({type:"text",x:260,y:160,life:1.05,max:1.05,color:"#a6eaff",text:"−"+tr.damageToP});
+    if(tr.healP)addParticle({type:"text",x:260,y:210,life:1.05,max:1.05,color:"#d4f3ad",text:"+"+tr.healP});
+    if(tr.healE)addParticle({type:"text",x:980,y:210,life:1.05,max:1.05,color:"#d4f3ad",text:"+"+tr.healE});
+    beep(145,.19,"sawtooth",.08);
+   }
+   if(k>=1)finishTurn();
+  }
+  units.forEach(u=>drawUnit(u,sceneTime));particleTick(dt);drawParticles();
+  if(flash>0){ctx.globalAlpha=flash;ctx.fillStyle="#fef2cd";ctx.fillRect(0,0,W,H);flash=Math.max(0,flash-dt*.8);}
+  ctx.restore();raf=requestAnimationFrame(frame);
+ }
+ /* ------------------- INPUT / ACCESSIBILITY ------------------- */
+ function openManual(){const b=$("manualBackdrop");b.classList.add("open");$("manual").focus();}
+ function closeManual(){$("manualBackdrop").classList.remove("open");}
+ ["guideTop","guideSide","splashGuide","endGuide"].forEach(id=>$(id).addEventListener("click",openManual));
+ $("closeManual").addEventListener("click",closeManual);$("manualGotIt").addEventListener("click",closeManual);
+ $("manualBackdrop").addEventListener("click",e=>{if(e.target===$("manualBackdrop"))closeManual();});
+ $("startButton").addEventListener("click",startGame);$("rematchButton").addEventListener("click",startGame);
+ $("executeButton").addEventListener("click",execute);
+ $("speedButton").addEventListener("click",()=>{fast=!fast;$("speedButton").textContent=fast?"1× SPEED":"2× SPEED";$("speedButton").setAttribute("aria-pressed",String(fast));});
+ $("soundToggle").addEventListener("click",()=>{soundOn=!soundOn;$("soundToggle").textContent=soundOn?"♫ SOUND ON":"♪ SOUND OFF";$("soundToggle").setAttribute("aria-pressed",String(soundOn));beep(620,.1);});
+ window.addEventListener("keydown",e=>{if($("manualBackdrop").classList.contains("open")){if(e.key==="Escape")closeManual();return;}if(e.key.toLowerCase()==="h"){openManual();return;}if(phase==="start"&&e.key==="Enter"){startGame();return;}if(phase==="end"&&e.key==="Enter"){startGame();return;}if(phase!=="choose")return;const n=Number(e.key);if(n>=1&&n<=5){setOrder(ORDER_KEYS[n-1]);return;}if(e.key==="Enter"){e.preventDefault();execute();}});
+ refreshScore();createUnits();updateStats();setDifficulty("easy");raf=requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
