@@ -1,0 +1,5212 @@
+### Project File Structure
+
+```text
+tidebreak/
+├── index.html          # Main responsive HTML5 shell & screens
+├── css/
+│   └── styles.css      # Mobile-first coastal-fantasy UI theme & layouts
+├── js/
+│   ├── config.js       # Global constants, URLs, & balance tuning
+│   ├── data.js         # Heroes, enemies, 20+1 campaign stages, relics, achievements
+│   ├── save.js         # Versioned localStorage persistence, export/import, validation
+│   ├── audio.js        # Procedural Web Audio API music & combat SFX
+│   ├── art.js          # HiDPI 2.5D arena, character rigs, portraits, VFX, Easter eggs
+│   ├── engine.js       # Real-time ATB combat loop, abilities, shields, survival waves
+│   └── ui.js           # Screen routing, squad builder, upgrades, HUD, modals
+└── README.md           # Setup, GitHub Pages deployment, & customization guide
+```
+
+---
+
+### 1. `index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#071124" />
+  <meta name="description" content="TIDEBREAK: Battle for the Elements — A mobile-first coastal fantasy tactical hero-battle game." />
+  <title>TIDEBREAK: Battle for the Elements</title>
+
+  <!-- Inline SVG Favicon to prevent 404 requests on static hosts -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2322d3ee'/%3E%3Cstop offset='100%25' stop-color='%23f59e0b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23071124'/%3E%3Cpath d='M32 10 L46 28 L32 54 L18 28 Z' fill='url(%23g)'/%3E%3Ccircle cx='32' cy='29' r='6' fill='%23071124'/%3E%3C/svg%3E" />
+
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div id="app-shell" class="app-shell">
+    <!-- Global Toast Notification Stack (Achievements, Saves, Tips) -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- =========================================================
+         SCREEN 1: OPENING SPLASH SCREEN
+         ========================================================= -->
+    <section id="screen-splash" class="screen screen-splash active" aria-label="Welcome Screen">
+      <div class="splash-backdrop"></div>
+      <div class="splash-content">
+        <div class="crest-emblem" aria-hidden="true">
+          <svg viewBox="0 0 120 120" class="crest-svg">
+            <defs>
+              <linearGradient id="crestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="55%" stop-color="#14b8a6" />
+                <stop offset="100%" stop-color="#fbbf24" />
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="url(#crestGrad)" stroke-width="2.5" stroke-dasharray="8 6" />
+            <circle cx="60" cy="60" r="40" fill="rgba(14, 34, 68, 0.78)" stroke="#22d3ee" stroke-width="1.5" />
+            <path d="M60 18 L78 50 L60 98 L42 50 Z" fill="url(#crestGrad)" />
+            <path d="M26 62 Q60 44 94 62 Q60 76 26 62 Z" fill="rgba(34,211,238,0.28)" stroke="#38bdf8" stroke-width="1.5" />
+            <circle cx="60" cy="52" r="7" fill="#071124" stroke="#fbbf24" stroke-width="2" />
+          </svg>
+        </div>
+
+        <p class="eyebrow">COASTAL FANTASY TACTICAL RPG</p>
+        <h1 class="game-title">TIDEBREAK</h1>
+        <p class="game-subtitle">Battle for the Elements</p>
+
+        <p class="splash-tagline">
+          Command elemental guardians, time devastating abilities, and reclaim the sunken coasts.
+        </p>
+
+        <button id="btn-enter-game" class="btn btn-primary btn-lg pulse-glow">
+          Tap to Begin
+        </button>
+
+        <p class="splash-note">
+          Free to play • Saves locally • No account required
+        </p>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 2: TITLE / HOME HUB
+         ========================================================= -->
+    <section id="screen-home" class="screen screen-home" aria-label="Main Hub">
+      <header class="top-bar">
+        <div class="brand-mini">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TIDEBREAK</span>
+        </div>
+        <div class="currency-bar">
+          <div class="currency-pill" title="Tide Pearls — Used to level up heroes">
+            <span class="icon-pearl" aria-hidden="true">◉</span>
+            <span id="hud-pearls">0</span>
+          </div>
+          <div class="currency-pill shard" title="Starlight Shards — Earned from Bosses & Survival">
+            <span class="icon-shard" aria-hidden="true">✦</span>
+            <span id="hud-shards">0</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button id="btn-mute-global" class="icon-btn" aria-label="Toggle Sound" title="Mute / Unmute">🔊</button>
+          <button id="btn-fullscreen-global" class="icon-btn" aria-label="Toggle Full Screen" title="Full Screen">⛶</button>
+        </div>
+      </header>
+
+      <main class="hub-main">
+        <!-- Hero Banner Showcase -->
+        <div class="hub-hero-card">
+          <canvas id="home-preview-canvas" class="home-preview-canvas" width="600" height="240" aria-label="Active Squad Preview"></canvas>
+          <div class="hub-hero-overlay">
+            <div class="hub-status-row">
+              <span class="badge badge-cyan" id="home-campaign-badge">Campaign: Stage 1 / 20</span>
+              <span class="badge badge-gold" id="home-power-badge">Squad Power: 0</span>
+            </div>
+            <div class="hub-relic-pill" id="home-active-relic">
+              No Relic Equipped
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Play Modes -->
+        <div class="hub-cta-grid">
+          <button id="btn-nav-campaign" class="action-card primary-card">
+            <div class="card-icon">⚔️</div>
+            <div class="card-body">
+              <h2>Campaign</h2>
+              <p>20 Coastal Stages &amp; Bosses</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </button>
+
+          <button id="btn-nav-survival" class="action-card survival-card">
+            <div class="card-icon">🌊</div>
+            <div class="card-body">
+              <h2>Tidal Survival</h2>
+              <p id="home-survival-best">Best Wave: 0</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </button>
+        </div>
+
+        <!-- Secondary Management Grid -->
+        <div class="hub-menu-grid">
+          <button id="btn-nav-roster" class="menu-tile">
+            <span class="tile-icon">🛡️</span>
+            <span class="tile-label">Heroes &amp; Team</span>
+            <span class="tile-sub" id="home-heroes-count">3 / 7 Unlocked</span>
+          </button>
+
+          <button id="btn-nav-relics" class="menu-tile">
+            <span class="tile-icon">🧭</span>
+            <span class="tile-label">Relics &amp; Honors</span>
+            <span class="tile-sub" id="home-ach-count">0 / 12 Unlocked</span>
+          </button>
+
+          <button id="btn-nav-settings" class="menu-tile">
+            <span class="tile-icon">⚙️</span>
+            <span class="tile-label">Settings &amp; Save</span>
+            <span class="tile-sub">Backup / Accessibility</span>
+          </button>
+
+          <a id="link-back-gallery" class="menu-tile link-tile" href="https://amandazirzow.com/" rel="noopener">
+            <span class="tile-icon">🏛️</span>
+            <span class="tile-label">Back to Gallery</span>
+            <span class="tile-sub">amandazirzow.com</span>
+          </a>
+        </div>
+
+        <!-- Tasteful Support the Game Card -->
+        <div class="support-card" id="home-support-card">
+          <div class="support-header">
+            <span class="support-heart">✦</span>
+            <h3>Support the Game</h3>
+          </div>
+          <p class="support-text">
+            Enjoying TIDEBREAK? This little game is a labor of love. If you'd like to help keep it growing, you can leave a tip. Either way, thanks for playing!
+          </p>
+          <button class="btn btn-support btn-donation-trigger" type="button">
+            Leave an Optional Tip
+          </button>
+        </div>
+      </main>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 3: CAMPAIGN MAP & SQUAD SELECTION
+         ========================================================= -->
+    <section id="screen-campaign" class="screen screen-sub" aria-label="Campaign Map">
+      <header class="sub-header">
+        <button class="btn-back" data-nav="home" aria-label="Back to Home">‹ Back</button>
+        <h2>Campaign &amp; Deployment</h2>
+        <div class="currency-pill compact">
+          <span class="icon-pearl">◉</span>
+          <span class="sync-pearls">0</span>
+        </div>
+      </header>
+
+      <div class="sub-scroll">
+        <!-- Quick Active Squad Strip -->
+        <section class="panel squad-strip-panel">
+          <div class="panel-head">
+            <h3>Active Squad <span id="squad-count-label">(3 / 5)</span></h3>
+            <button id="btn-edit-squad-from-campaign" class="btn-link">Edit Team</button>
+          </div>
+          <div id="campaign-squad-preview" class="squad-mini-row"></div>
+        </section>
+
+        <!-- Secret Location Banner (Appears only once unlocked!) -->
+        <div id="secret-haven-container" class="secret-haven-container hidden"></div>
+
+        <!-- Campaign Stages List -->
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Elemental Coasts</h3>
+            <span class="muted-text">Boss every 5 stages</span>
+          </div>
+          <div id="campaign-stage-list" class="stage-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 4: HERO ROSTER, TEAM BUILDER & UPGRADES
+         ========================================================= -->
+    <section id="screen-roster" class="screen screen-sub" aria-label="Hero Roster and Team">
+      <header class="sub-header">
+        <button class="btn-back" data-nav="home" aria-label="Back to Home">‹ Back</button>
+        <h2>Heroes &amp; Upgrades</h2>
+        <div class="currency-pill compact">
+          <span class="icon-pearl">◉</span>
+          <span class="sync-pearls">0</span>
+        </div>
+      </header>
+
+      <div class="sub-scroll">
+        <!-- Team Slots Bar -->
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Battle Squad (Up to 5)</h3>
+            <span class="muted-text">Tap hero below to add/remove</span>
+          </div>
+          <div id="roster-squad-slots" class="squad-slots-grid"></div>
+        </section>
+
+        <!-- Hero Grid -->
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Elemental Champions</h3>
+            <span class="muted-text">Select to inspect or upgrade</span>
+          </div>
+          <div id="roster-hero-grid" class="hero-cards-grid"></div>
+        </section>
+
+        <!-- Selected Hero Inspector -->
+        <section id="hero-inspector" class="panel hero-inspector">
+          <div class="inspector-top">
+            <canvas id="inspector-portrait" width="110" height="110" class="inspector-canvas"></canvas>
+            <div class="inspector-meta">
+              <div class="inspector-title-row">
+                <h3 id="insp-name">Hero</h3>
+                <span id="insp-role" class="role-badge">Role</span>
+              </div>
+              <p id="insp-title" class="muted-text"></p>
+              <div id="insp-level-row" class="level-row">
+                <span class="level-pill" id="insp-level">Lv. 1</span>
+                <span class="power-pill" id="insp-power">Power 0</span>
+              </div>
+            </div>
+          </div>
+
+          <p id="insp-lore" class="inspector-lore"></p>
+
+          <div class="stats-grid" id="insp-stats"></div>
+
+          <div class="ability-box">
+            <div class="ability-head">
+              <span class="ability-tag">SPECIAL ABILITY</span>
+              <strong id="insp-ability-name">Ability</strong>
+            </div>
+            <p id="insp-ability-desc"></p>
+          </div>
+
+          <div class="inspector-actions">
+            <button id="btn-toggle-squad" class="btn btn-secondary">Add to Squad</button>
+            <button id="btn-upgrade-hero" class="btn btn-primary">Upgrade (50 ◉)</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 5: RELICS & ACHIEVEMENTS
+         ========================================================= -->
+    <section id="screen-relics" class="screen screen-sub" aria-label="Relics and Achievements">
+      <header class="sub-header">
+        <button class="btn-back" data-nav="home" aria-label="Back to Home">‹ Back</button>
+        <h2>Relics &amp; Honors</h2>
+        <div class="currency-pill compact shard">
+          <span class="icon-shard">✦</span>
+          <span class="sync-shards">0</span>
+        </div>
+      </header>
+
+      <div class="sub-scroll">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Ancient Relics</h3>
+            <span class="muted-text">Equip 1 team bonus</span>
+          </div>
+          <div id="relics-list" class="relics-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Achievements</h3>
+            <span id="ach-progress-text" class="muted-text">0 / 12</span>
+          </div>
+          <div id="achievements-list" class="achievements-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 6: SETTINGS, ACCESSIBILITY & SAVE MANAGEMENT
+         ========================================================= -->
+    <section id="screen-settings" class="screen screen-sub" aria-label="Settings and Save Data">
+      <header class="sub-header">
+        <button class="btn-back" data-nav="home" aria-label="Back to Home">‹ Back</button>
+        <h2>Settings &amp; Data</h2>
+        <span></span>
+      </header>
+
+      <div class="sub-scroll">
+        <section class="panel">
+          <h3>Audio &amp; Visual Comfort</h3>
+          <div class="setting-row">
+            <div>
+              <strong>Master Sound</strong>
+              <p class="muted-text">Enable or mute all game audio</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-sound-enabled" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Ambient Music</strong>
+              <p class="muted-text">Soft coastal synth soundtrack</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-music-enabled" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Sound Effects</strong>
+              <p class="muted-text">Combat impacts, heals, and chimes</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-sfx-enabled" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Reduced Motion</strong>
+              <p class="muted-text">Disables screen shake &amp; intense particle bursts</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-reduced-motion" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>Save Backup &amp; Portability</h3>
+          <p class="muted-text save-disclaimer">
+            Your progress is stored only locally in this browser. Clearing your browser data may reset progress unless you export a backup file.
+          </p>
+          <div class="save-actions">
+            <button id="btn-export-save" class="btn btn-secondary">Export Save (.json)</button>
+            <label class="btn btn-secondary file-btn">
+              Import Save (.json)
+              <input type="file" id="input-import-save" accept=".json,application/json" hidden />
+            </label>
+            <button id="btn-reset-save" class="btn btn-danger">Reset Progress</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>About TIDEBREAK</h3>
+          <p class="muted-text">
+            Version 1.0 • Built with vanilla HTML5 Canvas &amp; Web Audio API. Designed for touchscreens and desktop browsers.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SCREEN 7: BATTLE ARENA
+         ========================================================= -->
+    <section id="screen-battle" class="screen screen-battle" aria-label="Battle Arena">
+      <!-- Top Battle HUD -->
+      <header class="battle-hud-top">
+        <div class="battle-stage-info">
+          <span id="battle-title" class="battle-title">Stage 1</span>
+          <span id="battle-timer" class="battle-timer">00:00</span>
+        </div>
+
+        <div class="battle-controls-top">
+          <button id="btn-battle-auto" class="pill-toggle" title="Toggle Auto Special Abilities">Auto: OFF</button>
+          <button id="btn-battle-speed" class="pill-toggle" title="Toggle Combat Speed">1x</button>
+          <button id="btn-battle-mute" class="icon-btn sm" aria-label="Toggle Mute">🔊</button>
+          <button id="btn-battle-pause" class="icon-btn sm" aria-label="Pause Battle">⏸</button>
+        </div>
+      </header>
+
+      <!-- Tactical Hint Strip -->
+      <div class="battle-hint-bar">
+        <span id="battle-target-hint">Tap an enemy to focus attacks • Tap glowing portraits for Specials</span>
+      </div>
+
+      <!-- 2.5D Animated Arena Canvas -->
+      <div class="arena-wrapper">
+        <canvas id="battle-canvas" class="battle-canvas"></canvas>
+      </div>
+
+      <!-- Thumb-Friendly Bottom Ability Control Dock -->
+      <footer class="battle-hud-bottom">
+        <div id="ability-dock" class="ability-dock"></div>
+      </footer>
+    </section>
+
+    <!-- =========================================================
+         MODAL: PAUSE OVERLAY
+         ========================================================= -->
+    <div id="modal-pause" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pause-heading">
+      <div class="modal-card">
+        <h2 id="pause-heading">Battle Paused</h2>
+        <p class="muted-text">Take a breath. The tides will wait.</p>
+        <div class="modal-stack">
+          <button id="btn-resume-battle" class="btn btn-primary">Resume Battle</button>
+          <button id="btn-pause-mute" class="btn btn-secondary">Toggle Sound</button>
+          <button id="btn-retreat-battle" class="btn btn-danger">Retreat to Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: BATTLE RESULTS (VICTORY / DEFEAT)
+         ========================================================= -->
+    <div id="modal-results" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="results-heading">
+      <div class="modal-card results-card">
+        <div id="results-crest" class="results-crest">🏆</div>
+        <h2 id="results-heading">Victory!</h2>
+        <p id="results-subtitle" class="muted-text"></p>
+
+        <div id="results-rewards" class="rewards-box"></div>
+        <div id="results-unlocks" class="unlocks-box hidden"></div>
+
+        <div id="results-support-box" class="support-mini hidden">
+          <p>
+            Enjoying TIDEBREAK? This little game is a labor of love. If you'd like to help keep it growing, you can leave a tip. Either way, thanks for playing!
+          </p>
+          <button class="btn btn-support btn-sm btn-donation-trigger" type="button">
+            Support the Game
+          </button>
+        </div>
+
+        <div class="modal-stack">
+          <button id="btn-results-next" class="btn btn-primary">Next Stage</button>
+          <button id="btn-results-retry" class="btn btn-secondary">Play Again</button>
+          <button id="btn-results-home" class="btn btn-ghost">Return to Hub</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: CONFIRMATION DIALOG (Save Import / Reset)
+         ========================================================= -->
+    <div id="modal-confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-heading">
+      <div class="modal-card">
+        <h2 id="confirm-heading">Confirm Action</h2>
+        <p id="confirm-message" class="muted-text"></p>
+        <div class="modal-row">
+          <button id="btn-confirm-cancel" class="btn btn-secondary">Cancel</button>
+          <button id="btn-confirm-ok" class="btn btn-danger">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ordered relative script imports (works both via HTTP/GitHub Pages and local file://) -->
+  <script defer src="./js/config.js"></script>
+  <script defer src="./js/data.js"></script>
+  <script defer src="./js/save.js"></script>
+  <script defer src="./js/audio.js"></script>
+  <script defer src="./js/art.js"></script>
+  <script defer src="./js/engine.js"></script>
+  <script defer src="./js/ui.js"></script>
+</body>
+</html>
+```
+
+---
+
+### 2. `css/styles.css`
+
+```css
+/* ==========================================================================
+   TIDEBREAK: Battle for the Elements — Mobile-First Stylesheet
+   Theme: Dark Navy (#071124), Electric Blue (#22d3ee), Turquoise (#14b8a6),
+          Victory Gold (#fbbf24 / #f59e0b).
+   ========================================================================== */
+
+:root {
+  --bg-deep: #060f20;
+  --bg-navy: #0b1933;
+  --bg-panel: rgba(13, 30, 58, 0.88);
+  --bg-card: rgba(18, 41, 77, 0.9);
+  --border-glow: rgba(56, 189, 248, 0.28);
+  --border-bright: rgba(34, 211, 238, 0.65);
+  --cyan: #22d3ee;
+  --sky: #38bdf8;
+  --teal: #14b8a6;
+  --gold: #fbbf24;
+  --amber: #f59e0b;
+  --crimson: #f43f5e;
+  --emerald: #34d399;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-card: 0 10px 28px rgba(2, 8, 23, 0.55);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  background: radial-gradient(circle at 50% 0%, #102a52 0%, #060f20 68%);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* App Shell: Full-bleed on phones, sleek centered frame on wide desktops */
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: linear-gradient(180deg, #091730 0%, #050d1d 100%);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.75);
+}
+
+@media (min-width: 720px) {
+  .app-shell {
+    border-left: 1px solid rgba(56, 189, 248, 0.16);
+    border-right: 1px solid rgba(56, 189, 248, 0.16);
+  }
+}
+
+/* Landscape compatibility for wide viewports or rotated phones */
+@media (min-aspect-ratio: 13/10) and (min-width: 640px) {
+  .app-shell {
+    max-width: 920px;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Screen switching */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  overflow: hidden;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: absolute;
+  top: calc(14px + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(92%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: linear-gradient(135deg, rgba(15, 38, 72, 0.96), rgba(9, 24, 48, 0.98));
+  border: 1px solid var(--cyan);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  animation: toastSlide 0.3s ease-out;
+}
+
+.toast.toast-gold {
+  border-color: var(--gold);
+}
+
+@keyframes toastSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   BUTTONS & CONTROLS (Minimum 44px touch targets)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-lg {
+  min-height: 54px;
+  padding: 14px 28px;
+  font-size: 1.08rem;
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: 7px 14px;
+  font-size: 0.86rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  border-color: rgba(125, 211, 252, 0.45);
+  color: #031526;
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.32);
+}
+
+.btn-secondary {
+  background: rgba(24, 52, 96, 0.9);
+  border-color: var(--border-glow);
+  color: var(--text-main);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #be123c 0%, #e11d48 100%);
+  border-color: rgba(253, 164, 175, 0.4);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--text-muted);
+}
+
+.btn-support {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #1f1302;
+  border-color: rgba(254, 243, 199, 0.5);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25);
+}
+
+.icon-btn {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glow);
+  background: rgba(15, 35, 68, 0.85);
+  color: var(--text-main);
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-btn.sm {
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 0.95rem;
+}
+
+.btn-back {
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glow);
+  background: rgba(15, 35, 68, 0.85);
+  color: var(--cyan);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+/* ==========================================================================
+   SPLASH SCREEN
+   ========================================================================== */
+.screen-splash {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.splash-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(34, 211, 238, 0.22), transparent 58%),
+    radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.16), transparent 50%),
+    linear-gradient(180deg, #07142b 0%, #040b18 100%);
+}
+
+.splash-content {
+  position: relative;
+  z-index: 2;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.crest-emblem {
+  width: 112px;
+  height: 112px;
+  margin-bottom: 6px;
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.crest-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.35));
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.game-title {
+  margin: 0;
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #ffffff 10%, #7dd3fc 65%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 6px 26px rgba(34, 211, 238, 0.25);
+}
+
+.game-subtitle {
+  margin: -6px 0 8px;
+  font-size: 1.05rem;
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.splash-tagline {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.94rem;
+}
+
+.splash-note {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 6px 20px rgba(20, 184, 166, 0.35); }
+  50% { box-shadow: 0 6px 28px rgba(34, 211, 238, 0.65); }
+}
+
+/* ==========================================================================
+   HOME HUB
+   ========================================================================== */
+.top-bar,
+.sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(7, 17, 36, 0.92);
+  border-bottom: 1px solid var(--border-glow);
+  flex-shrink: 0;
+}
+
+.sub-header h2 {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+.brand-mini {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  font-size: 0.95rem;
+}
+
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.currency-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(15, 36, 70, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.currency-pill.shard {
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
+.icon-pearl {
+  color: var(--cyan);
+}
+
+.icon-shard {
+  color: var(--gold);
+}
+
+.top-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hub-main,
+.sub-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hub-hero-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-glow);
+  background: #08152b;
+  box-shadow: var(--shadow-card);
+  min-height: 158px;
+}
+
+.home-preview-canvas {
+  width: 100%;
+  height: 162px;
+  display: block;
+}
+
+.hub-hero-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hub-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(6, 15, 32, 0.85);
+}
+
+.badge-cyan {
+  color: var(--cyan);
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.badge-gold {
+  color: var(--gold);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.hub-relic-pill {
+  align-self: flex-start;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(6, 15, 32, 0.82);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  color: #ccfbf1;
+}
+
+.hub-cta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .hub-cta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-glow);
+  background: var(--bg-card);
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.12s ease, border-color 0.15s ease;
+}
+
+.action-card:active {
+  transform: scale(0.985);
+}
+
+.primary-card {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.48), rgba(13, 35, 68, 0.95));
+  border-color: rgba(34, 211, 238, 0.55);
+}
+
+.survival-card {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.4), rgba(13, 35, 68, 0.95));
+}
+
+.card-icon {
+  font-size: 1.7rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(6, 15, 32, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex: 1;
+}
+
+.card-body h2 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.card-body p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.card-arrow {
+  font-size: 1.5rem;
+  color: var(--cyan);
+}
+
+.hub-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glow);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 82px;
+}
+
+.tile-icon {
+  font-size: 1.3rem;
+}
+
+.tile-label {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.tile-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+/* Support Card */
+.support-card,
+.support-mini {
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(44, 30, 12, 0.45), rgba(13, 30, 58, 0.92));
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.support-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.support-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--gold);
+}
+
+.support-heart {
+  color: var(--gold);
+}
+
+.support-text,
+.support-mini p {
+  margin: 0 0 10px;
+  font-size: 0.84rem;
+  color: #e2e8f0;
+}
+
+/* ==========================================================================
+   PANELS, CAMPAIGN, ROSTER, RELICS, SETTINGS
+   ========================================================================== */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-lg);
+  padding: 13px;
+  box-shadow: var(--shadow-card);
+}
+
+.panel h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.muted-text {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* Squad Preview & Slots */
+.squad-mini-row,
+.squad-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.squad-slot {
+  border-radius: 10px;
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  background: rgba(6, 15, 32, 0.65);
+  min-height: 62px;
+  padding: 5px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.squad-slot.filled {
+  border-style: solid;
+  border-color: var(--cyan);
+  background: rgba(16, 42, 82, 0.85);
+  color: var(--text-main);
+}
+
+.squad-slot canvas {
+  width: 36px;
+  height: 36px;
+}
+
+/* Stage List */
+.stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(9, 22, 46, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.stage-row.boss-row {
+  border-color: rgba(251, 191, 36, 0.52);
+  background: linear-gradient(90deg, rgba(56, 24, 14, 0.42), rgba(9, 22, 46, 0.95));
+}
+
+.stage-row.secret-row {
+  border-color: rgba(45, 212, 191, 0.65);
+  background: linear-gradient(90deg, rgba(13, 62, 68, 0.62), rgba(9, 22, 46, 0.95));
+}
+
+.stage-row.locked {
+  opacity: 0.5;
+}
+
+.stage-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stage-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stage-num {
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(34, 211, 238, 0.16);
+  color: var(--cyan);
+}
+
+.boss-row .stage-num {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--gold);
+}
+
+.stage-name {
+  font-weight: 800;
+  font-size: 0.94rem;
+}
+
+.stage-meta {
+  margin-top: 3px;
+  font-size: 0.77rem;
+  color: var(--text-muted);
+}
+
+/* Hero Cards Grid */
+.hero-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 8px;
+}
+
+.hero-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(8, 20, 42, 0.95);
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--text-main);
+  text-align: center;
+}
+
+.hero-card.selected {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28);
+}
+
+.hero-card.in-squad::after {
+  content: "IN TEAM";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--teal);
+  color: #03201c;
+}
+
+.hero-card.locked {
+  opacity: 0.55;
+}
+
+.hero-card canvas {
+  width: 56px;
+  height: 56px;
+}
+
+.hero-card-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.hero-card-role {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Hero Inspector */
+.inspector-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.inspector-canvas {
+  width: 88px;
+  height: 88px;
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.16), rgba(6, 15, 32, 0.9));
+  border: 1px solid var(--border-glow);
+  flex-shrink: 0;
+}
+
+.inspector-meta {
+  flex: 1;
+}
+
+.inspector-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.role-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.18);
+  color: var(--cyan);
+}
+
+.level-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.level-pill,
+.power-pill {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(15, 36, 70, 0.9);
+}
+
+.power-pill {
+  color: var(--gold);
+}
+
+.inspector-lore {
+  margin: 10px 0;
+  font-size: 0.83rem;
+  color: #cbd5e1;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.stat-box {
+  background: rgba(6, 15, 32, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 9px;
+  padding: 6px;
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.stat-val {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.ability-box {
+  background: rgba(9, 24, 52, 0.85);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  border-radius: 10px;
+  padding: 9px 11px;
+  margin-bottom: 12px;
+}
+
+.ability-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ability-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--teal);
+  color: #03201c;
+}
+
+.ability-box p {
+  margin: 0;
+  font-size: 0.81rem;
+  color: #cbd5e1;
+}
+
+.inspector-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Relics & Achievements */
+.relics-list,
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relic-row,
+.ach-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(8, 20, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.relic-row.equipped {
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.16);
+}
+
+.ach-row.unlocked {
+  border-color: var(--emerald);
+}
+
+.ach-row.locked {
+  opacity: 0.65;
+}
+
+/* Settings Switches */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.setting-row p {
+  margin: 2px 0 0;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #1e293b;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  transition: 0.2s;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #e2e8f0;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--teal);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+.save-disclaimer {
+  margin: 6px 0 12px;
+}
+
+.save-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-btn {
+  text-align: center;
+}
+
+/* ==========================================================================
+   BATTLE ARENA SCREEN
+   ========================================================================== */
+.screen-battle {
+  background: #040b18;
+}
+
+.battle-hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(6, 15, 32, 0.94);
+  border-bottom: 1px solid var(--border-glow);
+  z-index: 5;
+}
+
+.battle-stage-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-title {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.battle-timer {
+  font-size: 0.76rem;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.battle-controls-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-toggle {
+  min-height: 34px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-glow);
+  background: rgba(15, 36, 70, 0.9);
+  color: var(--text-main);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pill-toggle.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(66, 44, 12, 0.8);
+}
+
+.battle-hint-bar {
+  background: rgba(9, 22, 46, 0.92);
+  padding: 4px 10px;
+  text-align: center;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
+}
+
+.arena-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.battle-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+.battle-hud-bottom {
+  background: rgba(6, 15, 32, 0.96);
+  border-top: 1px solid var(--border-glow);
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  z-index: 5;
+}
+
+.ability-dock {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.ability-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 4px;
+  min-height: 82px;
+  border-radius: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(13, 30, 58, 0.95);
+  color: var(--text-main);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.1s ease, border-color 0.2s ease;
+}
+
+.ability-btn.ready {
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.45);
+  background: linear-gradient(180deg, rgba(32, 64, 112, 0.98), rgba(14, 34, 66, 0.98));
+}
+
+.ability-btn.ready:active {
+  transform: scale(0.94);
+}
+
+.ability-btn.ko {
+  opacity: 0.35;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.ability-btn canvas {
+  width: 34px;
+  height: 34px;
+}
+
+.ability-hero-name {
+  font-size: 0.63rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mini-bars {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mini-bar-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.85);
+  overflow: hidden;
+}
+
+.mini-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  transition: width 0.15s ease;
+}
+
+.mini-en-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #22d3ee);
+  transition: width 0.12s ease;
+}
+
+.ability-btn.ready .mini-en-fill {
+  background: linear-gradient(90deg, #f59e0b, #fde047);
+}
+
+.ready-tag {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: #1f1302;
+  background: var(--gold);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+.modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 8, 20, 0.78);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 500;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 390px;
+  background: linear-gradient(180deg, #0f254a 0%, #091730 100%);
+  border: 1px solid var(--border-bright);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+}
+
+.modal-card h2 {
+  margin: 0 0 6px;
+}
+
+.modal-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.results-crest {
+  font-size: 2.5rem;
+  margin-bottom: 4px;
+}
+
+.rewards-box,
+.unlocks-box {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(6, 15, 32, 0.72);
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.unlocks-box {
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   REDUCED MOTION SUPPORT
+   ========================================================================== */
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crest-emblem,
+  .pulse-glow {
+    animation: none;
+  }
+}
+```
+
+---
+
+### 3. `js/config.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/config.js — Global Game Configuration & Balance Constants
+ * ============================================================================
+ * Purpose:
+ *   Centralizes all tunable constants, external URLs, storage keys, and
+ *   gameplay difficulty curves so maintainers can update links or balance
+ *   without hunting through engine logic.
+ *
+ * Relates to:
+ *   - ui.js (donation URL validation, gallery link)
+ *   - save.js (versioned localStorage key)
+ *   - engine.js (combat speed, ATB tick pacing, crit multiplier, level scaling)
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+window.Tidebreak.CONFIG = {
+  GAME_TITLE: "TIDEBREAK: Battle for the Elements",
+  VERSION: "1.0.0",
+
+  // Versioned persistence key (increment SAVE_VERSION if schema changes)
+  SAVE_KEY: "tidebreak_save_v1",
+  SAVE_VERSION: 1,
+
+  // Public Gallery home & configurable Donation URL (Section 8 & 9)
+  GALLERY_URL: "https://amandazirzow.com/",
+  DONATION_URL: "https://venmo.com/u/zirzow",
+
+  // Team & Upgrade Limits
+  MAX_SQUAD_SIZE: 5,
+  MAX_HERO_LEVEL: 25,
+
+  // Hero stat growth per level (linear compounding-friendly scaling)
+  // Upgrades materially improve HP, ATK, DEF, and Speed in combat.
+  LEVEL_SCALING: {
+    HP_PER_LEVEL: 0.13,   // +13% base HP per level above 1
+    ATK_PER_LEVEL: 0.11,  // +11% base ATK per level above 1
+    DEF_PER_LEVEL: 0.10,  // +10% base DEF per level above 1
+    SPD_PER_LEVEL: 1.8    // +1.8 Speed per level above 1
+  },
+
+  // Upgrade Pearl cost formula: BASE * level^EXP
+  UPGRADE_COST_BASE: 45,
+  UPGRADE_COST_MULT: 1.38,
+
+  // Combat Simulation Constants (tuned for 45–110 second tactical encounters)
+  COMBAT: {
+    ATB_RATE: 0.42,            // Gauge fill per point of Speed per second
+    MAX_ENERGY: 100,
+    ENERGY_ON_ATTACK: 26,      // ~4 basic attacks per special ability
+    ENERGY_ON_HIT: 11,         // Taking hits charges abilities faster
+    CRIT_MULTIPLIER: 1.65,
+    DEFENSE_CONSTANT: 115,     // Mitigation = 115 / (115 + DEF)
+    VARIANCE_MIN: 0.94,
+    VARIANCE_MAX: 1.06,
+    SURVIVAL_WAVE_SCALE: 0.14  // +14% enemy stats per Survival wave
+  }
+};
+
+/**
+ * Validates that a configured external URL uses a safe http/https protocol
+ * and is not an empty or placeholder value.
+ * Used before enabling the optional Donation button.
+ *
+ * @param {string} urlString
+ * @returns {boolean}
+ */
+window.Tidebreak.isValidExternalUrl = function (urlString) {
+  if (!urlString || typeof urlString !== "string") return false;
+  const trimmed = urlString.trim();
+  if (!trimmed || trimmed.includes("YOUR_") || trimmed === "#") return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch (err) {
+    return false;
+  }
+};
+```
+
+---
+
+### 4. `js/data.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/data.js — Static Game Content (Heroes, Enemies, Campaign, Relics, Honors)
+ * ============================================================================
+ * Purpose:
+ *   Defines all original characters, enemy archetypes, 20 Campaign stages
+ *   (with bosses every 5 levels), secret sanctuary stage "Nicholas Haven",
+ *   Relics (including the rare "North Star Compass"), and Achievements.
+ *
+ * Relates to:
+ *   - art.js (uses hero.visual / enemy.visual keys to draw vector rigs)
+ *   - engine.js (uses stats & ability handlers during battle)
+ *   - save.js (unlocks heroes, relics, and achievements based on IDs here)
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  /**
+   * 7 Original Heroes covering all 5 required roles:
+   * Tank, Damage, Healer, Support, Specialist.
+   * Players start with Reef Guardian, Stormbreaker, and Tideweaver.
+   */
+  const HEROES = [
+    {
+      id: "reef_guardian",
+      name: "Reef Guardian",
+      title: "Bulwark of the Abyss",
+      role: "Tank",
+      element: "water",
+      starter: true,
+      unlockHint: "Starting Hero",
+      lore: "Forged from living coral and sunken iron, he stands between his allies and the crushing tide.",
+      baseStats: { hp: 560, atk: 34, def: 28, spd: 86, crit: 0.08 },
+      ability: {
+        name: "Aegis Tidewall",
+        desc: "Surrounds all allies with a coral shield (32% of Guardian's Max HP) for 8s and draws enemy focus.",
+        type: "team_shield"
+      },
+      colors: { primary: "#14b8a6", secondary: "#0f766e", accent: "#fbbf24", glow: "#2dd4bf" }
+    },
+    {
+      id: "stormbreaker",
+      name: "Stormbreaker",
+      title: "Tempest Arcanist",
+      role: "Specialist",
+      element: "lightning",
+      starter: true,
+      unlockHint: "Starting Hero",
+      lore: "Channels coastal squalls through a twin-pronged storm halberd, arcing lightning across enemy ranks.",
+      baseStats: { hp: 330, atk: 54, def: 12, spd: 108, crit: 0.16 },
+      ability: {
+        name: "Tempest Chain",
+        desc: "Strikes primary target for 210% ATK lightning damage and chains to 3 more enemies for 135% ATK.",
+        type: "chain_lightning"
+      },
+      colors: { primary: "#38bdf8", secondary: "#1d4ed8", accent: "#fde047", glow: "#7dd3fc" }
+    },
+    {
+      id: "tideweaver",
+      name: "Tideweaver",
+      title: "Siren of Renewal",
+      role: "Healer",
+      element: "water",
+      starter: true,
+      unlockHint: "Starting Hero",
+      lore: "Reads the song of moonlit currents to mend shattered armor and restore fallen breath.",
+      baseStats: { hp: 360, atk: 40, def: 15, spd: 100, crit: 0.10 },
+      ability: {
+        name: "Siren's Renewal",
+        desc: "Heals all allies for 195% ATK + 10% Max HP and grants 6s of gentle Regeneration.",
+        type: "team_heal"
+      },
+      colors: { primary: "#22d3ee", secondary: "#0e7490", accent: "#a7f3d0", glow: "#67e8f9" }
+    },
+    {
+      id: "rift_runner",
+      name: "Rift Runner",
+      title: "Gale Duelist",
+      role: "Damage",
+      element: "wind",
+      starter: false,
+      unlockStage: 3,
+      unlockHint: "Clear Campaign Stage 3",
+      lore: "Slices through sea-mist faster than the eye can track, turning momentum into lethal precision.",
+      baseStats: { hp: 315, atk: 58, def: 11, spd: 126, crit: 0.28 },
+      ability: {
+        name: "Chrono Pierce",
+        desc: "Dashes for a guaranteed 255% ATK Critical Strike and surges own Speed by +35% for 6s.",
+        type: "crit_dash"
+      },
+      colors: { primary: "#818cf8", secondary: "#3730a3", accent: "#38bdf8", glow: "#a5b4fc" }
+    },
+    {
+      id: "emberforge",
+      name: "Emberforge",
+      title: "Volcanic Artificer",
+      role: "Damage",
+      element: "fire",
+      starter: false,
+      unlockStage: 6,
+      unlockHint: "Clear Campaign Stage 6",
+      lore: "Where ocean trenches meet molten stone, Emberforge tempers sea-glass cannons of solar fury.",
+      baseStats: { hp: 380, atk: 51, def: 17, spd: 94, crit: 0.14 },
+      ability: {
+        name: "Caldera Nova",
+        desc: "Blasts ALL enemies for 165% ATK fire damage and inflicts Burn for 5 seconds.",
+        type: "aoe_burn"
+      },
+      colors: { primary: "#f97316", secondary: "#9a3412", accent: "#fde047", glow: "#fb923c" }
+    },
+    {
+      id: "shadowfin",
+      name: "Shadowfin",
+      title: "Deepwater Tactician",
+      role: "Specialist",
+      element: "shadow",
+      starter: false,
+      unlockStage: 9,
+      unlockHint: "Clear Campaign Stage 9",
+      lore: "Glides silently beneath crashing breakers to sever enemy focus and shatter heavy defenses.",
+      baseStats: { hp: 335, atk: 56, def: 13, spd: 116, crit: 0.24 },
+      ability: {
+        name: "Abyssal Ambush",
+        desc: "Pierces 50% Defense for 245% ATK damage and disrupts the target's action gauge (-45%).",
+        type: "pierce_disrupt"
+      },
+      colors: { primary: "#a855f7", secondary: "#4c1d95", accent: "#22d3ee", glow: "#c084fc" }
+    },
+    {
+      id: "galeweaver",
+      name: "Galeweaver",
+      title: "Horizon Herald",
+      role: "Support",
+      element: "wind",
+      starter: false,
+      unlockStage: 12,
+      unlockHint: "Clear Campaign Stage 12",
+      lore: "Plays a resonant tide-astrolabe that aligns wind, wave, and courage across the entire squad.",
+      baseStats: { hp: 375, atk: 42, def: 18, spd: 109, crit: 0.12 },
+      ability: {
+        name: "Cyclone Blessing",
+        desc: "Grants allies +25% ATK & +25% Speed for 8s, restores +25 Energy, and blasts all foes for 105% ATK.",
+        type: "team_buff"
+      },
+      colors: { primary: "#34d399", secondary: "#065f46", accent: "#fbbf24", glow: "#6ee7b7" }
+    }
+  ];
+
+  /**
+   * Enemy Archetypes & Bosses
+   */
+  const ENEMIES = {
+    raider: {
+      id: "raider",
+      name: "Tide Raider",
+      role: "Damage",
+      baseStats: { hp: 220, atk: 24, def: 8, spd: 88, crit: 0.08 },
+      colors: { primary: "#64748b", secondary: "#334155", accent: "#f43f5e", glow: "#fb7185" }
+    },
+    crab: {
+      id: "crab",
+      name: "Ironclaw Crab",
+      role: "Tank",
+      baseStats: { hp: 360, atk: 20, def: 22, spd: 72, crit: 0.05 },
+      colors: { primary: "#ef4444", secondary: "#7f1d1d", accent: "#fca5a5", glow: "#f87171" }
+    },
+    siren: {
+      id: "siren",
+      name: "Storm Siren",
+      role: "Specialist",
+      baseStats: { hp: 210, atk: 30, def: 10, spd: 104, crit: 0.14 },
+      colors: { primary: "#06b6d4", secondary: "#164e63", accent: "#facc15", glow: "#22d3ee" }
+    },
+    golem: {
+      id: "golem",
+      name: "Basalt Golem",
+      role: "Tank",
+      baseStats: { hp: 460, atk: 27, def: 28, spd: 65, crit: 0.06 },
+      colors: { primary: "#78716c", secondary: "#292524", accent: "#f97316", glow: "#fb923c" }
+    },
+    stalker: {
+      id: "stalker",
+      name: "Void Stalker",
+      role: "Damage",
+      baseStats: { hp: 255, atk: 36, def: 11, spd: 114, crit: 0.20 },
+      colors: { primary: "#9333ea", secondary: "#3b0764", accent: "#f43f5e", glow: "#c084fc" }
+    },
+    pyro: {
+      id: "pyro",
+      name: "Magma Weaver",
+      role: "Specialist",
+      baseStats: { hp: 270, atk: 34, def: 13, spd: 95, crit: 0.12 },
+      colors: { primary: "#ea580c", secondary: "#431407", accent: "#fde047", glow: "#fb923c" }
+    },
+    // Bosses (every 5 campaign levels)
+    boss_krakenshell: {
+      id: "boss_krakenshell",
+      name: "Dreadnought Shell",
+      role: "Boss",
+      isBoss: true,
+      baseStats: { hp: 1150, atk: 42, def: 26, spd: 86, crit: 0.12 },
+      specialName: "Tidal Slam",
+      colors: { primary: "#0d9488", secondary: "#134e4a", accent: "#fbbf24", glow: "#2dd4bf" }
+    },
+    boss_maelstrom: {
+      id: "boss_maelstrom",
+      name: "Archon Maelstrom",
+      role: "Boss",
+      isBoss: true,
+      baseStats: { hp: 1650, atk: 54, def: 24, spd: 102, crit: 0.16 },
+      specialName: "Cyclone Surge",
+      colors: { primary: "#0284c7", secondary: "#1e3a8a", accent: "#fde047", glow: "#38bdf8" }
+    },
+    boss_cindermaw: {
+      id: "boss_cindermaw",
+      name: "Lord Cindermaw",
+      role: "Boss",
+      isBoss: true,
+      baseStats: { hp: 2250, atk: 65, def: 30, spd: 94, crit: 0.15 },
+      specialName: "Abyssal Eruption",
+      colors: { primary: "#dc2626", secondary: "#450a0a", accent: "#fbbf24", glow: "#f97316" }
+    },
+    boss_leviathan: {
+      id: "boss_leviathan",
+      name: "Leviathan Sovereign",
+      role: "Boss",
+      isBoss: true,
+      baseStats: { hp: 3100, atk: 78, def: 35, spd: 106, crit: 0.18 },
+      specialName: "Sovereign Tidebreak",
+      colors: { primary: "#6366f1", secondary: "#1e1b4b", accent: "#22d3ee", glow: "#a855f7" }
+    }
+  };
+
+  /**
+   * 20 Main Campaign Stages (Boss every 5 stages) + Secret Stage "Nicholas Haven"
+   */
+  const CAMPAIGN_STAGES = [
+    { id: 1, name: "Sunlit Shallows", subtitle: "First Skirmish", scale: 0.72, enemies: ["raider", "raider"], pearls: 55, shards: 0 },
+    { id: 2, name: "Driftwood Cove", subtitle: "Coastal Ambush", scale: 0.82, enemies: ["raider", "crab", "raider"], pearls: 65, shards: 0 },
+    { id: 3, name: "Whispering Reef", subtitle: "Unlocks Rift Runner", scale: 0.92, enemies: ["crab", "siren", "raider"], pearls: 80, shards: 1, unlockHero: "rift_runner" },
+    { id: 4, name: "Sunken Causeway", subtitle: "Rising Swell", scale: 1.02, enemies: ["crab", "siren", "siren"], pearls: 90, shards: 0 },
+    { id: 5, name: "Coral Bastion", subtitle: "BOSS: Dreadnought Shell", isBoss: true, scale: 1.05, enemies: ["raider", "boss_krakenshell", "siren"], pearls: 145, shards: 3 },
+
+    { id: 6, name: "Glassblower Atoll", subtitle: "Unlocks Emberforge", scale: 1.15, enemies: ["golem", "pyro", "raider"], pearls: 110, shards: 1, unlockHero: "emberforge" },
+    { id: 7, name: "Tidepool Ruins", subtitle: "Ancient Echoes", scale: 1.25, enemies: ["golem", "siren", "pyro", "raider"], pearls: 120, shards: 0 },
+    { id: 8, name: "Stormwatch Pier", subtitle: "Lightning Squall", scale: 1.35, enemies: ["crab", "siren", "stalker", "siren"], pearls: 130, shards: 1 },
+    { id: 9, name: "Moonshadow Trench", subtitle: "Unlocks Shadowfin", scale: 1.45, enemies: ["golem", "stalker", "stalker", "pyro"], pearls: 145, shards: 2, unlockHero: "shadowfin" },
+    { id: 10, name: "Eye of the Maelstrom", subtitle: "BOSS: Archon Maelstrom", isBoss: true, scale: 1.35, enemies: ["siren", "boss_maelstrom", "golem", "siren"], pearls: 210, shards: 4 },
+
+    { id: 11, name: "Sapphire Breakwater", subtitle: "Deep Currents", scale: 1.60, enemies: ["golem", "crab", "pyro", "stalker"], pearls: 165, shards: 1 },
+    { id: 12, name: "Astrolabe Spire", subtitle: "Unlocks Galeweaver", scale: 1.72, enemies: ["golem", "siren", "stalker", "pyro"], pearls: 185, shards: 2, unlockHero: "galeweaver" },
+    { id: 13, name: "Obsidian Jetty", subtitle: "Molten Surf", scale: 1.86, enemies: ["golem", "pyro", "pyro", "stalker", "raider"], pearls: 195, shards: 1 },
+    { id: 14, name: "Kraken's Spine", subtitle: "Abyssal Vanguard", scale: 2.00, enemies: ["golem", "crab", "stalker", "siren", "pyro"], pearls: 210, shards: 2 },
+    { id: 15, name: "Caldera Throne", subtitle: "BOSS: Lord Cindermaw", isBoss: true, scale: 1.75, enemies: ["golem", "pyro", "boss_cindermaw", "stalker"], pearls: 290, shards: 5 },
+
+    { id: 16, name: "Starfall Lagoon", subtitle: "Celestial Tides", scale: 2.22, enemies: ["golem", "stalker", "stalker", "siren", "pyro"], pearls: 240, shards: 2 },
+    { id: 17, name: "Tempest Horizon", subtitle: "Gale Force", scale: 2.40, enemies: ["golem", "golem", "siren", "siren", "stalker"], pearls: 260, shards: 2 },
+    { id: 18, name: "Abyssal Gate", subtitle: "Final Approach", scale: 2.60, enemies: ["golem", "pyro", "stalker", "stalker", "siren"], pearls: 285, shards: 3 },
+    { id: 19, name: "Shattered Crown", subtitle: "Royal Guard", scale: 2.82, enemies: ["golem", "golem", "pyro", "stalker", "siren"], pearls: 315, shards: 3 },
+    { id: 20, name: "Heart of Tidebreak", subtitle: "FINAL BOSS: Leviathan Sovereign", isBoss: true, scale: 2.35, enemies: ["golem", "siren", "boss_leviathan", "pyro", "stalker"], pearls: 500, shards: 10 }
+  ];
+
+  /**
+   * Secret Sanctuary Stage (Section 5 Easter Egg)
+   * Unlocked by earning the hidden achievement "The Quiet Protector".
+   */
+  const SECRET_STAGE = {
+    id: "nicholas_haven",
+    name: "Nicholas Haven",
+    subtitle: "Secret Coastal Sanctuary • Starlit Reflections",
+    isSecret: true,
+    scale: 1.45,
+    enemies: ["crab", "siren", "stalker", "golem"],
+    pearls: 260,
+    shards: 5
+  };
+
+  /**
+   * Equippable Relics (including the rare "North Star Compass" Easter Egg)
+   */
+  const RELICS = [
+    {
+      id: "tidal_shell",
+      name: "Resonant Shell",
+      rarity: "Common",
+      desc: "+10% Team Max Health in all battles.",
+      unlockHint: "Unlocked from the start",
+      starter: true,
+      bonus: { hpMult: 0.10 }
+    },
+    {
+      id: "storm_capacitor",
+      name: "Stormglass Coil",
+      rarity: "Rare",
+      desc: "+12% Team Attack Power & +10 Starting Energy.",
+      unlockHint: "Clear Campaign Stage 5",
+      bonus: { atkMult: 0.12, startEnergy: 10 }
+    },
+    {
+      id: "north_star_compass",
+      name: "North Star Compass",
+      rarity: "Mythic Keepsake",
+      desc: "\"Some things are worth finding your way back to.\" (+12% Team Speed, +10% Crit Chance, +10% Max HP)",
+      unlockHint: "Clear Stage 10 or unlock Nicholas Haven",
+      bonus: { spdMult: 0.12, critBonus: 0.10, hpMult: 0.10 }
+    },
+    {
+      id: "leviathan_heart",
+      name: "Sovereign Prism",
+      rarity: "Legendary",
+      desc: "+18% Team Attack, +15% Defense, and +15 Starting Energy.",
+      unlockHint: "Defeat Leviathan Sovereign (Stage 20)",
+      bonus: { atkMult: 0.18, defMult: 0.15, startEnergy: 15 }
+    }
+  ];
+
+  /**
+   * Player Achievements (12 total, including hidden "The Quiet Protector")
+   */
+  const ACHIEVEMENTS = [
+    { id: "first_victory", name: "First Tide", desc: "Win your very first battle.", rewardPearls: 50, rewardShards: 1 },
+    { id: "squad_of_five", name: "Full Horizon", desc: "Deploy a full squad of 5 heroes into battle.", rewardPearls: 80, rewardShards: 1 },
+    { id: "upgrade_hero", name: "Tempered Steel", desc: "Upgrade any hero to Level 5.", rewardPearls: 75, rewardShards: 1 },
+    { id: "boss_5", name: "Shell Breaker", desc: "Defeat Dreadnought Shell at Stage 5.", rewardPearls: 100, rewardShards: 2 },
+    { id: "boss_10", name: "Calm the Squall", desc: "Defeat Archon Maelstrom at Stage 10.", rewardPearls: 150, rewardShards: 3 },
+    { id: "boss_15", name: "Ash & Tide", desc: "Defeat Lord Cindermaw at Stage 15.", rewardPearls: 200, rewardShards: 4 },
+    { id: "boss_20", name: "Tidebreaker", desc: "Complete the 20-stage Campaign.", rewardPearls: 350, rewardShards: 6 },
+    { id: "survival_5", name: "Enduring Coast", desc: "Reach Wave 5 in Tidal Survival.", rewardPearls: 100, rewardShards: 2 },
+    { id: "survival_10", name: "Unbroken Wave", desc: "Reach Wave 10 in Tidal Survival.", rewardPearls: 200, rewardShards: 4 },
+    { id: "all_heroes", name: "Council of Elements", desc: "Unlock all 7 elemental heroes.", rewardPearls: 220, rewardShards: 4 },
+    { id: "veteran_10", name: "Master Strategist", desc: "Win 15 total battles.", rewardPearls: 140, rewardShards: 2 },
+    {
+      id: "quiet_protector",
+      name: "The Quiet Protector",
+      desc: "Strength is knowing who to protect.",
+      hiddenHint: "Hidden Honor — Shield and preserve every ally against a Boss.",
+      secret: true,
+      rewardPearls: 250,
+      rewardShards: 5
+    }
+  ];
+
+  /**
+   * Computes a hero's effective stats at a given level (plus optional relic bonuses).
+   */
+  function getHeroStats(heroId, level = 1, relicId = null) {
+    const hero = HEROES.find((h) => h.id === heroId);
+    if (!hero) return null;
+
+    const L = TB.CONFIG.LEVEL_SCALING;
+    const lvOffset = Math.max(0, level - 1);
+    let hp = Math.round(hero.baseStats.hp * (1 + lvOffset * L.HP_PER_LEVEL));
+    let atk = Math.round(hero.baseStats.atk * (1 + lvOffset * L.ATK_PER_LEVEL));
+    let def = Math.round(hero.baseStats.def * (1 + lvOffset * L.DEF_PER_LEVEL));
+    let spd = Math.round(hero.baseStats.spd + lvOffset * L.SPD_PER_LEVEL);
+    let crit = hero.baseStats.crit;
+
+    if (relicId) {
+      const relic = RELICS.find((r) => r.id === relicId);
+      if (relic && relic.bonus) {
+        if (relic.bonus.hpMult) hp = Math.round(hp * (1 + relic.bonus.hpMult));
+        if (relic.bonus.atkMult) atk = Math.round(atk * (1 + relic.bonus.atkMult));
+        if (relic.bonus.defMult) def = Math.round(def * (1 + relic.bonus.defMult));
+        if (relic.bonus.spdMult) spd = Math.round(spd * (1 + relic.bonus.spdMult));
+        if (relic.bonus.critBonus) crit = Math.min(0.75, crit + relic.bonus.critBonus);
+      }
+    }
+
+    const power = Math.round(hp * 0.35 + atk * 4.2 + def * 3.1 + spd * 1.4);
+    return { hp, atk, def, spd, crit, power };
+  }
+
+  function getUpgradeCost(currentLevel) {
+    const C = TB.CONFIG;
+    return Math.round(C.UPGRADE_COST_BASE * Math.pow(C.UPGRADE_COST_MULT, Math.max(0, currentLevel - 1)));
+  }
+
+  TB.DATA = {
+    HEROES,
+    ENEMIES,
+    CAMPAIGN_STAGES,
+    SECRET_STAGE,
+    RELICS,
+    ACHIEVEMENTS,
+    getHeroStats,
+    getUpgradeCost
+  };
+})(window.Tidebreak);
+```
+
+---
+
+### 5. `js/save.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/save.js — Versioned Persistence, Backup Export/Import & Achievements
+ * ============================================================================
+ * Purpose:
+ *   Safely reads and writes player progress to localStorage using versioned
+ *   JSON data, error recovery, forward-compatible defaults, and JSON file
+ *   export/import. Evaluates unlocks & achievements after gameplay events.
+ *
+ * Relates to:
+ *   - config.js (SAVE_KEY, SAVE_VERSION)
+ *   - data.js (starter heroes, achievements, relics)
+ *   - ui.js (triggers toast notifications on new unlocks)
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  function createDefaultState() {
+    return {
+      schema: "tidebreak-save",
+      version: TB.CONFIG.SAVE_VERSION,
+      pearls: 90,
+      shards: 0,
+      unlockedHeroes: ["reef_guardian", "stormbreaker", "tideweaver"],
+      heroLevels: {
+        reef_guardian: 1,
+        stormbreaker: 1,
+        tideweaver: 1,
+        rift_runner: 1,
+        emberforge: 1,
+        shadowfin: 1,
+        galeweaver: 1
+      },
+      squad: ["reef_guardian", "stormbreaker", "tideweaver"],
+      highestStageCleared: 0,
+      secretHavenUnlocked: false,
+      secretHavenCleared: false,
+      survivalBestWave: 0,
+      unlockedRelics: ["tidal_shell"],
+      equippedRelic: "tidal_shell",
+      achievements: [],
+      stats: {
+        battlesWon: 0,
+        battlesPlayed: 0
+      },
+      settings: {
+        soundEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
+        reducedMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        battleSpeed: 1,
+        autoBattle: false
+      }
+    };
+  }
+
+  /**
+   * Deep-merges loaded save objects against defaults so missing fields or
+   * new game updates never leave undefined properties.
+   */
+  function sanitizeSave(raw) {
+    const def = createDefaultState();
+    if (!raw || typeof raw !== "object") return def;
+
+    const merged = {
+      ...def,
+      pearls: Number.isFinite(raw.pearls) && raw.pearls >= 0 ? Math.floor(raw.pearls) : def.pearls,
+      shards: Number.isFinite(raw.shards) && raw.shards >= 0 ? Math.floor(raw.shards) : def.shards,
+      highestStageCleared: Number.isFinite(raw.highestStageCleared) ? Math.max(0, Math.min(20, raw.highestStageCleared)) : 0,
+      secretHavenUnlocked: Boolean(raw.secretHavenUnlocked),
+      secretHavenCleared: Boolean(raw.secretHavenCleared),
+      survivalBestWave: Number.isFinite(raw.survivalBestWave) ? Math.max(0, Math.floor(raw.survivalBestWave)) : 0,
+      equippedRelic: typeof raw.equippedRelic === "string" ? raw.equippedRelic : def.equippedRelic,
+      stats: { ...def.stats, ...(raw.stats || {}) },
+      settings: { ...def.settings, ...(raw.settings || {}) }
+    };
+
+    const validHeroIds = new Set(TB.DATA.HEROES.map((h) => h.id));
+    if (Array.isArray(raw.unlockedHeroes)) {
+      const filtered = raw.unlockedHeroes.filter((id) => validHeroIds.has(id));
+      merged.unlockedHeroes = Array.from(new Set([...def.unlockedHeroes, ...filtered]));
+    }
+
+    if (raw.heroLevels && typeof raw.heroLevels === "object") {
+      for (const id of validHeroIds) {
+        const lv = raw.heroLevels[id];
+        if (Number.isFinite(lv) && lv >= 1) {
+          merged.heroLevels[id] = Math.min(TB.CONFIG.MAX_HERO_LEVEL, Math.floor(lv));
+        }
+      }
+    }
+
+    if (Array.isArray(raw.squad)) {
+      const unlockedSet = new Set(merged.unlockedHeroes);
+      const cleanSquad = raw.squad.filter((id) => unlockedSet.has(id)).slice(0, TB.CONFIG.MAX_SQUAD_SIZE);
+      merged.squad = cleanSquad.length > 0 ? Array.from(new Set(cleanSquad)) : [...def.squad];
+    }
+
+    const validRelicIds = new Set(TB.DATA.RELICS.map((r) => r.id));
+    if (Array.isArray(raw.unlockedRelics)) {
+      merged.unlockedRelics = Array.from(new Set(["tidal_shell", ...raw.unlockedRelics.filter((id) => validRelicIds.has(id))]));
+    }
+    if (!merged.unlockedRelics.includes(merged.equippedRelic)) {
+      merged.equippedRelic = merged.unlockedRelics[0] || null;
+    }
+
+    const validAchIds = new Set(TB.DATA.ACHIEVEMENTS.map((a) => a.id));
+    if (Array.isArray(raw.achievements)) {
+      merged.achievements = Array.from(new Set(raw.achievements.filter((id) => validAchIds.has(id))));
+    }
+
+    return merged;
+  }
+
+  function loadState() {
+    try {
+      const str = window.localStorage.getItem(TB.CONFIG.SAVE_KEY);
+      if (!str) return createDefaultState();
+      const parsed = JSON.parse(str);
+      return sanitizeSave(parsed);
+    } catch (err) {
+      console.warn("Tidebreak: Could not read localStorage, falling back to safe defaults.", err);
+      return createDefaultState();
+    }
+  }
+
+  function saveState(state) {
+    try {
+      const payload = JSON.stringify({ ...state, version: TB.CONFIG.SAVE_VERSION, savedAt: new Date().toISOString() });
+      window.localStorage.setItem(TB.CONFIG.SAVE_KEY, payload);
+      return true;
+    } catch (err) {
+      console.warn("Tidebreak: Failed to persist save to localStorage.", err);
+      return false;
+    }
+  }
+
+  function exportSaveFile(state) {
+    const payload = JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateTag = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `tidebreak-save-${dateTag}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function parseImportedSave(jsonText) {
+    const parsed = JSON.parse(jsonText);
+    if (!parsed || typeof parsed !== "object" || parsed.schema !== "tidebreak-save") {
+      throw new Error("Invalid Tidebreak save file.");
+    }
+    return sanitizeSave(parsed);
+  }
+
+  /**
+   * Checks & grants a specific achievement if not yet earned.
+   * Returns the achievement definition if newly unlocked, or null.
+   */
+  function tryUnlockAchievement(state, achId) {
+    if (state.achievements.includes(achId)) return null;
+    const def = TB.DATA.ACHIEVEMENTS.find((a) => a.id === achId);
+    if (!def) return null;
+    state.achievements.push(achId);
+    state.pearls += def.rewardPearls || 0;
+    state.shards += def.rewardShards || 0;
+
+    // Unlock Nicholas Haven when earning The Quiet Protector!
+    if (achId === "quiet_protector") {
+      state.secretHavenUnlocked = true;
+      if (!state.unlockedRelics.includes("north_star_compass")) {
+        state.unlockedRelics.push("north_star_compass");
+      }
+    }
+    return def;
+  }
+
+  function tryUnlockRelic(state, relicId) {
+    if (state.unlockedRelics.includes(relicId)) return null;
+    const def = TB.DATA.RELICS.find((r) => r.id === relicId);
+    if (!def) return null;
+    state.unlockedRelics.push(relicId);
+    return def;
+  }
+
+  TB.SAVE = {
+    createDefaultState,
+    loadState,
+    saveState,
+    exportSaveFile,
+    parseImportedSave,
+    tryUnlockAchievement,
+    tryUnlockRelic
+  };
+})(window.Tidebreak);
+```
+
+---
+
+### 6. `js/audio.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/audio.js — Procedural Web Audio API Sound Effects & Ambient Soundtrack
+ * ============================================================================
+ * Purpose:
+ *   Synthesizes all combat SFX (lightning crackle, tidal heal chime, fire
+ *   whoosh, shield clang, crit burst, victory/defeat chords) and a gentle
+ *   pentatonic coastal ambient loop using pure Web Audio API oscillators.
+ *   Requires zero external MP3/OGG files and handles iOS/Android autoplay unlock.
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  let ctx = null;
+  let musicTimer = null;
+  let musicStep = 0;
+
+  let settings = {
+    soundEnabled: true,
+    musicEnabled: true,
+    sfxEnabled: true
+  };
+
+  function ensureContext() {
+    if (!ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      ctx = new AudioCtx();
+    }
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    return ctx;
+  }
+
+  function syncSettings(newSettings) {
+    settings = { ...settings, ...newSettings };
+    if (!settings.soundEnabled || !settings.musicEnabled) {
+      stopMusic();
+    } else if (ctx && ctx.state === "running") {
+      startMusic();
+    }
+  }
+
+  function unlock() {
+    const c = ensureContext();
+    if (c && settings.soundEnabled && settings.musicEnabled) {
+      startMusic();
+    }
+  }
+
+  function playTone({ freq = 440, endFreq = null, type = "sine", duration = 0.16, gain = 0.08, delay = 0 }) {
+    if (!settings.soundEnabled || !settings.sfxEnabled) return;
+    const c = ensureContext();
+    if (!c) return;
+
+    const now = c.currentTime + delay;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq !== null) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+    }
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(gain, now + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(g);
+    g.connect(c.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  function playSfx(name) {
+    if (!settings.soundEnabled || !settings.sfxEnabled) return;
+    switch (name) {
+      case "click":
+        playTone({ freq: 520, endFreq: 660, type: "triangle", duration: 0.06, gain: 0.045 });
+        break;
+      case "attack":
+        playTone({ freq: 240, endFreq: 110, type: "triangle", duration: 0.11, gain: 0.06 });
+        break;
+      case "crit":
+        playTone({ freq: 440, endFreq: 880, type: "sawtooth", duration: 0.14, gain: 0.07 });
+        playTone({ freq: 660, endFreq: 330, type: "triangle", duration: 0.18, gain: 0.06, delay: 0.03 });
+        break;
+      case "lightning":
+        playTone({ freq: 920, endFreq: 210, type: "sawtooth", duration: 0.22, gain: 0.07 });
+        playTone({ freq: 620, endFreq: 140, type: "square", duration: 0.16, gain: 0.045, delay: 0.05 });
+        break;
+      case "heal":
+        playTone({ freq: 523.25, type: "sine", duration: 0.22, gain: 0.06 });
+        playTone({ freq: 659.25, type: "sine", duration: 0.24, gain: 0.06, delay: 0.07 });
+        playTone({ freq: 783.99, type: "sine", duration: 0.28, gain: 0.06, delay: 0.14 });
+        break;
+      case "shield":
+        playTone({ freq: 330, endFreq: 495, type: "triangle", duration: 0.24, gain: 0.075 });
+        playTone({ freq: 660, type: "sine", duration: 0.26, gain: 0.05, delay: 0.05 });
+        break;
+      case "fire":
+        playTone({ freq: 180, endFreq: 75, type: "sawtooth", duration: 0.28, gain: 0.08 });
+        playTone({ freq: 310, endFreq: 120, type: "triangle", duration: 0.22, gain: 0.05, delay: 0.04 });
+        break;
+      case "shadow":
+        playTone({ freq: 760, endFreq: 190, type: "triangle", duration: 0.18, gain: 0.07 });
+        break;
+      case "victory":
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+          playTone({ freq: f, type: "triangle", duration: 0.36, gain: 0.075, delay: idx * 0.09 });
+        });
+        break;
+      case "defeat":
+        [349.23, 311.13, 261.63, 196.0].forEach((f, idx) => {
+          playTone({ freq: f, type: "sine", duration: 0.4, gain: 0.07, delay: idx * 0.14 });
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
+   * Gentle coastal pentatonic synth arpeggio (D minor / F major coastal palette)
+   */
+  const MUSIC_NOTES = [293.66, 349.23, 440.0, 523.25, 392.0, 440.0, 349.23, 261.63];
+
+  function startMusic() {
+    if (musicTimer || !settings.soundEnabled || !settings.musicEnabled) return;
+    const c = ensureContext();
+    if (!c) return;
+
+    musicTimer = window.setInterval(() => {
+      if (!settings.soundEnabled || !settings.musicEnabled || !ctx || ctx.state !== "running") return;
+      const note = MUSIC_NOTES[musicStep % MUSIC_NOTES.length];
+      musicStep++;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(note, now);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.022, now + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.15);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.2);
+    }, 850);
+  }
+
+  function stopMusic() {
+    if (musicTimer) {
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+  }
+
+  TB.AUDIO = {
+    unlock,
+    syncSettings,
+    playSfx,
+    startMusic,
+    stopMusic
+  };
+})(window.Tidebreak);
+```
+
+---
+
+### 7. `js/art.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/art.js — 2.5D Isometric Arena, Original Character Art, VFX & Easter Eggs
+ * ============================================================================
+ * Purpose:
+ *   Draws all visual elements procedurally on HTML5 Canvas 2D:
+ *   - 2.5D isometric coastal arena with ocean horizon, wave shimmer, stone
+ *     elemental platform, ley-line tiles, subtle "N + A" pillar rune carving,
+ *     subtle 8-spoked bicycle-wheel bronze tide-astrolabe, and rare passing
+ *     marine life (manta ray, sea turtle, and Blaze the white lionhead bunny).
+ *   - Original multi-layered vector sprites for all 7 heroes & enemy/boss types.
+ *   - Hero portraits for UI roster cards & bottom battle dock.
+ *   - Projectiles, lightning chains, shields, healing motes, & floating text.
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  /**
+   * Subtle ambient Easter egg state for the arena background.
+   */
+  const easterState = {
+    swimmerType: "ray", // "ray" | "turtle"
+    swimmerX: -120,
+    swimmerY: 0.25,
+    swimmerTimer: 6,
+    bunnyVisible: false,
+    bunnyTimer: 11
+  };
+
+  /**
+   * Draws an individual original character sprite (Hero, Enemy, or Boss).
+   * Supports breathing bob, lunge offset, hit recoil flash, shields, and KO fade.
+   */
+  function drawCharacterSprite(ctx, unit, x, y, scale, time, facingRight) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const isDead = unit.hp <= 0;
+    const alpha = isDead ? Math.max(0, 1 - (unit.deathTimer || 0) * 1.6) : 1;
+    if (alpha <= 0.01) {
+      ctx.restore();
+      return;
+    }
+    ctx.globalAlpha = alpha;
+
+    const bob = isDead ? 0 : Math.sin(time * 3.2 + unit.animSeed) * 2.5 * scale;
+    const lunge = (unit.lunge || 0) * (facingRight ? 1 : -1) * scale;
+    const hitShake = (unit.hitFlash || 0) > 0 ? Math.sin(time * 55) * 3 * scale : 0;
+
+    // Ground ellipse shadow
+    ctx.fillStyle = "rgba(2, 6, 20, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(0, 26 * scale, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Target reticle under selected enemy
+    if (unit.isTargeted && !isDead) {
+      ctx.save();
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 2.2 * scale;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.ellipse(0, 26 * scale, 28 * scale, 11 * scale, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.translate(lunge + hitShake, bob);
+    if (!facingRight) ctx.scale(-1, 1);
+
+    const bossScale = unit.isBoss ? 1.32 : 1;
+    ctx.scale(scale * bossScale, scale * bossScale);
+
+    const c = unit.colors || { primary: "#38bdf8", secondary: "#1e3a8a", accent: "#fbbf24", glow: "#7dd3fc" };
+
+    // Elemental aura glow when energy is full
+    if (unit.energy >= 100 && !isDead) {
+      ctx.save();
+      ctx.strokeStyle = "#fde047";
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.55 + Math.sin(time * 7) * 0.25;
+      ctx.beginPath();
+      ctx.arc(0, -4, 30, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Dispatch distinct silhouette & equipment per hero / enemy archetype
+    drawSilhouetteById(ctx, unit.templateId || unit.id, c, time, unit.hitFlash > 0);
+
+    // Shield dome overlay if unit currently has shield HP
+    if ((unit.shield || 0) > 0 && !isDead) {
+      ctx.save();
+      ctx.scale(facingRight ? 1 : -1, 1);
+      ctx.strokeStyle = "rgba(45, 212, 191, 0.85)";
+      ctx.fillStyle = "rgba(20, 184, 166, 0.14)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, -4, 31, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawSilhouetteById(ctx, id, c, time, hitFlash) {
+    const flashFill = hitFlash ? "#ffffff" : null;
+
+    // Cloak / Cape / Fins behind torso
+    ctx.fillStyle = flashFill || c.secondary;
+    if (id === "stormbreaker" || id === "tideweaver" || id === "galeweaver" || id === "siren") {
+      ctx.beginPath();
+      ctx.moveTo(-4, -14);
+      ctx.quadraticCurveTo(-24, 4, -18, 22);
+      ctx.lineTo(4, 18);
+      ctx.closePath();
+      ctx.fill();
+    } else if (id === "shadowfin" || id === "stalker") {
+      // Fin dorsal crest
+      ctx.beginPath();
+      ctx.moveTo(-8, -22);
+      ctx.lineTo(-22, -4);
+      ctx.lineTo(-10, 14);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Specialized Monster Shapes for Crabs, Golems & Bosses
+    if (id === "crab" || id === "boss_krakenshell") {
+      // Armored Crab / Dreadnought Shell
+      ctx.fillStyle = flashFill || c.secondary;
+      ctx.beginPath();
+      ctx.ellipse(0, 2, 24, 17, 0, Math.PI, 0, false);
+      ctx.lineTo(24, 14);
+      ctx.lineTo(-24, 14);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = flashFill || c.primary;
+      ctx.beginPath();
+      ctx.ellipse(0, 4, 20, 13, 0, Math.PI, 0, false);
+      ctx.fill();
+
+      // Claws
+      ctx.fillStyle = flashFill || c.accent;
+      ctx.beginPath();
+      ctx.arc(22, 0, 8, 0.3, Math.PI * 1.7);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-20, 4, 6, 0.3, Math.PI * 1.7);
+      ctx.fill();
+
+      // Glowing eyes
+      ctx.fillStyle = "#fde047";
+      ctx.beginPath();
+      ctx.arc(7, -3, 2.5, 0, Math.PI * 2);
+      ctx.arc(14, -3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
+    if (id === "golem" || id === "boss_cindermaw") {
+      // Heavy Elemental Stone Titan
+      ctx.fillStyle = flashFill || c.secondary;
+      ctx.beginPath();
+      ctx.roundRect(-18, -18, 36, 36, 8);
+      ctx.fill();
+      ctx.fillStyle = flashFill || c.primary;
+      ctx.beginPath();
+      ctx.roundRect(-22, -14, 12, 24, 5);
+      ctx.roundRect(10, -14, 12, 24, 5);
+      ctx.fill();
+      // Molten Core Rune
+      ctx.fillStyle = flashFill || c.accent;
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(7, 0);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(-7, 0);
+      ctx.closePath();
+      ctx.fill();
+      // Visor slit
+      ctx.fillStyle = "#fde047";
+      ctx.fillRect(-7, -23, 14, 4);
+      return;
+    }
+
+    if (id === "boss_leviathan") {
+      // Leviathan Sovereign — Sea Serpent Crowned Dragon
+      ctx.fillStyle = flashFill || c.secondary;
+      ctx.beginPath();
+      ctx.moveTo(-22, 20);
+      ctx.quadraticCurveTo(-18, -10, 0, -28);
+      ctx.quadraticCurveTo(22, -12, 18, 18);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = flashFill || c.primary;
+      ctx.beginPath();
+      ctx.ellipse(2, -4, 15, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Trident Crown
+      ctx.strokeStyle = flashFill || c.accent;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-9, -24);
+      ctx.lineTo(-12, -36);
+      ctx.moveTo(0, -26);
+      ctx.lineTo(0, -40);
+      ctx.moveTo(9, -24);
+      ctx.lineTo(12, -36);
+      ctx.stroke();
+
+      ctx.fillStyle = "#22d3ee";
+      ctx.beginPath();
+      ctx.arc(6, -15, 3, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
+    // Standard Humanoid Hero / Raider / Boss Silhouette
+    // Legs / Boots
+    ctx.fillStyle = flashFill || "#0f172a";
+    ctx.fillRect(-8, 8, 6, 14);
+    ctx.fillRect(3, 8, 6, 14);
+
+    // Armored Torso
+    ctx.fillStyle = flashFill || c.primary;
+    ctx.beginPath();
+    ctx.roundRect(-11, -13, 22, 24, 6);
+    ctx.fill();
+
+    // Chest Emblem / Sash
+    ctx.fillStyle = flashFill || c.accent;
+    ctx.beginPath();
+    ctx.moveTo(0, -9);
+    ctx.lineTo(5, -2);
+    ctx.lineTo(0, 5);
+    ctx.lineTo(-5, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Head / Helmet
+    ctx.fillStyle = flashFill || "#e2e8f0";
+    ctx.beginPath();
+    ctx.arc(0, -21, 9.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Helm / Crest / Hair per hero
+    ctx.fillStyle = flashFill || c.secondary;
+    if (id === "reef_guardian") {
+      // Heavy coral visor helmet + tower shield
+      ctx.beginPath();
+      ctx.arc(0, -22, 10.5, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.fill();
+      // Tower Shield in front
+      ctx.fillStyle = flashFill || c.primary;
+      ctx.strokeStyle = c.accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(9, -15, 11, 30, 4);
+      ctx.fill();
+      ctx.stroke();
+    } else if (id === "stormbreaker" || id === "boss_maelstrom") {
+      // Horned storm circlet + lightning halberd
+      ctx.strokeStyle = c.accent;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-6, -28);
+      ctx.lineTo(-10, -37);
+      ctx.moveTo(6, -28);
+      ctx.lineTo(10, -37);
+      ctx.stroke();
+
+      // Halberd staff
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(14, 20);
+      ctx.lineTo(18, -30);
+      ctx.stroke();
+      ctx.fillStyle = c.accent;
+      ctx.beginPath();
+      ctx.arc(18, -32, 4.5 + Math.sin(time * 6) * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (id === "tideweaver" || id === "siren") {
+      // Flowing aqua hair & pearl staff
+      ctx.fillStyle = flashFill || c.primary;
+      ctx.beginPath();
+      ctx.arc(-2, -23, 10, Math.PI * 0.7, Math.PI * 2.0);
+      ctx.fill();
+      ctx.strokeStyle = c.accent;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(13, 18);
+      ctx.lineTo(15, -24);
+      ctx.stroke();
+      ctx.fillStyle = "#67e8f9";
+      ctx.beginPath();
+      ctx.arc(15, -26, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (id === "rift_runner") {
+      // Sleek scarf & twin aero blades
+      ctx.fillStyle = flashFill || c.accent;
+      ctx.beginPath();
+      ctx.moveTo(-6, -15);
+      ctx.lineTo(-22, -18 + Math.sin(time * 8) * 3);
+      ctx.lineTo(-18, -11);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#e0f2fe";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(10, 2);
+      ctx.lineTo(24, -10);
+      ctx.stroke();
+    } else if (id === "emberforge" || id === "pyro") {
+      // Brazier shoulder pauldrons & solar hammer
+      ctx.fillStyle = flashFill || c.accent;
+      ctx.beginPath();
+      ctx.arc(-11, -11, 5, 0, Math.PI * 2);
+      ctx.arc(11, -11, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(13, 14);
+      ctx.lineTo(19, -20);
+      ctx.stroke();
+      ctx.fillStyle = c.primary;
+      ctx.fillRect(13, -25, 13, 8);
+    } else if (id === "shadowfin" || id === "stalker") {
+      // Hood & glowing twin daggers
+      ctx.beginPath();
+      ctx.moveTo(-11, -20);
+      ctx.lineTo(0, -34);
+      ctx.lineTo(11, -20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = c.accent;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(10, 4);
+      ctx.lineTo(23, -4);
+      ctx.stroke();
+    } else if (id === "galeweaver") {
+      // Horizon Crest & spinning wind-astrolabe ring
+      ctx.strokeStyle = c.accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(17, -10, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(17, -18);
+      ctx.lineTo(17, -2);
+      ctx.moveTo(9, -10);
+      ctx.lineTo(25, -10);
+      ctx.stroke();
+    } else {
+      // Raider cutlass
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(11, 2);
+      ctx.lineTo(22, -12);
+      ctx.stroke();
+    }
+
+    // Glowing Visor Eyes
+    ctx.fillStyle = hitFlash ? "#0f172a" : c.glow;
+    ctx.fillRect(2, -23, 5, 2.5);
+  }
+
+  /**
+   * Renders a hero portrait onto a small UI Canvas (Roster cards & Battle Dock).
+   */
+  function drawPortrait(canvas, heroDef) {
+    if (!canvas || !heroDef) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const grad = ctx.createRadialGradient(w * 0.5, h * 0.4, 4, w * 0.5, h * 0.5, w * 0.6);
+    grad.addColorStop(0, heroDef.colors.primary + "44");
+    grad.addColorStop(1, "#061124");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    drawCharacterSprite(
+      ctx,
+      {
+        templateId: heroDef.id,
+        colors: heroDef.colors,
+        hp: 100,
+        energy: 0,
+        animSeed: 0
+      },
+      w * 0.5,
+      h * 0.62,
+      w / 82,
+      0.5,
+      true
+    );
+  }
+
+  /**
+   * Renders the animated 2.5D Isometric Coastal Elemental Arena + Easter eggs.
+   */
+  function drawArenaBackground(ctx, width, height, time, dt, isSecretHaven, reducedMotion) {
+    // 1. Sky & Ocean Gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+    if (isSecretHaven) {
+      skyGrad.addColorStop(0, "#0b1e3b");
+      skyGrad.addColorStop(0.42, "#134e6f");
+      skyGrad.addColorStop(1, "#061224");
+    } else {
+      skyGrad.addColorStop(0, "#050d1e");
+      skyGrad.addColorStop(0.38, "#0b2447");
+      skyGrad.addColorStop(1, "#040c1a");
+    }
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Stars & Moon / North Star
+    ctx.fillStyle = "rgba(224, 242, 254, 0.7)";
+    for (let i = 0; i < 18; i++) {
+      const sx = ((i * 97) % 100) * 0.01 * width;
+      const sy = ((i * 53) % 28) * 0.01 * height;
+      const r = i % 3 === 0 ? 1.5 : 0.9;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // North Star sparkle
+    const nsX = width * 0.5;
+    const nsY = height * 0.09;
+    ctx.fillStyle = "#fde68a";
+    ctx.beginPath();
+    ctx.arc(nsX, nsY, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horizon Ocean Waves
+    const horizonY = height * 0.30;
+    const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, height * 0.68);
+    oceanGrad.addColorStop(0, "#0e4d73");
+    oceanGrad.addColorStop(1, "#071a33");
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(0, horizonY, width, height * 0.4);
+
+    // Subtle passing Marine-Life Easter Egg (Manta Ray or Sea Turtle)
+    updateAndDrawEasterEggs(ctx, width, height, horizonY, time, dt, isSecretHaven, reducedMotion);
+
+    // Shimmering horizon wave lines
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+    ctx.lineWidth = 1.4;
+    for (let row = 0; row < 4; row++) {
+      const wy = horizonY + 12 + row * 18;
+      ctx.beginPath();
+      for (let x = 0; x <= width; x += 24) {
+        const waveY = wy + (reducedMotion ? 0 : Math.sin(x * 0.03 + time * 1.8 + row) * 2.5);
+        if (x === 0) ctx.moveTo(x, waveY);
+        else ctx.lineTo(x, waveY);
+      }
+      ctx.stroke();
+    }
+
+    // 2. 2.5D Isometric Stone Battle Platform
+    const platTop = height * 0.36;
+    const platBot = height * 0.94;
+    const padX = width * 0.04;
+
+    // Platform Drop Side (3D thickness)
+    ctx.fillStyle = "#081426";
+    ctx.beginPath();
+    ctx.moveTo(padX, platBot - 16);
+    ctx.lineTo(width - padX, platBot - 16);
+    ctx.lineTo(width - padX * 1.6, platBot);
+    ctx.lineTo(padX * 1.6, platBot);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main Stone Deck
+    const deckGrad = ctx.createLinearGradient(0, platTop, 0, platBot);
+    deckGrad.addColorStop(0, "#102849");
+    deckGrad.addColorStop(1, "#0a1a33");
+    ctx.fillStyle = deckGrad;
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.14, platTop);
+    ctx.lineTo(width * 0.86, platTop);
+    ctx.lineTo(width - padX, platBot - 16);
+    ctx.lineTo(padX, platBot - 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Isometric Ley-line Grid on Platform
+    ctx.strokeStyle = "rgba(34, 211, 238, 0.12)";
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      const t = i / 4;
+      const y = platTop + (platBot - 16 - platTop) * t;
+      const inset = width * 0.14 * (1 - t) + padX * t;
+      ctx.beginPath();
+      ctx.moveTo(inset, y);
+      ctx.lineTo(width - inset, y);
+      ctx.stroke();
+    }
+
+    // Subtle Center Bronze Astrolabe / 8-Spoked Bicycle-Wheel Tide Medallion (Easter Egg)
+    const cx = width * 0.5;
+    const cy = (platTop + platBot) * 0.51;
+    const wheelRx = Math.min(width * 0.12, 48);
+    const wheelRy = wheelRx * 0.52;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = "rgba(251, 191, 36, 0.24)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, wheelRx, wheelRy, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, wheelRx * 0.22, wheelRy * 0.22, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 8 delicate wheel spokes rotating slowly
+    const rot = reducedMotion ? 0 : time * 0.15;
+    ctx.lineWidth = 1.1;
+    for (let s = 0; s < 8; s++) {
+      const ang = rot + (s * Math.PI) / 4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(ang) * wheelRx, Math.sin(ang) * wheelRy);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Flanking Ancient Coastal Stone Pillars
+    drawPillar(ctx, width * 0.11, platTop + 8, 18, 42, true);
+    drawPillar(ctx, width * 0.89, platTop + 8, 18, 42, false);
+
+    // Optional Blaze the White Lionhead Bunny Easter Egg on Nicholas Haven or rare visits
+    if (isSecretHaven || easterState.bunnyVisible) {
+      drawBlazeBunny(ctx, width * 0.13, platTop + 6, time, reducedMotion);
+    }
+  }
+
+  /**
+   * Draws an ancient weathered stone pillar; the left pillar carries a very subtle
+   * "N + A" rune engraving (Section 5 Easter Egg).
+   */
+  function drawPillar(ctx, x, y, w, h, hasCarving) {
+    ctx.save();
+    ctx.fillStyle = "#162d4f";
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.26)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h, w, h, 3);
+    ctx.fill();
+    ctx.stroke();
+
+    // Glowing rune band
+    ctx.fillStyle = "rgba(34, 211, 238, 0.35)";
+    ctx.fillRect(x - w / 2 + 2, y - h + 8, w - 4, 3);
+
+    if (hasCarving) {
+      ctx.fillStyle = "rgba(148, 163, 184, 0.34)";
+      ctx.font = "bold 7px serif";
+      ctx.textAlign = "center";
+      ctx.fillText("N+A", x, y - 10);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Subtle gliding manta ray / sea turtle under waves + occasional white lionhead bunny.
+   */
+  function updateAndDrawEasterEggs(ctx, width, height, horizonY, time, dt, isSecretHaven, reducedMotion) {
+    if (!reducedMotion) {
+      easterState.swimmerTimer -= dt;
+      if (easterState.swimmerTimer <= 0) {
+        easterState.swimmerX += dt * 42;
+        if (easterState.swimmerX > width + 80) {
+          easterState.swimmerX = -80;
+          easterState.swimmerTimer = 16 + Math.random() * 14;
+          easterState.swimmerType = Math.random() < 0.5 ? "ray" : "turtle";
+        }
+      }
+
+      easterState.bunnyTimer -= dt;
+      if (easterState.bunnyTimer <= 0) {
+        easterState.bunnyVisible = !easterState.bunnyVisible;
+        easterState.bunnyTimer = easterState.bunnyVisible ? 9 : 26;
+      }
+    }
+
+    if (easterState.swimmerX > -60 && easterState.swimmerX < width + 60) {
+      const sy = horizonY + 26;
+      const sx = easterState.swimmerX;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.globalAlpha = 0.42;
+      if (easterState.swimmerType === "ray") {
+        // Graceful Manta Ray
+        ctx.fillStyle = "#38bdf8";
+        ctx.beginPath();
+        ctx.moveTo(14, 0);
+        ctx.quadraticCurveTo(0, -11, -12, -2);
+        ctx.lineTo(-22, 0);
+        ctx.lineTo(-12, 2);
+        ctx.quadraticCurveTo(0, 11, 14, 0);
+        ctx.fill();
+      } else {
+        // Gentle Sea Turtle
+        ctx.fillStyle = "#2dd4bf";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(9, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Draws "Blaze the bunny" — a small fluffy white lionhead bunny perched subtly
+   * beside the coastal stone pillar.
+   */
+  function drawBlazeBunny(ctx, x, y, time, reducedMotion) {
+    ctx.save();
+    const hop = reducedMotion ? 0 : Math.abs(Math.sin(time * 2.2)) * 2.5;
+    ctx.translate(x + 18, y - hop);
+    // Fluffy lionhead mane
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.arc(0, -5, 6.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(-4, 0, 6.5, 4.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Ears
+    ctx.beginPath();
+    ctx.ellipse(-1, -12, 1.8, 4.5, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(2.5, -12, 1.8, 4.5, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Tiny eye & pink nose
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(2.5, -6, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fda4af";
+    ctx.beginPath();
+    ctx.arc(5.5, -4.5, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /**
+   * Draws a unit's crisp overhead Health + Shield + Energy meter bar.
+   */
+  function drawUnitBars(ctx, unit, x, y, scale) {
+    if (unit.hp <= 0) return;
+    const bw = (unit.isBoss ? 64 : 46) * scale;
+    const bh = 6 * scale;
+    const topY = y - (unit.isBoss ? 52 : 40) * scale;
+
+    ctx.save();
+    // Backplate
+    ctx.fillStyle = "rgba(2, 6, 23, 0.85)";
+    ctx.beginPath();
+    ctx.roundRect(x - bw / 2 - 1, topY - 1, bw + 2, bh + 5 * scale, 3);
+    ctx.fill();
+
+    // HP Fill
+    const hpPct = Math.max(0, Math.min(1, unit.hp / unit.maxHp));
+    ctx.fillStyle = unit.team === "player" ? "#34d399" : "#f43f5e";
+    ctx.fillRect(x - bw / 2, topY, bw * hpPct, bh);
+
+    // Shield Fill overlay
+    if (unit.shield > 0) {
+      const shPct = Math.min(1, unit.shield / unit.maxHp);
+      ctx.fillStyle = "rgba(45, 212, 191, 0.9)";
+      ctx.fillRect(x - bw / 2, topY, bw * shPct, bh * 0.55);
+    }
+
+    // Energy / Action Gauge strip
+    const enPct = Math.max(0, Math.min(1, unit.energy / 100));
+    ctx.fillStyle = unit.energy >= 100 ? "#fbbf24" : "#38bdf8";
+    ctx.fillRect(x - bw / 2, topY + bh + 1, bw * enPct, 2.5 * scale);
+
+    ctx.restore();
+  }
+
+  /**
+   * Draws animated projectiles, lightning arcs, shockwaves, and floating numbers.
+   */
+  function drawCombatVfx(ctx, projectiles, effects, floatingTexts, scale) {
+    // Projectiles
+    for (const p of projectiles) {
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, (p.radius || 5.5) * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Visual Effects (Rings, Lightning Arcs, Heal Sparkles)
+    for (const fx of effects) {
+      ctx.save();
+      const progress = 1 - fx.life / fx.maxLife;
+      ctx.globalAlpha = Math.max(0, 1 - progress);
+
+      if (fx.type === "ring") {
+        ctx.strokeStyle = fx.color;
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.arc(fx.x, fx.y, (10 + progress * (fx.radius || 44)) * scale, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (fx.type === "lightning") {
+        ctx.strokeStyle = fx.color || "#fde047";
+        ctx.lineWidth = 2.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(fx.x1, fx.y1);
+        const midX = (fx.x1 + fx.x2) / 2 + (Math.random() - 0.5) * 26;
+        const midY = (fx.y1 + fx.y2) / 2 - 18;
+        ctx.lineTo(midX, midY);
+        ctx.lineTo(fx.x2, fx.y2);
+        ctx.stroke();
+      } else if (fx.type === "slash") {
+        ctx.strokeStyle = fx.color || "#ffffff";
+        ctx.lineWidth = 3.5 * scale;
+        ctx.beginPath();
+        ctx.arc(fx.x, fx.y, 24 * scale, -0.8, 0.8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Floating Damage / Heal / Crit Numbers
+    for (const ft of floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.life / ft.maxLife);
+      ctx.font = `900 ${Math.round((ft.big ? 17 : 13) * scale)}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.strokeStyle = "rgba(2, 6, 23, 0.9)";
+      ctx.lineWidth = 3;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Renders the decorative Home Hub squad preview canvas.
+   */
+  function drawHomeSquadPreview(canvas, saveState, time) {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, "#0b2447");
+    grad.addColorStop(1, "#061124");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Ocean gleam
+    ctx.fillStyle = "rgba(34, 211, 238, 0.09)";
+    ctx.beginPath();
+    ctx.ellipse(w * 0.5, h * 0.78, w * 0.42, 26, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const squad = saveState.squad || [];
+    const spacing = w / (squad.length + 1);
+    squad.forEach((heroId, idx) => {
+      const def = TB.DATA.HEROES.find((hr) => hr.id === heroId);
+      if (!def) return;
+      drawCharacterSprite(
+        ctx,
+        {
+          templateId: def.id,
+          colors: def.colors,
+          hp: 100,
+          energy: 0,
+          animSeed: idx * 1.4
+        },
+        spacing * (idx + 1),
+        h * 0.62,
+        1.15,
+        time,
+        true
+      );
+    });
+  }
+
+  TB.ART = {
+    drawCharacterSprite,
+    drawPortrait,
+    drawArenaBackground,
+    drawUnitBars,
+    drawCombatVfx,
+    drawHomeSquadPreview
+  };
+})(window.Tidebreak);
+```
+
+---
+
+### 8. `js/engine.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/engine.js — Real-Time Tactical ATB Combat Simulation Engine
+ * ============================================================================
+ * Purpose:
+ *   Runs the 60fps requestAnimationFrame battle loop for Campaign, Secret Stage,
+ *   and Survival Mode. Handles:
+ *   - Spawning player squad with actual saved hero levels & equipped relic
+ *   - Enemy wave/boss scaling
+ *   - Speed-governed ATB basic attacks, Energy charging, & manual Special Abilities
+ *   - Enemy target prioritization by tapping/clicking on Canvas
+ *   - Shields, Burn DoTs, Regeneration, Buffs, & Clean Victory/Defeat transitions
+ *   - Zero memory leaks when repeatedly entering/exiting battles
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  let rafId = null;
+  let lastTimestamp = 0;
+  let stateRef = null;
+  let onBattleEndCallback = null;
+  let onHudTickCallback = null;
+
+  const sim = {
+    active: false,
+    paused: false,
+    ended: false,
+    mode: "campaign", // "campaign" | "survival" | "secret"
+    stageDef: null,
+    survivalWave: 1,
+    elapsed: 0,
+    time: 0,
+    speed: 1,
+    autoBattle: false,
+    reducedMotion: false,
+    shakeTime: 0,
+    priorityTargetId: null,
+    allies: [],
+    enemies: [],
+    projectiles: [],
+    effects: [],
+    floatingTexts: [],
+    allyDeaths: 0,
+    hadReefGuardian: false
+  };
+
+  function getPositions(count, isLeft, width, height) {
+    const coords = [];
+    const baseX = isLeft ? width * 0.25 : width * 0.75;
+    const staggerX = isLeft ? -width * 0.08 : width * 0.08;
+    const topY = height * 0.45;
+    const botY = height * 0.83;
+
+    for (let i = 0; i < count; i++) {
+      const frac = count === 1 ? 0.5 : i / (count - 1);
+      const y = topY + (botY - topY) * frac;
+      const x = baseX + (i % 2 === 0 ? 0 : staggerX);
+      coords.push({ x, y });
+    }
+    return coords;
+  }
+
+  function buildAllyUnit(heroId, saveState, uid) {
+    const def = TB.DATA.HEROES.find((h) => h.id === heroId);
+    const level = (saveState.heroLevels && saveState.heroLevels[heroId]) || 1;
+    const relicId = saveState.equippedRelic;
+    const relic = TB.DATA.RELICS.find((r) => r.id === relicId);
+    const stats = TB.DATA.getHeroStats(heroId, level, relicId);
+    const startEnergy = (relic && relic.bonus && relic.bonus.startEnergy) || 0;
+
+    return {
+      uid,
+      team: "player",
+      templateId: def.id,
+      name: def.name,
+      role: def.role,
+      ability: def.ability,
+      colors: def.colors,
+      maxHp: stats.hp,
+      hp: stats.hp,
+      atk: stats.atk,
+      def: stats.def,
+      spd: stats.spd,
+      crit: stats.crit,
+      shield: 0,
+      shieldTimer: 0,
+      tauntTimer: 0,
+      regenTimer: 0,
+      regenAmount: 0,
+      atkBuffTimer: 0,
+      atkBuffPct: 0,
+      spdBuffTimer: 0,
+      spdBuffPct: 0,
+      burnTimer: 0,
+      burnDps: 0,
+      energy: startEnergy,
+      atb: Math.random() * 25,
+      animSeed: Math.random() * 6,
+      lunge: 0,
+      hitFlash: 0,
+      deathTimer: 0,
+      x: 0,
+      y: 0
+    };
+  }
+
+  function buildEnemyUnit(enemyKey, scale, uid) {
+    const def = TB.DATA.ENEMIES[enemyKey];
+    const hp = Math.round(def.baseStats.hp * scale);
+    const atk = Math.round(def.baseStats.atk * (0.85 + scale * 0.35));
+    const defStat = Math.round(def.baseStats.def * (0.8 + scale * 0.25));
+    const spd = Math.round(def.baseStats.spd * (0.95 + Math.min(0.25, scale * 0.05)));
+
+    return {
+      uid,
+      team: "enemy",
+      templateId: def.id,
+      name: def.name,
+      role: def.role,
+      isBoss: Boolean(def.isBoss),
+      specialName: def.specialName || "Strike",
+      colors: def.colors,
+      maxHp: hp,
+      hp,
+      atk,
+      def: defStat,
+      spd,
+      crit: def.baseStats.crit,
+      shield: 0,
+      shieldTimer: 0,
+      burnTimer: 0,
+      burnDps: 0,
+      energy: 0,
+      atb: Math.random() * 20,
+      animSeed: Math.random() * 6,
+      lunge: 0,
+      hitFlash: 0,
+      deathTimer: 0,
+      isTargeted: false,
+      x: 0,
+      y: 0
+    };
+  }
+
+  function spawnSurvivalEnemies(wave) {
+    const scale = 0.78 + (wave - 1) * TB.CONFIG.COMBAT.SURVIVAL_WAVE_SCALE;
+    const pool = ["raider", "crab", "siren", "golem", "stalker", "pyro"];
+    const count = Math.min(5, 2 + Math.floor((wave + 1) / 2));
+    const keys = [];
+    for (let i = 0; i < count; i++) {
+      if (wave % 5 === 0 && i === Math.floor(count / 2)) {
+        const bosses = ["boss_krakenshell", "boss_maelstrom", "boss_cindermaw", "boss_leviathan"];
+        keys.push(bosses[(Math.floor(wave / 5) - 1) % bosses.length]);
+      } else {
+        keys.push(pool[(wave + i) % pool.length]);
+      }
+    }
+    sim.enemies = keys.map((k, idx) => buildEnemyUnit(k, scale, `e_${wave}_${idx}`));
+    sim.priorityTargetId = sim.enemies[0] ? sim.enemies[0].uid : null;
+  }
+
+  function startBattle({ mode, stageDef, saveState, canvas, onEnd, onHudTick }) {
+    stopBattle();
+
+    stateRef = saveState;
+    onBattleEndCallback = onEnd;
+    onHudTickCallback = onHudTick;
+
+    sim.active = true;
+    sim.paused = false;
+    sim.ended = false;
+    sim.mode = mode;
+    sim.stageDef = stageDef;
+    sim.survivalWave = 1;
+    sim.elapsed = 0;
+    sim.time = 0;
+    sim.speed = saveState.settings.battleSpeed || 1;
+    sim.autoBattle = Boolean(saveState.settings.autoBattle);
+    sim.reducedMotion = Boolean(saveState.settings.reducedMotion);
+    sim.shakeTime = 0;
+    sim.projectiles = [];
+    sim.effects = [];
+    sim.floatingTexts = [];
+    sim.allyDeaths = 0;
+
+    const squadIds = saveState.squad.slice(0, TB.CONFIG.MAX_SQUAD_SIZE);
+    sim.hadReefGuardian = squadIds.includes("reef_guardian");
+    sim.allies = squadIds.map((id, idx) => buildAllyUnit(id, saveState, `a_${idx}`));
+
+    if (mode === "survival") {
+      spawnSurvivalEnemies(1);
+    } else {
+      sim.enemies = stageDef.enemies.map((k, idx) => buildEnemyUnit(k, stageDef.scale, `e_${idx}`));
+      sim.priorityTargetId = sim.enemies[0] ? sim.enemies[0].uid : null;
+    }
+
+    lastTimestamp = performance.now();
+    const loop = (now) => {
+      if (!sim.active) return;
+      const rawDt = Math.min((now - lastTimestamp) / 1000, 0.05);
+      lastTimestamp = now;
+
+      if (!sim.paused && !sim.ended) {
+        updateSimulation(rawDt * sim.speed);
+      }
+      renderFrame(canvas, rawDt);
+
+      if (onHudTickCallback) {
+        onHudTickCallback(getSnapshot());
+      }
+      rafId = window.requestAnimationFrame(loop);
+    };
+
+    rafId = window.requestAnimationFrame(loop);
+  }
+
+  function stopBattle() {
+    sim.active = false;
+    if (rafId !== null) {
+      window.cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    sim.allies = [];
+    sim.enemies = [];
+    sim.projectiles = [];
+    sim.effects = [];
+    sim.floatingTexts = [];
+  }
+
+  function setPaused(val) {
+    sim.paused = Boolean(val);
+    lastTimestamp = performance.now();
+  }
+
+  function toggleSpeed() {
+    sim.speed = sim.speed === 1 ? 2 : 1;
+    return sim.speed;
+  }
+
+  function toggleAuto() {
+    sim.autoBattle = !sim.autoBattle;
+    return sim.autoBattle;
+  }
+
+  function getSnapshot() {
+    return {
+      elapsed: sim.elapsed,
+      survivalWave: sim.survivalWave,
+      speed: sim.speed,
+      autoBattle: sim.autoBattle,
+      allies: sim.allies
+    };
+  }
+
+  /**
+   * Allows tapping/clicking an enemy on the Canvas to set Priority Target.
+   */
+  function handleCanvasTap(clientX, clientY, canvas) {
+    if (!sim.active || sim.paused || sim.ended) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    let closest = null;
+    let bestDist = 48;
+    for (const enemy of sim.enemies) {
+      if (enemy.hp <= 0) continue;
+      const dx = enemy.x - x;
+      const dy = enemy.y - y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < bestDist) {
+        bestDist = dist;
+        closest = enemy;
+      }
+    }
+
+    if (closest) {
+      sim.priorityTargetId = closest.uid;
+      sim.effects.push({ type: "ring", x: closest.x, y: closest.y + 18, color: "#fbbf24", radius: 34, life: 0.35, maxLife: 0.35 });
+      TB.AUDIO.playSfx("click");
+    }
+  }
+
+  function livingAllies() {
+    return sim.allies.filter((u) => u.hp > 0);
+  }
+
+  function livingEnemies() {
+    return sim.enemies.filter((u) => u.hp > 0);
+  }
+
+  function pickEnemyTargetForAlly() {
+    const alive = livingEnemies();
+    if (!alive.length) return null;
+    const prio = alive.find((e) => e.uid === sim.priorityTargetId);
+    return prio || alive[0];
+  }
+
+  function pickAllyTargetForEnemy() {
+    const alive = livingAllies();
+    if (!alive.length) return null;
+    // Tanks (and Reef Guardian while Taunting) draw enemy fire meaningfully
+    const taunter = alive.find((a) => a.tauntTimer > 0);
+    if (taunter && Math.random() < 0.78) return taunter;
+
+    const weights = alive.map((a) => (a.role === "Tank" ? 2.4 : 1.0));
+    const total = weights.reduce((s, w) => s + w, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < alive.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return alive[i];
+    }
+    return alive[0];
+  }
+
+  function computeDamage(attacker, defender, mult, forceCrit = false, ignoreDefPct = 0) {
+    const atkEff = attacker.atk * (1 + (attacker.atkBuffPct || 0));
+    const defEff = defender.def * (1 - ignoreDefPct);
+    const C = TB.CONFIG.COMBAT;
+    const mitigation = C.DEFENSE_CONSTANT / (C.DEFENSE_CONSTANT + Math.max(0, defEff));
+    const variance = C.VARIANCE_MIN + Math.random() * (C.VARIANCE_MAX - C.VARIANCE_MIN);
+    const isCrit = forceCrit || Math.random() < (attacker.crit || 0.1);
+    const raw = atkEff * mult * mitigation * variance * (isCrit ? C.CRIT_MULTIPLIER : 1);
+    return { amount: Math.max(1, Math.round(raw)), isCrit };
+  }
+
+  function applyDamage(target, amount, isCrit = false, customColor = null) {
+    if (target.hp <= 0) return;
+
+    let remaining = amount;
+    if (target.shield > 0) {
+      const absorbed = Math.min(target.shield, remaining);
+      target.shield -= absorbed;
+      remaining -= absorbed;
+      if (absorbed > 0 && remaining === 0) {
+        spawnText(target.x, target.y - 34, `BLOCKED`, "#2dd4bf", false);
+      }
+    }
+
+    if (remaining > 0) {
+      target.hp = Math.max(0, target.hp - remaining);
+      target.hitFlash = 0.14;
+      target.energy = Math.min(100, target.energy + TB.CONFIG.COMBAT.ENERGY_ON_HIT);
+      const col = customColor || (isCrit ? "#fbbf24" : "#f8fafc");
+      spawnText(target.x, target.y - 30, isCrit ? `${remaining}!` : `${remaining}`, col, isCrit);
+
+      if (isCrit && !sim.reducedMotion) {
+        sim.shakeTime = 0.12;
+      }
+
+      if (target.hp <= 0 && target.team === "player") {
+        sim.allyDeaths += 1;
+      }
+    }
+  }
+
+  function applyHeal(target, amount) {
+    if (target.hp <= 0) return;
+    const healed = Math.min(target.maxHp - target.hp, Math.round(amount));
+    target.hp += healed;
+    if (healed > 0) {
+      spawnText(target.x, target.y - 32, `+${healed}`, "#34d399", false);
+    }
+  }
+
+  function spawnText(x, y, text, color, big = false) {
+    sim.floatingTexts.push({
+      x: x + (Math.random() - 0.5) * 12,
+      y,
+      vy: -26,
+      text,
+      color,
+      big,
+      life: 0.85,
+      maxLife: 0.85
+    });
+  }
+
+  function fireProjectile(from, to, color, onArrive) {
+    sim.projectiles.push({
+      x: from.x,
+      y: from.y - 8,
+      tx: to.x,
+      ty: to.y - 8,
+      targetRef: to,
+      color,
+      speed: 440,
+      onArrive
+    });
+  }
+
+  function performBasicAttack(attacker) {
+    const target = attacker.team === "player" ? pickEnemyTargetForAlly() : pickAllyTargetForEnemy();
+    if (!target) return;
+
+    attacker.lunge = 14;
+    attacker.energy = Math.min(100, attacker.energy + TB.CONFIG.COMBAT.ENERGY_ON_ATTACK);
+
+    const isRanged = ["stormbreaker", "tideweaver", "emberforge", "galeweaver", "siren", "pyro"].includes(attacker.templateId);
+    if (isRanged) {
+      TB.AUDIO.playSfx("attack");
+      fireProjectile(attacker, target, attacker.colors.glow, () => {
+        if (target.hp <= 0) return;
+        const dmg = computeDamage(attacker, target, 1.0);
+        applyDamage(target, dmg.amount, dmg.isCrit);
+        if (dmg.isCrit) TB.AUDIO.playSfx("crit");
+        sim.effects.push({ type: "ring", x: target.x, y: target.y, color: attacker.colors.glow, radius: 22, life: 0.25, maxLife: 0.25 });
+      });
+    } else {
+      TB.AUDIO.playSfx("attack");
+      const dmg = computeDamage(attacker, target, 1.0);
+      applyDamage(target, dmg.amount, dmg.isCrit);
+      if (dmg.isCrit) TB.AUDIO.playSfx("crit");
+      sim.effects.push({ type: "slash", x: target.x, y: target.y - 6, color: attacker.colors.accent, life: 0.22, maxLife: 0.22 });
+    }
+  }
+
+  /**
+   * Triggers a Hero's Manual Special Ability when Energy >= 100.
+   */
+  function triggerHeroAbility(heroUid) {
+    if (!sim.active || sim.paused || sim.ended) return false;
+    const hero = sim.allies.find((a) => a.uid === heroUid);
+    if (!hero || hero.hp <= 0 || hero.energy < 100) return false;
+
+    hero.energy = 0;
+    hero.lunge = 18;
+
+    const abilityType = hero.ability.type;
+    const foes = livingEnemies();
+    const friends = livingAllies();
+    const prio = pickEnemyTargetForAlly();
+
+    if (abilityType === "team_shield") {
+      TB.AUDIO.playSfx("shield");
+      const shieldVal = Math.round(hero.maxHp * 0.32 + hero.atk * 1.1);
+      hero.tauntTimer = 8;
+      for (const f of friends) {
+        f.shield = Math.max(f.shield, shieldVal);
+        f.shieldTimer = 8;
+        sim.effects.push({ type: "ring", x: f.x, y: f.y, color: "#2dd4bf", radius: 36, life: 0.45, maxLife: 0.45 });
+        spawnText(f.x, f.y - 36, `+SHIELD`, "#2dd4bf", false);
+      }
+    } else if (abilityType === "chain_lightning") {
+      TB.AUDIO.playSfx("lightning");
+      if (prio) {
+        const d1 = computeDamage(hero, prio, 2.1);
+        applyDamage(prio, d1.amount, d1.isCrit, "#fde047");
+        sim.effects.push({ type: "lightning", x1: hero.x, y1: hero.y - 14, x2: prio.x, y2: prio.y - 10, color: "#fde047", life: 0.32, maxLife: 0.32 });
+
+        const others = foes.filter((e) => e.uid !== prio.uid).slice(0, 3);
+        let prev = prio;
+        for (const oe of others) {
+          const d2 = computeDamage(hero, oe, 1.35);
+          applyDamage(oe, d2.amount, d2.isCrit, "#38bdf8");
+          sim.effects.push({ type: "lightning", x1: prev.x, y1: prev.y - 10, x2: oe.x, y2: oe.y - 10, color: "#38bdf8", life: 0.32, maxLife: 0.32 });
+          prev = oe;
+        }
+      }
+    } else if (abilityType === "team_heal") {
+      TB.AUDIO.playSfx("heal");
+      for (const f of friends) {
+        const healAmt = hero.atk * 1.95 + f.maxHp * 0.10;
+        applyHeal(f, healAmt);
+        f.regenTimer = 6;
+        f.regenAmount = Math.round(hero.atk * 0.38);
+        sim.effects.push({ type: "ring", x: f.x, y: f.y, color: "#34d399", radius: 32, life: 0.45, maxLife: 0.45 });
+      }
+    } else if (abilityType === "crit_dash") {
+      TB.AUDIO.playSfx("crit");
+      if (prio) {
+        const dmg = computeDamage(hero, prio, 2.55, true);
+        applyDamage(prio, dmg.amount, true, "#a5b4fc");
+        sim.effects.push({ type: "slash", x: prio.x, y: prio.y - 8, color: "#818cf8", life: 0.32, maxLife: 0.32 });
+      }
+      hero.spdBuffPct = 0.35;
+      hero.spdBuffTimer = 6;
+      spawnText(hero.x, hero.y - 34, "HASTE!", "#a5b4fc", false);
+    } else if (abilityType === "aoe_burn") {
+      TB.AUDIO.playSfx("fire");
+      for (const e of foes) {
+        const dmg = computeDamage(hero, e, 1.65);
+        applyDamage(e, dmg.amount, dmg.isCrit, "#fb923c");
+        e.burnTimer = 5;
+        e.burnDps = Math.round(hero.atk * 0.36);
+        sim.effects.push({ type: "ring", x: e.x, y: e.y, color: "#f97316", radius: 40, life: 0.4, maxLife: 0.4 });
+      }
+    } else if (abilityType === "pierce_disrupt") {
+      TB.AUDIO.playSfx("shadow");
+      const target = prio || foes.slice().sort((a, b) => a.hp - b.hp)[0];
+      if (target) {
+        const dmg = computeDamage(hero, target, 2.45, false, 0.5);
+        applyDamage(target, dmg.amount, dmg.isCrit, "#c084fc");
+        target.atb = Math.max(0, target.atb - 45);
+        sim.effects.push({ type: "slash", x: target.x, y: target.y - 6, color: "#c084fc", life: 0.32, maxLife: 0.32 });
+        spawnText(target.x, target.y - 44, "DISRUPT!", "#c084fc", false);
+      }
+    } else if (abilityType === "team_buff") {
+      TB.AUDIO.playSfx("heal");
+      for (const f of friends) {
+        f.atkBuffPct = 0.25;
+        f.atkBuffTimer = 8;
+        f.spdBuffPct = 0.25;
+        f.spdBuffTimer = 8;
+        f.energy = Math.min(100, f.energy + 25);
+        sim.effects.push({ type: "ring", x: f.x, y: f.y, color: "#fbbf24", radius: 34, life: 0.42, maxLife: 0.42 });
+      }
+      for (const e of foes) {
+        const dmg = computeDamage(hero, e, 1.05);
+        applyDamage(e, dmg.amount, dmg.isCrit, "#6ee7b7");
+      }
+    }
+
+    return true;
+  }
+
+  function performBossSpecial(boss) {
+    boss.energy = 0;
+    boss.lunge = 18;
+    TB.AUDIO.playSfx("fire");
+    spawnText(boss.x, boss.y - 42, boss.specialName.toUpperCase(), "#fbbf24", true);
+    for (const f of livingAllies()) {
+      const dmg = computeDamage(boss, f, 1.25);
+      applyDamage(f, dmg.amount, dmg.isCrit, "#fb7185");
+      sim.effects.push({ type: "ring", x: f.x, y: f.y, color: "#f43f5e", radius: 34, life: 0.38, maxLife: 0.38 });
+    }
+  }
+
+  function updateSimulation(dt) {
+    sim.elapsed += dt;
+    sim.time += dt;
+    if (sim.shakeTime > 0) sim.shakeTime = Math.max(0, sim.shakeTime - dt);
+
+    const allUnits = [...sim.allies, ...sim.enemies];
+
+    for (const u of allUnits) {
+      if (u.lunge > 0) u.lunge = Math.max(0, u.lunge - dt * 55);
+      if (u.hitFlash > 0) u.hitFlash = Math.max(0, u.hitFlash - dt);
+
+      if (u.hp <= 0) {
+        u.deathTimer += dt;
+        continue;
+      }
+
+      // Shield expiration
+      if (u.shieldTimer > 0) {
+        u.shieldTimer -= dt;
+        if (u.shieldTimer <= 0) u.shield = 0;
+      }
+      if (u.tauntTimer > 0) u.tauntTimer -= dt;
+      if (u.atkBuffTimer > 0) {
+        u.atkBuffTimer -= dt;
+        if (u.atkBuffTimer <= 0) u.atkBuffPct = 0;
+      }
+      if (u.spdBuffTimer > 0) {
+        u.spdBuffTimer -= dt;
+        if (u.spdBuffTimer <= 0) u.spdBuffPct = 0;
+      }
+
+      // Regen tick (every 1s roughly via fractional accumulator)
+      if (u.regenTimer > 0) {
+        u.regenTimer -= dt;
+        u._regenAcc = (u._regenAcc || 0) + dt;
+        if (u._regenAcc >= 1.0) {
+          u._regenAcc -= 1.0;
+          applyHeal(u, u.regenAmount);
+        }
+      }
+
+      // Burn tick
+      if (u.burnTimer > 0) {
+        u.burnTimer -= dt;
+        u._burnAcc = (u._burnAcc || 0) + dt;
+        if (u._burnAcc >= 1.0) {
+          u._burnAcc -= 1.0;
+          applyDamage(u, u.burnDps, false, "#fb923c");
+        }
+      }
+
+      // ATB Action Gauge fill
+      const spdEff = u.spd * (1 + (u.spdBuffPct || 0));
+      u.atb += spdEff * TB.CONFIG.COMBAT.ATB_RATE * dt;
+      if (u.atb >= 100) {
+        u.atb -= 100;
+        if (u.isBoss && u.energy >= 100) {
+          performBossSpecial(u);
+        } else {
+          performBasicAttack(u);
+        }
+      }
+
+      // Auto-battle option for player convenience
+      if (u.team === "player" && sim.autoBattle && u.energy >= 100) {
+        triggerHeroAbility(u.uid);
+      }
+    }
+
+    // Update projectiles
+    for (let i = sim.projectiles.length - 1; i >= 0; i--) {
+      const p = sim.projectiles[i];
+      const tx = p.targetRef ? p.targetRef.x : p.tx;
+      const ty = p.targetRef ? p.targetRef.y - 8 : p.ty;
+      const dx = tx - p.x;
+      const dy = ty - p.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < p.speed * dt + 6) {
+        if (p.onArrive) p.onArrive();
+        sim.projectiles.splice(i, 1);
+      } else {
+        p.x += (dx / dist) * p.speed * dt;
+        p.y += (dy / dist) * p.speed * dt;
+      }
+    }
+
+    // Update effects & floating text
+    for (let i = sim.effects.length - 1; i >= 0; i--) {
+      sim.effects[i].life -= dt;
+      if (sim.effects[i].life <= 0) sim.effects.splice(i, 1);
+    }
+    for (let i = sim.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = sim.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.life -= dt;
+      if (ft.life <= 0) sim.floatingTexts.splice(i, 1);
+    }
+
+    // Ensure priority target stays on a living enemy
+    if (!livingEnemies().some((e) => e.uid === sim.priorityTargetId)) {
+      const next = livingEnemies()[0];
+      sim.priorityTargetId = next ? next.uid : null;
+    }
+
+    // Victory / Defeat / Survival Wave check
+    if (livingAllies().length === 0) {
+      finishBattle(false);
+    } else if (livingEnemies().length === 0) {
+      if (sim.mode === "survival") {
+        sim.survivalWave += 1;
+        // Gentle breather heal between survival waves
+        for (const a of livingAllies()) {
+          applyHeal(a, a.maxHp * 0.22);
+        }
+        spawnSurvivalEnemies(sim.survivalWave);
+        spawnText(200, 140, `WAVE ${sim.survivalWave}!`, "#fbbf24", true);
+      } else {
+        finishBattle(true);
+      }
+    }
+  }
+
+  function finishBattle(victory) {
+    if (sim.ended) return;
+    sim.ended = true;
+    TB.AUDIO.playSfx(victory ? "victory" : "defeat");
+
+    if (onBattleEndCallback) {
+      onBattleEndCallback({
+        victory,
+        mode: sim.mode,
+        stageDef: sim.stageDef,
+        survivalWave: sim.survivalWave,
+        elapsed: sim.elapsed,
+        allyDeaths: sim.allyDeaths,
+        hadReefGuardian: sim.hadReefGuardian,
+        squadSize: sim.allies.length
+      });
+    }
+  }
+
+  function renderFrame(canvas, rawDt) {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.round(rect.width * dpr);
+    const targetH = Math.round(rect.height * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    const w = rect.width;
+    const h = rect.height;
+    const scale = Math.max(0.72, Math.min(1.25, w / 420));
+
+    if (sim.shakeTime > 0 && !sim.reducedMotion) {
+      ctx.translate((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6);
+    }
+
+    TB.ART.drawArenaBackground(
+      ctx,
+      w,
+      h,
+      sim.time,
+      rawDt,
+      sim.mode === "secret",
+      sim.reducedMotion
+    );
+
+    const allyPos = getPositions(sim.allies.length, true, w, h);
+    sim.allies.forEach((u, i) => {
+      u.x = allyPos[i].x;
+      u.y = allyPos[i].y;
+    });
+
+    const enemyPos = getPositions(sim.enemies.length, false, w, h);
+    sim.enemies.forEach((u, i) => {
+      u.x = enemyPos[i].x;
+      u.y = enemyPos[i].y;
+      u.isTargeted = u.uid === sim.priorityTargetId;
+    });
+
+    // Draw back-to-front by Y coordinate for authentic 2.5D depth sorting
+    const renderList = [...sim.allies, ...sim.enemies].sort((a, b) => a.y - b.y);
+    for (const u of renderList) {
+      TB.ART.drawCharacterSprite(ctx, u, u.x, u.y, scale, sim.time, u.team === "player");
+      TB.ART.drawUnitBars(ctx, u, u.x, u.y, scale);
+    }
+
+    TB.ART.drawCombatVfx(ctx, sim.projectiles, sim.effects, sim.floatingTexts, scale);
+    ctx.restore();
+  }
+
+  TB.ENGINE = {
+    startBattle,
+    stopBattle,
+    setPaused,
+    toggleSpeed,
+    toggleAuto,
+    triggerHeroAbility,
+    handleCanvasTap
+  };
+})(window.Tidebreak);
+```
+
+---
+
+### 9. `js/ui.js`
+
+```javascript
+/**
+ * ============================================================================
+ * js/ui.js — Screen Navigation, Squad Builder, Upgrades, Save & Modal Controller
+ * ============================================================================
+ * Purpose:
+ *   Wires all DOM screens, buttons, modals, canvases, and saved-progress events
+ *   together into a responsive mobile-first interface.
+ */
+
+window.Tidebreak = window.Tidebreak || {};
+
+(function (TB) {
+  let state = TB.SAVE.loadState();
+  let selectedHeroId = state.squad[0] || "reef_guardian";
+  let lastBattleLaunch = null;
+  let confirmHandler = null;
+  let homeAnimId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function showToast(title, body = "", gold = false) {
+    const container = $("toast-container");
+    const el = document.createElement("div");
+    el.className = `toast ${gold ? "toast-gold" : ""}`;
+    el.innerHTML = `<span>${gold ? "🏆" : "✦"}</span><div><strong>${title}</strong>${body ? `<div class="muted-text">${body}</div>` : ""}</div>`;
+    container.appendChild(el);
+    window.setTimeout(() => {
+      el.remove();
+    }, 3600);
+  }
+
+  function showScreen(screenName) {
+    document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    const target = $(`screen-${screenName}`);
+    if (target) target.classList.add("active");
+
+    if (screenName === "home") {
+      renderHomeHub();
+      startHomePreviewLoop();
+    } else {
+      stopHomePreviewLoop();
+    }
+
+    if (screenName === "campaign") renderCampaignScreen();
+    if (screenName === "roster") renderRosterScreen();
+    if (screenName === "relics") renderRelicsScreen();
+    if (screenName === "settings") renderSettingsScreen();
+  }
+
+  function syncCurrencyDisplays() {
+    $("hud-pearls").textContent = state.pearls;
+    $("hud-shards").textContent = state.shards;
+    document.querySelectorAll(".sync-pearls").forEach((el) => (el.textContent = state.pearls));
+    document.querySelectorAll(".sync-shards").forEach((el) => (el.textContent = state.shards));
+  }
+
+  function applyAccessibilitySettings() {
+    document.body.classList.toggle("reduced-motion", Boolean(state.settings.reducedMotion));
+    TB.AUDIO.syncSettings(state.settings);
+    const muteIcon = state.settings.soundEnabled ? "🔊" : "🔇";
+    $("btn-mute-global").textContent = muteIcon;
+    $("btn-battle-mute").textContent = muteIcon;
+  }
+
+  function startHomePreviewLoop() {
+    stopHomePreviewLoop();
+    const canvas = $("home-preview-canvas");
+    const tick = (t) => {
+      if (!$("screen-home").classList.contains("active")) return;
+      TB.ART.drawHomeSquadPreview(canvas, state, t * 0.001);
+      homeAnimId = window.requestAnimationFrame(tick);
+    };
+    homeAnimId = window.requestAnimationFrame(tick);
+  }
+
+  function stopHomePreviewLoop() {
+    if (homeAnimId !== null) {
+      window.cancelAnimationFrame(homeAnimId);
+      homeAnimId = null;
+    }
+  }
+
+  function renderHomeHub() {
+    syncCurrencyDisplays();
+    const totalPower = state.squad.reduce((sum, id) => {
+      const lv = state.heroLevels[id] || 1;
+      return sum + TB.DATA.getHeroStats(id, lv, state.equippedRelic).power;
+    }, 0);
+
+    $("home-campaign-badge").textContent = `Campaign: Stage ${Math.min(20, state.highestStageCleared + 1)} / 20`;
+    $("home-power-badge").textContent = `Squad Power: ${totalPower}`;
+    $("home-survival-best").textContent = `Best Wave: ${state.survivalBestWave}`;
+    $("home-heroes-count").textContent = `${state.unlockedHeroes.length} / ${TB.DATA.HEROES.length} Unlocked`;
+    $("home-ach-count").textContent = `${state.achievements.length} / ${TB.DATA.ACHIEVEMENTS.length} Unlocked`;
+
+    const relic = TB.DATA.RELICS.find((r) => r.id === state.equippedRelic);
+    $("home-active-relic").textContent = relic ? `Relic: ${relic.name}` : "No Relic Equipped";
+
+    const galleryLink = $("link-back-gallery");
+    if (TB.isValidExternalUrl(TB.CONFIG.GALLERY_URL)) {
+      galleryLink.href = TB.CONFIG.GALLERY_URL;
+    }
+  }
+
+  function renderCampaignScreen() {
+    syncCurrencyDisplays();
+    $("squad-count-label").textContent = `(${state.squad.length} / ${TB.CONFIG.MAX_SQUAD_SIZE})`;
+
+    const preview = $("campaign-squad-preview");
+    preview.innerHTML = "";
+    for (let i = 0; i < TB.CONFIG.MAX_SQUAD_SIZE; i++) {
+      const heroId = state.squad[i];
+      const slot = document.createElement("div");
+      slot.className = `squad-slot ${heroId ? "filled" : ""}`;
+      if (heroId) {
+        const def = TB.DATA.HEROES.find((h) => h.id === heroId);
+        const c = document.createElement("canvas");
+        c.width = 48;
+        c.height = 48;
+        TB.ART.drawPortrait(c, def);
+        slot.appendChild(c);
+        const lbl = document.createElement("span");
+        lbl.textContent = `Lv.${state.heroLevels[heroId] || 1}`;
+        slot.appendChild(lbl);
+      } else {
+        slot.textContent = "Empty";
+      }
+      slot.addEventListener("click", () => showScreen("roster"));
+      preview.appendChild(slot);
+    }
+
+    // Secret Sanctuary: Nicholas Haven
+    const secretBox = $("secret-haven-container");
+    if (state.secretHavenUnlocked) {
+      secretBox.classList.remove("hidden");
+      secretBox.innerHTML = "";
+      const row = document.createElement("div");
+      row.className = "stage-row secret-row";
+      row.innerHTML = `
+        <div class="stage-info">
+          <div class="stage-title-line">
+            <span class="stage-num">SANCTUARY</span>
+            <span class="stage-name">${TB.DATA.SECRET_STAGE.name}</span>
+          </div>
+          <div class="stage-meta">${TB.DATA.SECRET_STAGE.subtitle} • +${TB.DATA.SECRET_STAGE.pearls} ◉</div>
+        </div>
+        <button class="btn btn-primary btn-sm">Enter</button>
+      `;
+      row.querySelector("button").addEventListener("click", () => launchBattle("secret", TB.DATA.SECRET_STAGE));
+      secretBox.appendChild(row);
+    } else {
+      secretBox.classList.add("hidden");
+    }
+
+    // 20 Main Campaign Stages
+    const list = $("campaign-stage-list");
+    list.innerHTML = "";
+    TB.DATA.CAMPAIGN_STAGES.forEach((st) => {
+      const unlocked = st.id <= state.highestStageCleared + 1;
+      const cleared = st.id <= state.highestStageCleared;
+      const row = document.createElement("div");
+      row.className = `stage-row ${st.isBoss ? "boss-row" : ""} ${unlocked ? "" : "locked"}`;
+      row.innerHTML = `
+        <div class="stage-info">
+          <div class="stage-title-line">
+            <span class="stage-num">${st.isBoss ? `BOSS ${st.id}` : `STAGE ${st.id}`}</span>
+            <span class="stage-name">${st.name}</span>
+            ${cleared ? `<span title="Cleared">⭐</span>` : ""}
+          </div>
+          <div class="stage-meta">${st.subtitle} • +${st.pearls} ◉${st.shards ? ` +${st.shards} ✦` : ""}</div>
+        </div>
+        <button class="btn ${unlocked ? "btn-primary" : "btn-secondary"} btn-sm" ${unlocked ? "" : "disabled"}>
+          ${unlocked ? "Battle" : "Locked"}
+        </button>
+      `;
+      if (unlocked) {
+        row.querySelector("button").addEventListener("click", () => launchBattle("campaign", st));
+      }
+      list.appendChild(row);
+    });
+  }
+
+  function renderRosterScreen() {
+    syncCurrencyDisplays();
+
+    // Squad Slots
+    const slotsEl = $("roster-squad-slots");
+    slotsEl.innerHTML = "";
+    for (let i = 0; i < TB.CONFIG.MAX_SQUAD_SIZE; i++) {
+      const heroId = state.squad[i];
+      const slot = document.createElement("button");
+      slot.className = `squad-slot ${heroId ? "filled" : ""}`;
+      if (heroId) {
+        const def = TB.DATA.HEROES.find((h) => h.id === heroId);
+        const c = document.createElement("canvas");
+        c.width = 48;
+        c.height = 48;
+        TB.ART.drawPortrait(c, def);
+        slot.appendChild(c);
+        const name = document.createElement("span");
+        name.textContent = def.name.split(" ")[0];
+        slot.appendChild(name);
+        slot.addEventListener("click", () => {
+          selectedHeroId = heroId;
+          renderRosterScreen();
+        });
+      } else {
+        slot.textContent = "+ Slot";
+      }
+      slotsEl.appendChild(slot);
+    }
+
+    // All Heroes Grid
+    const grid = $("roster-hero-grid");
+    grid.innerHTML = "";
+    TB.DATA.HEROES.forEach((hero) => {
+      const unlocked = state.unlockedHeroes.includes(hero.id);
+      const inSquad = state.squad.includes(hero.id);
+      const card = document.createElement("button");
+      card.className = `hero-card ${selectedHeroId === hero.id ? "selected" : ""} ${inSquad ? "in-squad" : ""} ${unlocked ? "" : "locked"}`;
+      const c = document.createElement("canvas");
+      c.width = 64;
+      c.height = 64;
+      TB.ART.drawPortrait(c, hero);
+      card.appendChild(c);
+
+      const n = document.createElement("div");
+      n.className = "hero-card-name";
+      n.textContent = hero.name;
+      const r = document.createElement("div");
+      r.className = "hero-card-role";
+      r.textContent = unlocked ? `${hero.role} • Lv.${state.heroLevels[hero.id] || 1}` : `🔒 ${hero.unlockHint}`;
+      card.appendChild(n);
+      card.appendChild(r);
+
+      card.addEventListener("click", () => {
+        TB.AUDIO.playSfx("click");
+        selectedHeroId = hero.id;
+        renderRosterScreen();
+      });
+      grid.appendChild(card);
+    });
+
+    // Inspector Panel
+    const hero = TB.DATA.HEROES.find((h) => h.id === selectedHeroId) || TB.DATA.HEROES[0];
+    const unlocked = state.unlockedHeroes.includes(hero.id);
+    const level = state.heroLevels[hero.id] || 1;
+    const stats = TB.DATA.getHeroStats(hero.id, level, state.equippedRelic);
+
+    TB.ART.drawPortrait($("inspector-portrait"), hero);
+    $("insp-name").textContent = hero.name;
+    $("insp-role").textContent = hero.role;
+    $("insp-title").textContent = hero.title;
+    $("insp-level").textContent = unlocked ? `Lv. ${level}` : "Locked";
+    $("insp-power").textContent = `Power ${stats.power}`;
+    $("insp-lore").textContent = hero.lore;
+    $("insp-ability-name").textContent = hero.ability.name;
+    $("insp-ability-desc").textContent = hero.ability.desc;
+
+    $("insp-stats").innerHTML = `
+      <div class="stat-box"><span class="stat-label">HP</span><span class="stat-val">${stats.hp}</span></div>
+      <div class="stat-box"><span class="stat-label">ATK</span><span class="stat-val">${stats.atk}</span></div>
+      <div class="stat-box"><span class="stat-label">DEF</span><span class="stat-val">${stats.def}</span></div>
+      <div class="stat-box"><span class="stat-label">SPD</span><span class="stat-val">${stats.spd}</span></div>
+    `;
+
+    const btnToggle = $("btn-toggle-squad");
+    const btnUpgrade = $("btn-upgrade-hero");
+
+    if (!unlocked) {
+      btnToggle.disabled = true;
+      btnToggle.textContent = hero.unlockHint;
+      btnUpgrade.disabled = true;
+      btnUpgrade.textContent = "Locked";
+    } else {
+      const inSquad = state.squad.includes(hero.id);
+      btnToggle.disabled = false;
+      btnToggle.textContent = inSquad ? "Remove from Team" : "Add to Team";
+
+      const isMax = level >= TB.CONFIG.MAX_HERO_LEVEL;
+      const cost = TB.DATA.getUpgradeCost(level);
+      btnUpgrade.disabled = isMax || state.pearls < cost;
+      btnUpgrade.textContent = isMax ? "Max Level" : `Upgrade (${cost} ◉)`;
+    }
+  }
+
+  function renderRelicsScreen() {
+    syncCurrencyDisplays();
+    const rList = $("relics-list");
+    rList.innerHTML = "";
+    TB.DATA.RELICS.forEach((rel) => {
+      const unlocked = state.unlockedRelics.includes(rel.id);
+      const equipped = state.equippedRelic === rel.id;
+      const row = document.createElement("div");
+      row.className = `relic-row ${equipped ? "equipped" : ""}`;
+      row.innerHTML = `
+        <div>
+          <strong>${rel.name}</strong> <span class="muted-text">[${rel.rarity}]</span>
+          <div class="muted-text">${unlocked ? rel.desc : `Locked — ${rel.unlockHint}`}</div>
+        </div>
+        <button class="btn btn-sm ${equipped ? "btn-support" : "btn-secondary"}" ${unlocked && !equipped ? "" : "disabled"}>
+          ${!unlocked ? "Locked" : equipped ? "Equipped" : "Equip"}
+        </button>
+      `;
+      if (unlocked && !equipped) {
+        row.querySelector("button").addEventListener("click", () => {
+          TB.AUDIO.playSfx("click");
+          state.equippedRelic = rel.id;
+          TB.SAVE.saveState(state);
+          renderRelicsScreen();
+        });
+      }
+      rList.appendChild(row);
+    });
+
+    const aList = $("achievements-list");
+    aList.innerHTML = "";
+    $("ach-progress-text").textContent = `${state.achievements.length} / ${TB.DATA.ACHIEVEMENTS.length}`;
+    TB.DATA.ACHIEVEMENTS.forEach((ach) => {
+      const unlocked = state.achievements.includes(ach.id);
+      const row = document.createElement("div");
+      row.className = `ach-row ${unlocked ? "unlocked" : "locked"}`;
+      const descText = ach.secret && !unlocked ? ach.hiddenHint : ach.desc;
+      row.innerHTML = `
+        <div>
+          <strong>${unlocked ? "🏆" : "🔒"} ${ach.name}</strong>
+          <div class="muted-text">${descText}</div>
+        </div>
+        <div class="muted-text">+${ach.rewardPearls}◉ +${ach.rewardShards}✦</div>
+      `;
+      aList.appendChild(row);
+    });
+  }
+
+  function renderSettingsScreen() {
+    $("set-sound-enabled").checked = Boolean(state.settings.soundEnabled);
+    $("set-music-enabled").checked = Boolean(state.settings.musicEnabled);
+    $("set-sfx-enabled").checked = Boolean(state.settings.sfxEnabled);
+    $("set-reduced-motion").checked = Boolean(state.settings.reducedMotion);
+  }
+
+  /**
+   * Launches a Battle Encounter cleanly and populates the thumb-friendly dock.
+   */
+  function launchBattle(mode, stageDef) {
+    if (!state.squad.length) {
+      showToast("Squad Empty", "Add at least one hero first!");
+      showScreen("roster");
+      return;
+    }
+
+    lastBattleLaunch = { mode, stageDef };
+    showScreen("battle");
+    $("modal-pause").classList.add("hidden");
+    $("modal-results").classList.add("hidden");
+
+    $("battle-title").textContent =
+      mode === "survival" ? "Tidal Survival" : `${stageDef.name}`;
+
+    const dock = $("ability-dock");
+    dock.innerHTML = "";
+    const btnRefs = {};
+
+    state.squad.forEach((heroId, idx) => {
+      const def = TB.DATA.HEROES.find((h) => h.id === heroId);
+      const uid = `a_${idx}`;
+      const btn = document.createElement("button");
+      btn.className = "ability-btn";
+      btn.title = `${def.name}: ${def.ability.name}`;
+
+      const c = document.createElement("canvas");
+      c.width = 48;
+      c.height = 48;
+      TB.ART.drawPortrait(c, def);
+
+      btn.innerHTML = `
+        <span class="ready-tag hidden">CAST</span>
+        <span class="ability-hero-name">${def.name.split(" ")[0]}</span>
+        <div class="mini-bars">
+          <div class="mini-bar-track"><div class="mini-hp-fill" style="width:100%"></div></div>
+          <div class="mini-bar-track"><div class="mini-en-fill" style="width:0%"></div></div>
+        </div>
+      `;
+      btn.insertBefore(c, btn.children[1]);
+      btn.addEventListener("click", () => {
+        TB.ENGINE.triggerHeroAbility(uid);
+      });
+      dock.appendChild(btn);
+      btnRefs[uid] = btn;
+    });
+
+    const autoBtn = $("btn-battle-auto");
+    const speedBtn = $("btn-battle-speed");
+
+    TB.ENGINE.startBattle({
+      mode,
+      stageDef,
+      saveState: state,
+      canvas: $("battle-canvas"),
+      onHudTick: (snap) => {
+        const mins = String(Math.floor(snap.elapsed / 60)).padStart(2, "0");
+        const secs = String(Math.floor(snap.elapsed % 60)).padStart(2, "0");
+        $("battle-timer").textContent =
+          mode === "survival" ? `Wave ${snap.survivalWave} • ${mins}:${secs}` : `${mins}:${secs}`;
+
+        autoBtn.textContent = `Auto: ${snap.autoBattle ? "ON" : "OFF"}`;
+        autoBtn.classList.toggle("active", snap.autoBattle);
+        speedBtn.textContent = `${snap.speed}x`;
+        speedBtn.classList.toggle("active", snap.speed === 2);
+
+        snap.allies.forEach((a) => {
+          const btn = btnRefs[a.uid];
+          if (!btn) return;
+          const hpPct = Math.max(0, Math.round((a.hp / a.maxHp) * 100));
+          const enPct = Math.max(0, Math.round(a.energy));
+          btn.querySelector(".mini-hp-fill").style.width = `${hpPct}%`;
+          btn.querySelector(".mini-en-fill").style.width = `${enPct}%`;
+          const isKo = a.hp <= 0;
+          const isReady = !isKo && a.energy >= 100;
+          btn.classList.toggle("ko", isKo);
+          btn.classList.toggle("ready", isReady);
+          btn.querySelector(".ready-tag").classList.toggle("hidden", !isReady);
+        });
+      },
+      onEnd: handleBattleResult
+    });
+  }
+
+  function handleBattleResult(result) {
+    state.stats.battlesPlayed += 1;
+
+    const unlocks = [];
+    let pearlsEarned = 0;
+    let shardsEarned = 0;
+
+    if (result.mode === "survival") {
+      const wavesCleared = Math.max(0, result.survivalWave - 1);
+      pearlsEarned = wavesCleared * 35 + 20;
+      shardsEarned = Math.floor(wavesCleared / 2);
+      if (result.survivalWave > state.survivalBestWave) {
+        state.survivalBestWave = result.survivalWave;
+      }
+      if (result.survivalWave >= 5) {
+        const a = TB.SAVE.tryUnlockAchievement(state, "survival_5");
+        if (a) unlocks.push(`Achievement: ${a.name}`);
+      }
+      if (result.survivalWave >= 10) {
+        const a = TB.SAVE.tryUnlockAchievement(state, "survival_10");
+        if (a) unlocks.push(`Achievement: ${a.name}`);
+      }
+    } else if (result.victory) {
+      state.stats.battlesWon += 1;
+      const st = result.stageDef;
+      const firstClear = result.mode === "campaign" && st.id > state.highestStageCleared;
+      pearlsEarned = firstClear ? st.pearls : Math.round(st.pearls * 0.65);
+      shardsEarned = firstClear ? st.shards : Math.max(0, Math.floor(st.shards * 0.5));
+
+      if (result.mode === "campaign") {
+        if (st.id > state.highestStageCleared) state.highestStageCleared = st.id;
+        if (st.unlockHero && !state.unlockedHeroes.includes(st.unlockHero)) {
+          state.unlockedHeroes.push(st.unlockHero);
+          const heroDef = TB.DATA.HEROES.find((h) => h.id === st.unlockHero);
+          unlocks.push(`New Hero Unlocked: ${heroDef.name}!`);
+        }
+        if (st.id === 5) {
+          const r = TB.SAVE.tryUnlockRelic(state, "storm_capacitor");
+          if (r) unlocks.push(`Relic Unlocked: ${r.name}`);
+          const a = TB.SAVE.tryUnlockAchievement(state, "boss_5");
+          if (a) unlocks.push(`Achievement: ${a.name}`);
+        }
+        if (st.id === 10) {
+          const r = TB.SAVE.tryUnlockRelic(state, "north_star_compass");
+          if (r) unlocks.push(`Rare Relic: ${r.name}`);
+          const a = TB.SAVE.tryUnlockAchievement(state, "boss_10");
+          if (a) unlocks.push(`Achievement: ${a.name}`);
+        }
+        if (st.id === 15) {
+          const a = TB.SAVE.tryUnlockAchievement(state, "boss_15");
+          if (a) unlocks.push(`Achievement: ${a.name}`);
+        }
+        if (st.id === 20) {
+          const r = TB.SAVE.tryUnlockRelic(state, "leviathan_heart");
+          if (r) unlocks.push(`Relic Unlocked: ${r.name}`);
+          const a = TB.SAVE.tryUnlockAchievement(state, "boss_20");
+          if (a) unlocks.push(`Achievement: ${a.name}`);
+        }
+        // Hidden Achievement: The Quiet Protector
+        if (st.isBoss && result.hadReefGuardian && result.allyDeaths === 0) {
+          const a = TB.SAVE.tryUnlockAchievement(state, "quiet_protector");
+          if (a) {
+            unlocks.push(`Hidden Honor: ${a.name} — Nicholas Haven Unlocked!`);
+          }
+        }
+      } else if (result.mode === "secret") {
+        state.secretHavenCleared = true;
+      }
+
+      // General Achievements
+      const a1 = TB.SAVE.tryUnlockAchievement(state, "first_victory");
+      if (a1) unlocks.push(`Achievement: ${a1.name}`);
+      if (result.squadSize >= 5) {
+        const a5 = TB.SAVE.tryUnlockAchievement(state, "squad_of_five");
+        if (a5) unlocks.push(`Achievement: ${a5.name}`);
+      }
+      if (state.unlockedHeroes.length >= TB.DATA.HEROES.length) {
+        const aa = TB.SAVE.tryUnlockAchievement(state, "all_heroes");
+        if (aa) unlocks.push(`Achievement: ${aa.name}`);
+      }
+      if (state.stats.battlesWon >= 15) {
+        const av = TB.SAVE.tryUnlockAchievement(state, "veteran_10");
+        if (av) unlocks.push(`Achievement: ${av.name}`);
+      }
+    } else {
+      // Consolation Tide Pearls on defeat so players can always upgrade & retry fairly
+      pearlsEarned = 20;
+    }
+
+    state.pearls += pearlsEarned;
+    state.shards += shardsEarned;
+    TB.SAVE.saveState(state);
+
+    // Populate Results Modal
+    const isWin = result.victory || (result.mode === "survival" && result.survivalWave > 1);
+    $("results-crest").textContent = isWin ? "🏆" : "🌊";
+    $("results-heading").textContent =
+      result.mode === "survival"
+        ? `Reached Wave ${result.survivalWave}`
+        : result.victory
+        ? "Victory!"
+        : "Tide Repelled";
+    $("results-subtitle").textContent =
+      result.mode === "survival"
+        ? "Your squad held the coast against rising waves."
+        : result.victory
+        ? `${result.stageDef.name} secured.`
+        : "Upgrade your heroes or adjust targeting and try again!";
+
+    $("results-rewards").innerHTML = `
+      <div><strong>+${pearlsEarned}</strong> Tide Pearls ◉</div>
+      ${shardsEarned > 0 ? `<div><strong>+${shardsEarned}</strong> Starlight Shards ✦</div>` : ""}
+    `;
+
+    const unlockBox = $("results-unlocks");
+    if (unlocks.length > 0) {
+      unlockBox.classList.remove("hidden");
+      unlockBox.innerHTML = unlocks.map((u) => `<div>✦ ${u}</div>`).join("");
+    } else {
+      unlockBox.classList.add("hidden");
+    }
+
+    $("results-support-box").classList.toggle("hidden", !isWin);
+
+    const nextBtn = $("btn-results-next");
+    const hasNext =
+      result.mode === "campaign" &&
+      result.victory &&
+      result.stageDef.id < TB.DATA.CAMPAIGN_STAGES.length;
+    nextBtn.classList.toggle("hidden", !hasNext);
+    if (hasNext) {
+      nextBtn.onclick = () => {
+        const nextStage = TB.DATA.CAMPAIGN_STAGES.find((s) => s.id === result.stageDef.id + 1);
+        launchBattle("campaign", nextStage);
+      };
+    }
+
+    $("modal-results").classList.remove("hidden");
+  }
+
+  function openConfirm(title, msg, onConfirm) {
+    $("confirm-heading").textContent = title;
+    $("confirm-message").textContent = msg;
+    confirmHandler = onConfirm;
+    $("modal-confirm").classList.remove("hidden");
+  }
+
+  /**
+   * Binds all interactive UI events once DOM is loaded.
+   */
+  function init() {
+    applyAccessibilitySettings();
+
+    // Splash -> Home
+    $("btn-enter-game").addEventListener("click", () => {
+      TB.AUDIO.unlock();
+      TB.AUDIO.playSfx("click");
+      showScreen("home");
+    });
+
+    // Back buttons
+    document.querySelectorAll("[data-nav]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        TB.AUDIO.playSfx("click");
+        showScreen(btn.dataset.nav);
+      });
+    });
+
+    // Home Hub Navigation
+    $("btn-nav-campaign").addEventListener("click", () => { TB.AUDIO.playSfx("click"); showScreen("campaign"); });
+    $("btn-nav-roster").addEventListener("click", () => { TB.AUDIO.playSfx("click"); showScreen("roster"); });
+    $("btn-nav-relics").addEventListener("click", () => { TB.AUDIO.playSfx("click"); showScreen("relics"); });
+    $("btn-nav-settings").addEventListener("click", () => { TB.AUDIO.playSfx("click"); showScreen("settings"); });
+    $("btn-edit-squad-from-campaign").addEventListener("click", () => showScreen("roster"));
+
+    $("btn-nav-survival").addEventListener("click", () => {
+      TB.AUDIO.playSfx("click");
+      launchBattle("survival", { name: "Tidal Survival" });
+    });
+
+    // Global Mute & Fullscreen
+    const toggleMute = () => {
+      state.settings.soundEnabled = !state.settings.soundEnabled;
+      TB.SAVE.saveState(state);
+      applyAccessibilitySettings();
+      if (state.settings.soundEnabled) TB.AUDIO.unlock();
+    };
+    $("btn-mute-global").addEventListener("click", toggleMute);
+    $("btn-battle-mute").addEventListener("click", toggleMute);
+    $("btn-pause-mute").addEventListener("click", toggleMute);
+
+    $("btn-fullscreen-global").addEventListener("click", () => {
+      const el = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(() => showToast("Full Screen", "Your browser or embed frame restricted fullscreen mode."));
+        }
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Roster Actions: Squad Add/Remove & Hero Upgrade
+    $("btn-toggle-squad").addEventListener("click", () => {
+      const idx = state.squad.indexOf(selectedHeroId);
+      if (idx >= 0) {
+        if (state.squad.length <= 1) {
+          showToast("Minimum 1 Hero", "Your squad needs at least one active hero.");
+          return;
+        }
+        state.squad.splice(idx, 1);
+      } else {
+        if (state.squad.length >= TB.CONFIG.MAX_SQUAD_SIZE) {
+          showToast("Squad Full", "Remove a hero from a slot before adding another.");
+          return;
+        }
+        state.squad.push(selectedHeroId);
+      }
+      TB.AUDIO.playSfx("click");
+      TB.SAVE.saveState(state);
+      renderRosterScreen();
+    });
+
+    $("btn-upgrade-hero").addEventListener("click", () => {
+      const lv = state.heroLevels[selectedHeroId] || 1;
+      const cost = TB.DATA.getUpgradeCost(lv);
+      if (lv >= TB.CONFIG.MAX_HERO_LEVEL || state.pearls < cost) return;
+      state.pearls -= cost;
+      state.heroLevels[selectedHeroId] = lv + 1;
+      TB.AUDIO.playSfx("shield");
+      if (lv + 1 >= 5) {
+        const ach = TB.SAVE.tryUnlockAchievement(state, "upgrade_hero");
+        if (ach) showToast(`Honor: ${ach.name}`, `+${ach.rewardPearls} ◉`, true);
+      }
+      TB.SAVE.saveState(state);
+      renderRosterScreen();
+    });
+
+    // Battle Controls
+    $("battle-canvas").addEventListener("pointerdown", (e) => {
+      TB.ENGINE.handleCanvasTap(e.clientX, e.clientY, $("battle-canvas"));
+    });
+    $("btn-battle-speed").addEventListener("click", () => {
+      state.settings.battleSpeed = TB.ENGINE.toggleSpeed();
+      TB.SAVE.saveState(state);
+    });
+    $("btn-battle-auto").addEventListener("click", () => {
+      state.settings.autoBattle = TB.ENGINE.toggleAuto();
+      TB.SAVE.saveState(state);
+    });
+    $("btn-battle-pause").addEventListener("click", () => {
+      TB.ENGINE.setPaused(true);
+      $("modal-pause").classList.remove("hidden");
+    });
+    $("btn-resume-battle").addEventListener("click", () => {
+      $("modal-pause").classList.add("hidden");
+      TB.ENGINE.setPaused(false);
+    });
+    $("btn-retreat-battle").addEventListener("click", () => {
+      $("modal-pause").classList.add("hidden");
+      TB.ENGINE.stopBattle();
+      showScreen("home");
+    });
+
+    // Results Modal Controls
+    $("btn-results-retry").addEventListener("click", () => {
+      $("modal-results").classList.add("hidden");
+      if (lastBattleLaunch) launchBattle(lastBattleLaunch.mode, lastBattleLaunch.stageDef);
+    });
+    $("btn-results-home").addEventListener("click", () => {
+      $("modal-results").classList.add("hidden");
+      TB.ENGINE.stopBattle();
+      showScreen("home");
+    });
+
+    // Keyboard shortcuts 1-5 for desktop players
+    window.addEventListener("keydown", (e) => {
+      if (!$("screen-battle").classList.contains("active")) return;
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 5) {
+        TB.ENGINE.triggerHeroAbility(`a_${num - 1}`);
+      }
+    });
+
+    // Pause cleanly if browser tab is backgrounded
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && $("screen-battle").classList.contains("active") && $("modal-results").classList.contains("hidden")) {
+        TB.ENGINE.setPaused(true);
+        $("modal-pause").classList.remove("hidden");
+      }
+    });
+
+    // Settings Toggles
+    $("set-sound-enabled").addEventListener("change", (e) => {
+      state.settings.soundEnabled = e.target.checked;
+      TB.SAVE.saveState(state);
+      applyAccessibilitySettings();
+      if (e.target.checked) TB.AUDIO.unlock();
+    });
+    $("set-music-enabled").addEventListener("change", (e) => {
+      state.settings.musicEnabled = e.target.checked;
+      TB.SAVE.saveState(state);
+      applyAccessibilitySettings();
+    });
+    $("set-sfx-enabled").addEventListener("change", (e) => {
+      state.settings.sfxEnabled = e.target.checked;
+      TB.SAVE.saveState(state);
+      applyAccessibilitySettings();
+    });
+    $("set-reduced-motion").addEventListener("change", (e) => {
+      state.settings.reducedMotion = e.target.checked;
+      TB.SAVE.saveState(state);
+      applyAccessibilitySettings();
+    });
+
+    // Save Export / Import / Reset
+    $("btn-export-save").addEventListener("click", () => {
+      TB.SAVE.exportSaveFile(state);
+      showToast("Save Exported", "Backup JSON downloaded safely.");
+    });
+
+    $("input-import-save").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = TB.SAVE.parseImportedSave(reader.result);
+          openConfirm(
+            "Overwrite Current Save?",
+            "Importing this backup file will replace your current local progress.",
+            () => {
+              state = imported;
+              TB.SAVE.saveState(state);
+              applyAccessibilitySettings();
+              renderSettingsScreen();
+              showToast("Save Restored", "Backup loaded successfully!", true);
+            }
+          );
+        } catch (err) {
+          showToast("Import Failed", "That file does not appear to be a valid Tidebreak save.");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    });
+
+    $("btn-reset-save").addEventListener("click", () => {
+      openConfirm(
+        "Reset All Progress?",
+        "This erases unlocked heroes, upgrades, and campaign progress from this browser.",
+        () => {
+          state = TB.SAVE.createDefaultState();
+          TB.SAVE.saveState(state);
+          selectedHeroId = state.squad[0];
+          applyAccessibilitySettings();
+          showScreen("home");
+          showToast("Progress Reset", "Started a fresh Tidebreak journey.");
+        }
+      );
+    });
+
+    $("btn-confirm-cancel").addEventListener("click", () => {
+      $("modal-confirm").classList.add("hidden");
+      confirmHandler = null;
+    });
+    $("btn-confirm-ok").addEventListener("click", () => {
+      $("modal-confirm").classList.add("hidden");
+      if (confirmHandler) confirmHandler();
+      confirmHandler = null;
+    });
+
+    // Optional Donation Button Validation & Safe External Open
+    const donationValid = TB.isValidExternalUrl(TB.CONFIG.DONATION_URL);
+    document.querySelectorAll(".btn-donation-trigger").forEach((btn) => {
+      if (!donationValid) {
+        btn.disabled = true;
+        btn.title = "Donations are not currently configured.";
+      } else {
+        btn.addEventListener("click", () => {
+          window.open(TB.CONFIG.DONATION_URL, "_blank", "noopener,noreferrer");
+        });
+      }
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", init);
+})(window.Tidebreak);
+```
+
+---
+
+### 10. `README.md`
+
+```markdown
+# TIDEBREAK: Battle for the Elements
+
+A mobile-first, free-to-play coastal fantasy tactical hero-battle RPG built with **vanilla HTML5, CSS3, ES6 JavaScript, HTML5 Canvas 2D, and the Web Audio API**.
+
+Intended public home: `https://amandazirzow.com/games/tidebreak/`
+
+---
+
+## Features
+- **Zero Dependencies & Zero Build Step**: Pure static web files—no Node build pipeline, no backend, no API keys, and no external audio/image assets that can break or violate copyright.
+- **Tactical Team Building**: 7 original heroes across Tank, Damage, Healer, Support, and Specialist roles. Start with 3 heroes and unlock 4 more through campaign progression.
+- **Real-Time ATB Combat**: Automated basic attacks governed by Speed, manual enemy target prioritization by tapping foes on the arena canvas, and manual Special Abilities triggered from the thumb-friendly dock (or keys `1`–`5` on desktop).
+- **Rich Progression**: 20 Campaign stages with unique Bosses every 5 stages, repeatable Tidal Survival endless wave mode, hero upgrades, equippable Relics, 12 Achievements, and a secret unlockable sanctuary.
+- **Local Save & Backup**: Versioned `localStorage` persistence with `.json` Export and Import backup files.
+- **Mobile & Accessibility First**: Touch-friendly >= 44px controls, portrait & landscape support, reduced-motion mode, instant mute, pause/resume on tab switch, Full Screen toggle, and safe-area-inset support.
+
+---
+
+## Local Installation & Testing
+Because the project uses standard relative `<script defer>` tags and procedural Canvas/Web Audio assets, you can run it two ways:
+
+1. **Direct File Open**: Double-click `index.html` to open directly in Chrome, Safari, Firefox, or Edge.
+2. **Local Static Server (Recommended for mobile testing)**:
+   ```bash
+   npx serve .
+   # or with Python 3:
+   python3 -m http.server 8080
+   ```
+   Then visit `http://localhost:8080` on your desktop or phone on the same Wi-Fi network.
+
+---
+
+## Deploying to GitHub Pages
+1. Create or open your static website repository (e.g., `amandazirzow.github.io` or your custom domain repo).
+2. Copy the `tidebreak/` folder into `/games/tidebreak/` in your repository so `index.html` lives at `/games/tidebreak/index.html`.
+3. Commit and push to your `main` (or `gh-pages`) branch:
+   ```bash
+   git add games/tidebreak
+   git commit -m "Add TIDEBREAK: Battle for the Elements"
+   git push origin main
+   ```
+4. In GitHub **Settings → Pages**, verify GitHub Pages is deploying from your branch. The game will be live at `https://amandazirzow.com/games/tidebreak/`.
+
+---
+
+## Configuration & Customization
+
+### Changing the Donation URL or Gallery Link
+Open `js/config.js` and edit:
+```javascript
+GALLERY_URL: "https://amandazirzow.com/",
+DONATION_URL: "https://venmo.com/u/zirzow",
+```
+The donation buttons automatically validate `DONATION_URL` via `isValidExternalUrl()` and open safely in a new tab with `noopener,noreferrer`. If set to an invalid or empty value, the donation button automatically disables.
+
+### Adjusting Difficulty & Balance
+All core tuning knobs live in `js/config.js`:
+- `LEVEL_SCALING` (`HP_PER_LEVEL`, `ATK_PER_LEVEL`, `DEF_PER_LEVEL`, `SPD_PER_LEVEL`): Controls how strong hero upgrades feel.
+- `UPGRADE_COST_BASE` / `UPGRADE_COST_MULT`: Controls Tide Pearl upgrade economy.
+- `COMBAT.ATB_RATE`, `ENERGY_ON_ATTACK`, `DEFENSE_CONSTANT`, `SURVIVAL_WAVE_SCALE`: Controls battle pacing and wave scaling.
+
+### Adding New Heroes or Campaign Levels
+1. **Add a Hero**: Append a new object to `HEROES` in `js/data.js`, add its ability handler in `triggerHeroAbility()` inside `js/engine.js`, and optionally customize its silhouette in `drawSilhouetteById()` inside `js/art.js`.
+2. **Add a Stage**: Append a new stage object to `CAMPAIGN_STAGES` in `js/data.js` (specifying `scale`, `enemies`, `pearls`, `shards`, and optional `unlockHero`).
+
+---
+
+## Embedding on Another Webpage (`<iframe>`)
+```html
+<div style="position: relative; width: 100%; max-width: 540px; height: 820px; margin: 0 auto;">
+  <iframe
+    src="https://amandazirzow.com/games/tidebreak/"
+    title="TIDEBREAK: Battle for the Elements"
+    style="width: 100%; height: 100%; border: 1px solid #1e3a8a; border-radius: 16px;"
+    allow="fullscreen"
+    loading="lazy">
+  </iframe>
+</div>
+```
+
+---
+
+## Third-Party Dependencies & Licenses
+- **Runtime Dependencies**: **None (0 external packages)**.
+- All artwork, character designs, UI styles, game logic, and synthesized audio are original code licensed for use with **TIDEBREAK: Battle for the Elements**.
+```
+
+---
+
+### Verification Summary (Testing & Acceptance Checklist)
+Every requirement in Section 11 has been verified directly across the code paths:
+1. **New players start battles smoothly**: `createDefaultState()` seeds 3 heroes (`reef_guardian`, `stormbreaker`, `tideweaver`) and `90` Tide Pearls; tapping **Tap to Begin → Campaign → Stage 1** starts combat immediately.
+2. **All 7 heroes attack and trigger unique abilities**: `triggerHeroAbility()` implements `team_shield`, `chain_lightning`, `team_heal`, `crit_dash`, `aoe_burn`, `pierce_disrupt`, and `team_buff`.
+3. **Team selection & upgrades alter combat**: `buildAllyUnit()` computes runtime HP, ATK, DEF, SPD, and Crit directly from `state.squad`, `state.heroLevels`, and `state.equippedRelic`.
+4. **Victory, defeat, unlocks, & Survival waves**: `handleBattleResult()` awards Tide Pearls, Starlight Shards, hero unlocks (Stages 3, 6, 9, 12), Relics (including **North Star Compass**), Achievements (including hidden **The Quiet Protector**), and unlocks **Nicholas Haven**.
+5. **Lifecycle & leak safety**: `stopBattle()` cancels `requestAnimationFrame` and clears transient simulation arrays whenever retreating, switching screens, or re-entering battles repeatedly; `visibilitychange` auto-pauses when backgrounded.
+6. **Optional donation safety**: `isValidExternalUrl()` verifies `https://` or `http://` before enabling `.btn-donation-trigger` buttons and opens safely with `noopener,noreferrer`.
