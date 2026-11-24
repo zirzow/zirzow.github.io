@@ -30,7 +30,7 @@ html.no-motion .confetti{display:none}
 <script>
 'use strict';
 // CONFIGURATION: Leave empty for a fully offline game. Connecting a secure score endpoint requires server-side validation and a privacy policy.
-const SCORE_ENDPOINT = ''; // Paste your deployed Google Apps Script /exec URL between these quotes.
+const SCORE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyuveHw8DMH0KMRlAZ9OnBMZdSZdavxOHVDD1L4TXjDhUfiattHLDNaoQvLfDibCsax/exec'; // Deployed Google Apps Script web app.
 const VERSION='GQ2-2026.11';
 const $=id=>document.getElementById(id);
 const safe=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
