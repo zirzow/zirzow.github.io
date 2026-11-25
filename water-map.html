@@ -723,6 +723,36 @@ html[data-az-theme=dark] .cwk-storm-major line{stroke:#C4B5FD}
 html[data-az-theme=dark] .cwk-storm-major path{fill:#C4B5FD}
 html[data-az-theme=dark] .cwk-storm-regional line{stroke:#A7B7CC}
 html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
+</style><style>
+/* Map page only: keep both navigation bars in normal document flow. */
+body > .az-header, body > .site-header, .az-header .az-nav, .site-header .site-nav {position:static!important;top:auto!important;backdrop-filter:none;}
+/* Theme-aware map chrome; preserve the geographic basemap and data colors. */
+html[data-az-theme=dark] .rain-controls,
+html[data-az-theme=dark] .map-status-bar,
+html[data-az-theme=dark] .map-tool-btn,
+html[data-az-theme=dark] .hist-toggle-btn:not(.is-on),
+html[data-az-theme=dark] .bacteria-segmented,
+html[data-az-theme=dark] .legend-trigger,
+html[data-az-theme=dark] .legend-panel,
+html[data-az-theme=dark] .image-save-dialog {background:var(--bg-surface);color:var(--text-primary);border-color:var(--border-strong);}
+html[data-az-theme=dark] .rain-controls label{color:var(--text-secondary);}
+html[data-az-theme=dark] .rain-controls select,
+html[data-az-theme=dark] .station-select{color:var(--text-primary);background:var(--bg-canvas);color-scheme:dark;}
+html[data-az-theme=dark] .btn-secondary:hover,
+html[data-az-theme=dark] .map-tool-btn:hover,
+html[data-az-theme=dark] .hist-toggle-btn:not(.is-on):hover,
+html[data-az-theme=dark] .legend-trigger:hover{background:var(--bg-subtle);color:var(--teal);border-color:var(--teal);}
+html[data-az-theme=dark] .scale-btn.active,
+html[data-az-theme=dark] .seg-btn.active-both,
+html[data-az-theme=dark] .seg-btn.active-single,
+html[data-az-theme=dark] .btn-secondary[aria-pressed=true],
+html[data-az-theme=dark] .btn-primary{background:#9bdcff;color:#09283c;border-color:#9bdcff;}
+html[data-az-theme=dark] .btn-primary:hover{background:#c8eaff;color:#09283c;}
+html[data-az-theme=dark] .legend-historic-row{color:var(--text-secondary);}
+html[data-az-theme=dark] .map-frame .leaflet-control-zoom a{background:var(--bg-surface);color:var(--text-primary);border-color:var(--border-strong);}
+html[data-az-theme=dark] .map-frame .leaflet-control-zoom a:hover{background:var(--bg-subtle);}
+html[data-az-theme=dark] .map-frame .leaflet-control-attribution{background:#12283cf2;color:#e0edf7;}
+html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff;}
 </style></head>
 <body><a class="az-skip" href="#top">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html" aria-current="page">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header>
   <header class="site-header">
