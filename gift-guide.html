@@ -38,4 +38,4 @@ const cards=[...document.querySelectorAll('.gg-card')];const buttons=[...filters
 function selectGiftFilter(value){let total=0;cards.forEach(card=>{const show=value==='all'||card.dataset.tags.split(/\s+/).includes(value);card.hidden=!show;if(show)total++;});buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.filter===value)));count.textContent=total+' gift ideas';}
 buttons.forEach(button=>button.addEventListener('click',()=>selectGiftFilter(button.dataset.filter)));selectGiftFilter('all');
 const motion=document.querySelector('.gg-motion');motion.addEventListener('click',()=>{const paused=document.getElementById('holiday-hero').classList.toggle('gg-paused');motion.setAttribute('aria-pressed',String(paused));motion.textContent=paused?'Resume animation':'Pause animation';});
-</script><script defer src="special-occasions.js?v=1"></script></body></html>
+</script><script defer src="special-occasions.js?v=2"></script></body></html>

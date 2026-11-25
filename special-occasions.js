@@ -32,6 +32,19 @@
     return 'general';
   }
   async function config(){try{const response=await fetch('special-occasion-settings.json',{cache:'no-cache'});if(response.ok)return await response.json();}catch(e){}return {mode:'auto'};}
+  function enhanceMotion(){
+    const card=host?.querySelector('.so-card');
+    const icon=card?.querySelector('.so-icon');
+    if(!card||!icon||card.querySelector('.so-motion-toggle'))return;
+    for(const cls of ['so-particle-track','so-particle-track second','so-sparkle s1','so-sparkle s2','so-sparkle s3']){
+      const el=document.createElement('span');el.className=cls;el.setAttribute('aria-hidden','true');
+      if(cls.includes('sparkle'))el.textContent='✦';
+      icon.appendChild(el);
+    }
+    const button=document.createElement('button');button.type='button';button.className='so-motion-toggle';button.textContent='Pause animation';button.setAttribute('aria-pressed','false');
+    button.addEventListener('click',()=>{const paused=card.toggleAttribute('data-paused');button.setAttribute('aria-pressed',String(paused));button.textContent=paused?'Resume animation':'Pause animation';});
+    card.querySelector('.so-copy').appendChild(button);card.classList.add('so-motion');
+  }
   async function load(){
     if(!host)return;
     const settings=await config();
@@ -44,10 +57,11 @@
         const template=document.createElement('template');template.innerHTML=await response.text();
         const section=template.content.querySelector('section[data-occasion]');
         if(!section)continue;
-        host.replaceChildren(section);return;
+        host.replaceChildren(section);enhanceMotion();return;
       }catch(e){}
     }
     // Existing fallback stays visible if a fetch fails.
+    enhanceMotion();
   }
   load();
   // Reuse the same occasion metadata in the destination gift guide.
