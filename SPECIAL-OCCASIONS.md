@@ -126,7 +126,7 @@ The loader uses the following rules, in priority order when dates overlap. These
 | Change the location of the block on the homepage | [index.html](index.html) |
 | Change the global footer | [footer.html](footer.html) |
 
-The individual HTML inserts are fragments, not full web pages. Preserve the section's data-occasion attribute, .so-card, .so-icon (and its inner span), .so-copy, and accessible heading ID so loading and animation continue to work. All 22 share the same rotating rings, orbiting lights, floating icon and sparkles. Visitors can pause motion; reduced-motion preferences are respected.
+The individual HTML inserts are fragments, not full web pages. Preserve the section's data-occasion attribute, .so-card, .so-icon (and its inner span), .so-copy, and accessible heading ID so loading and animation continue to work. All 22 share the same rotating rings, orbiting lights, floating icon and sparkles. Visitors can pause or resume decorative animations using the single control in the top navigation next to the light/dark toggle; reduced-motion preferences are respected.
 
 To edit an occasion's gift-guide title or description as well as its homepage banner, also update its metadata in special-occasions.js. The two sets of copy are currently stored separately.
 
@@ -135,7 +135,7 @@ To edit an occasion's gift-guide title or description as well as its homepage ba
 - Wrong occasion: check mode and manual in settings. Use valid JSON with double quotes, no trailing commas, and an exact ID from the table. Invalid IDs or unavailable settings fall back to automatic selection.
 - Old appearance: confirm the latest commit is on the deployed branch, then hard-refresh. The settings and insert requests use cache revalidation. If changing CSS or JS, update their version query strings in index.html (and in gift-guide.html for special-occasions.js).
 - General gift block appears instead: the requested insert may have failed to load; verify the filename and the section's data-occasion attribute. The loader falls back to the general insert or the homepage's static fallback.
-- No animation: check browser/system reduced-motion preferences and the Pause/Resume animation control. If JavaScript cannot load, the fallback is static.
+- No animation: check browser/system reduced-motion preferences and the top navigation Pause/Resume animations control. If JavaScript cannot load, the fallback is static.
 - Preview a destination without changing the homepage: [Christmas](https://amandazirzow.com/gift-guide.html?occasion=xmas), [Black Friday](https://amandazirzow.com/gift-guide.html?occasion=black-friday), [Fourth of July](https://amandazirzow.com/gift-guide.html?occasion=july4), [General](https://amandazirzow.com/gift-guide.html?occasion=general). These links preview the gift guide, not the homepage insert.
 
 No external scheduler or server is necessary. Gift links do not imply verified sales or discounts. The seasonal system does not alter the water map, games, homepage hero, or other topic pages.

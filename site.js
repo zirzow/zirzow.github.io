@@ -22,3 +22,34 @@ document.querySelectorAll('[data-shared-footer]').forEach(async host => {
     console.warn('Using fallback footer:', error);
   }
 });
+
+/* One global decorative-animation control, next to the color theme toggle.
+   Preferences persist across editorial pages. System reduced motion is honored. */
+(() => {
+  const root = document.documentElement;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let paused = false;
+  try { paused = localStorage.getItem('az-motion') === 'paused'; } catch (_) {}
+  const theme = document.querySelector('.az-header .az-theme');
+  if (!theme) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'az-motion';
+  theme.after(button);
+  function render() {
+    const effective = paused || reduced.matches;
+    root.toggleAttribute('data-az-motion-paused', effective);
+    button.textContent = effective ? 'Resume animations' : 'Pause animations';
+    button.setAttribute('aria-pressed', String(effective));
+    button.disabled = reduced.matches;
+    button.title = reduced.matches ? 'Animations are disabled by your system reduced-motion setting.' : 'Control decorative website animations';
+    if (reduced.matches) button.textContent = 'Animations off';
+  }
+  button.addEventListener('click', () => {
+    paused = !paused;
+    try { localStorage.setItem('az-motion', paused ? 'paused' : 'playing'); } catch (_) {}
+    render();
+  });
+  if (reduced.addEventListener) reduced.addEventListener('change', render);
+  render();
+})();

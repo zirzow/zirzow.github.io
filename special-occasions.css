@@ -6,7 +6,7 @@
 @media(max-width:600px){.so-card{grid-template-columns:1fr;text-align:center}.so-icon{width:105px}}
 
 /* Living seasonal badge: counter-rotating rings, orbiting lights, floating icon.
-   Motion starts only when the accessible pause control has been installed. */
+   Motion is controlled by the shared top navigation. */
 .so-card{position:relative;isolation:isolate}
 .so-icon span{display:block;position:relative;z-index:2;filter:drop-shadow(0 0 12px #9bdcff88)}
 .so-card.so-motion .so-icon:before{animation:so-spin 14s linear infinite}
@@ -23,10 +23,9 @@
 .so-card.so-motion .so-sparkle{animation:so-twinkle 3s ease-in-out infinite}
 .so-card.so-motion .so-sparkle.s2{animation-delay:-1s}.so-card.so-motion .so-sparkle.s3{animation-delay:-2s}
 .so-card.so-motion .so-icon{animation:so-glow 4s ease-in-out infinite}
-.so-motion-toggle{display:block;margin:10px 0 0 auto;min-height:44px;padding:6px 12px;border:1px solid var(--az-edge);border-radius:999px;background:var(--az-card);color:var(--az-ink);font:inherit;font-size:13px;cursor:pointer}
-.so-card[data-paused] *, .so-card[data-paused] *:before,.so-card[data-paused] *:after{animation-play-state:paused!important}
+
 @keyframes so-spin{to{transform:rotate(360deg)}}@keyframes so-reverse{to{transform:rotate(-360deg)}}
 @keyframes so-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 @keyframes so-twinkle{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1.2)}}
 @keyframes so-glow{0%,100%{filter:drop-shadow(0 0 2px #9bdcff33)}50%{filter:drop-shadow(0 0 9px #9bdcff88)}}
-@media(prefers-reduced-motion:reduce){.so-card,.so-card *,.so-card *:before,.so-card *:after{animation:none!important}.so-motion-toggle{display:none}}
+@media(prefers-reduced-motion:reduce){.so-card,.so-card *,.so-card *:before,.so-card *:after{animation:none!important}}

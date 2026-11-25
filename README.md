@@ -42,3 +42,6 @@ Use xmas for Christmas, black-friday for Black Friday, or general for year-round
 - [Calusa Waterkeeper water-map documentation](README_CWK_MAP.md)
 
 The water-map documentation is maintained separately from general website instructions.
+
+## Animation preferences
+The single Pause animations control next to the light/dark toggle manages the homepage hero, seasonal insert and gift-guide decorations. The preference persists across editorial pages; system reduced motion is respected. Games retain their own gameplay controls.
