@@ -1,1 +1,34 @@
 .journal-hero{padding:clamp(36px,7vw,85px) 0;background:radial-gradient(ellipse at 85% 15%,#245b68,#081827 75%);color:#eff7ff}.journal-hero h1{color:#eff7ff;font-size:clamp(2.6rem,7vw,5rem);margin:.2em 0}.journal-hero p{color:#c5e5ed;max-width:65ch}.journal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px}.journal-card,.journal-signup{border:1px solid var(--az-edge,#82909a);border-radius:22px;padding:clamp(18px,3vw,30px);background:var(--az-card,transparent)}.journal-card img,.journal-story img{width:100%;height:auto;border-radius:14px}.journal-card h2{margin:.4em 0}.journal-story{max-width:800px;margin:auto;line-height:1.85}.journal-story figure{margin:24px 0}.journal-story figcaption{font-size:.95rem}.journal-signup{margin:24px 0}.journal-signup form{display:grid;gap:12px}.journal-signup label{display:block;font-weight:650}.journal-signup input:not([type=checkbox]),.journal-signup textarea{display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;font:inherit}.journal-signup details{padding:12px;border:1px solid var(--az-edge,#82909a);border-radius:12px}.journal-signup summary{cursor:pointer;font-weight:bold;min-height:32px}.journal-signup fieldset{border:0;margin:10px 0;padding:0}.journal-signup .optional-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}.journal-signup .check{display:flex;align-items:flex-start;gap:9px;font-weight:normal;margin:8px 0}.journal-signup input[type=checkbox]{width:19px;height:19px;flex:none}.journal-signup .trap{position:absolute;left:-10000px}.journal-signup button:disabled{opacity:.7;cursor:not-allowed}.journal-signup :focus-visible{outline:3px solid #e4a934;outline-offset:3px}.journal-signup .notice{font-size:.9rem}.journal-signup h2{margin-top:0}.journal-signup button{min-height:44px}.journal-visual{min-height:180px;background:linear-gradient(145deg,#153b40,#4b755b);color:#fff;display:grid;place-items:center;border-radius:16px;font-size:64px}.journal-story a{overflow-wrap:anywhere}
+/* A quiet, borderless footer layout, scoped to the shared footer only. */
+.az-footer.az-footer-compact{border:0;background:var(--az-card,#12283c);color:var(--az-ink,#eff7ff);font:400 14px/1.5 system-ui,sans-serif}
+.az-footer-compact .az-wrap.az-footer-inner{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start;gap:clamp(24px,5vw,70px);padding:26px 24px 23px;max-width:1160px;margin:auto}
+.az-footer-wordmark{font-size:26px;font-weight:900;letter-spacing:-.065em;color:var(--az-ink)!important;text-decoration:none;line-height:1}
+.az-footer-wordmark span{color:var(--az-accent)}
+.az-footer-compact .az-footer-motto{margin:8px 0 14px;font-size:14px;color:var(--az-muted)}
+.az-footer-links{display:flex;flex-wrap:wrap;gap:6px 16px}
+.az-footer-compact .az-footer-links a{color:var(--az-muted);font-size:13px;text-decoration:none}
+.az-footer-compact .az-footer-links a:hover{color:var(--az-accent);text-decoration:underline}
+.az-footer-compact .az-footer-copy{margin:16px 0 0;font-size:12px;color:var(--az-muted)}
+.az-footer-contact{min-width:0}
+.az-footer-contact .journal-signup{border:0;background:none;border-radius:0;margin:0;padding:0}
+.az-footer-contact .journal-signup>.az-kicker{display:none}
+.az-footer-contact .journal-signup h2{font:750 17px/1.3 system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 4px;color:var(--az-ink)}
+.az-footer-contact .journal-signup>p:not(.az-kicker){font-size:13px;color:var(--az-muted);margin:0 0 9px;line-height:1.4}
+.az-footer-contact .journal-signup form{gap:4px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}
+.az-footer-contact .journal-signup form>label:first-child{grid-column:1;grid-row:1;font-size:0;min-width:0}
+.az-footer-contact .journal-signup input:not([type=checkbox]),.az-footer-contact .journal-signup textarea{font:400 13px/1.4 system-ui,sans-serif;min-height:38px;padding:8px 10px;border:0;border-radius:6px;background:var(--az-soft);color:var(--az-ink);box-sizing:border-box}
+.az-footer-contact .journal-signup input::placeholder{color:var(--az-muted);opacity:1}
+.az-footer-contact .journal-signup form>button{grid-column:2;grid-row:1;min-height:38px;height:38px;font-size:12px;white-space:nowrap;padding:8px 13px;margin:0;border:0;border-radius:6px}
+.az-footer-contact .journal-signup form>details{grid-column:1/-1;grid-row:3;border:0;padding:0;margin:0}
+.az-footer-contact .journal-signup summary{font-size:12px;font-weight:600;min-height:0;padding:5px 0;color:var(--az-accent)}
+.az-footer-contact .journal-signup form>.check{grid-column:1/-1;grid-row:2;font-size:11.5px;line-height:1.4;gap:7px;margin:4px 0;color:var(--az-muted)}
+.az-footer-contact .journal-signup input[type=checkbox]{width:16px;height:16px;accent-color:var(--az-accent);margin:1px 0 0}
+.az-footer-contact .journal-signup .optional-grid{gap:7px;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
+.az-footer-contact .journal-signup .optional-grid label,.az-footer-contact .journal-signup details p,.az-footer-contact .journal-signup fieldset{font-size:12px}
+.az-footer-contact .journal-signup details .check{font-size:12px;margin:5px 0}
+.az-footer-contact .journal-signup .notice{grid-column:1/-1;font-size:11px;line-height:1.4;margin:0;color:var(--az-muted)}
+.az-footer-contact .journal-signup [data-newsletter-status]{display:none}
+.az-footer-contact .journal-signup form:has(button:disabled) [data-newsletter-status]{display:block}
+.az-footer-contact .journal-signup .trap{position:absolute;left:-10000px}
+@media(max-width:680px){.az-footer-compact .az-wrap.az-footer-inner{grid-template-columns:1fr;gap:22px;padding:22px 18px}.az-footer-contact .journal-signup .optional-grid{grid-template-columns:1fr}}
+@media(max-width:340px){.az-footer-contact .journal-signup form{grid-template-columns:1fr}.az-footer-contact .journal-signup form>button{grid-column:1;grid-row:2;width:100%}.az-footer-contact .journal-signup form>.check{grid-row:3}.az-footer-contact .journal-signup form>details{grid-row:4}}
