@@ -1,0 +1,5 @@
+{
+  "mode": "auto",
+  "manual": "xmas",
+  "comment": "Use mode auto for date-based switching, manual to select a single insert by its ID, or off to hide the feature. The manual value is ignored in auto mode."
+}
