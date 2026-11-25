@@ -696,10 +696,18 @@
     #rain-legend {display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
     #rain-legend span {display:inline-flex;align-items:center;gap:4px;}
     #rain-legend img {width:18px;height:18px;object-fit:contain;}
-    @media(max-width:600px){.header-inner{gap:8px}.brand-wordmark{font-size:15px}.map-bottom-right{bottom:42px;max-width:calc(100% - 28px)}.map-legend-wrap{bottom:120px}.trend-panel{padding:12px}}
+    @media(max-width:600px){.header-inner{gap:8px}.brand-wordmark{font-size:15px}.map-bottom-right{bottom:42px;max-width:calc(100% - 28px)}.map-legend-wrap{bottom:42px;left:8px;z-index:510;max-width:calc(100% - 16px)}.map-legend-wrap .legend-panel{width:min(320px,calc(100vw - 56px));max-height:330px;overflow:auto;overscroll-behavior:contain}.map-bottom-right{right:8px;flex-direction:column;align-items:flex-end;gap:5px}.legend-trigger{padding:8px 9px}.bacteria-segmented{gap:1px}.seg-btn{padding:6px 7px}.trend-panel{padding:12px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
     .export-row {display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:10px 0;color:var(--text-secondary);font-size:13px;}
     .export-row button:disabled, #save-trend-png:disabled {opacity:.65;cursor:wait;}
+    @media(max-width:360px){.map-legend-wrap{bottom:85px}.map-bottom-right{bottom:38px}.legend-panel{max-height:280px!important}}
+    .image-save-dialog{width:min(680px,calc(100% - 24px));max-height:90vh;max-height:90dvh;overflow:auto;border:1px solid var(--border-strong);border-radius:14px;padding:18px;color:var(--text-primary);background:white;box-shadow:0 12px 50px #0004;}
+    .image-save-dialog::backdrop{background:#0f172ab3;}
+    .image-save-dialog img{display:block;max-width:100%;max-height:55vh;object-fit:contain;margin:12px auto;border:1px solid var(--border-hairline);}
+    .image-save-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+    .image-save-dialog p{font-size:14px;margin:8px 0;}
+    .image-save-dialog button,.image-save-dialog a{min-height:44px;white-space:normal;}
+    [hidden]{display:none!important;}
   </style>
 </head>
 <body>
@@ -1003,6 +1011,17 @@
   </footer>
 
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <dialog id="image-save-dialog" class="image-save-dialog" aria-labelledby="image-save-title">
+    <h2 class="section-title" id="image-save-title">Save or share image</h2>
+    <p id="image-save-help">On your phone, tap Share / Save to Photos, then choose Save Image or Save to Photos if available. You can also touch and hold the image below to save it.</p>
+    <img id="image-save-preview" alt="Generated map or trend graph with source attribution" />
+    <div class="image-save-actions">
+      <button type="button" class="btn-primary" id="image-share-btn">Share / Save to Photos</button>
+      <a class="btn-secondary" id="image-download-link" download>Download PNG</a>
+      <button type="button" class="btn-secondary" id="image-save-close">Close</button>
+    </div>
+    <p id="image-share-status" role="status" aria-live="polite"></p>
+  </dialog>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
   <script>
     (function () {
@@ -1681,7 +1700,28 @@
       function exportDate() { var parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());var v={};parts.forEach(function(p){v[p.type]=p.value;});return v.year+'-'+v.month+'-'+v.day; }
       function exportText(id) { var e=document.getElementById(id);return e ? e.textContent.trim().replace(/\s+/g,' ') : ''; }
       function exportImage(src) { return new Promise(function(resolve,reject){var img=new Image();img.onload=function(){resolve(img);};img.onerror=function(){reject(Error('Image could not be rendered'));};img.src=src;}); }
-      function downloadPng(canvas,name) { return new Promise(function(resolve,reject){canvas.toBlob(function(blob){if(!blob){reject(Error('PNG encoding failed'));return;}var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},30000);resolve();},'image/png');}); }
+      // Prepare the PNG first; sharing requires a fresh user gesture on mobile Safari.
+      var previewUrl=null;
+      function downloadPng(canvas,name) {
+        return new Promise(function(resolve,reject){canvas.toBlob(function(blob){
+          if(!blob){reject(Error('PNG encoding failed'));return;}
+          var dialog=document.getElementById('image-save-dialog'),img=document.getElementById('image-save-preview'),link=document.getElementById('image-download-link'),share=document.getElementById('image-share-btn'),message=document.getElementById('image-share-status');
+          if(previewUrl)URL.revokeObjectURL(previewUrl);
+          previewUrl=URL.createObjectURL(blob);img.src=previewUrl;link.href=previewUrl;link.download=name;message.textContent='';
+          var file=typeof File==='function'?new File([blob],name,{type:'image/png'}):null;
+          var payload=file?{files:[file]}:null;
+          var canShare=false;try{canShare=!!(payload&&navigator.share&&navigator.canShare&&navigator.canShare(payload));}catch(e){}
+          share.hidden=!canShare;
+          share.onclick=function(){
+            // Invoke directly in the click event, before any asynchronous work.
+            try{navigator.share(payload).then(function(){message.textContent='Share sheet closed.';}).catch(function(e){if(e.name!=='AbortError')message.textContent='Sharing unavailable. Touch and hold the preview or use Download PNG.';});}catch(e){message.textContent='Sharing unavailable. Touch and hold the preview or use Download PNG.';}
+          };
+          document.getElementById('image-save-close').onclick=function(){dialog.close();};
+          dialog.onclose=function(){img.removeAttribute('src');link.removeAttribute('href');share.onclick=null;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}};
+          if(typeof dialog.showModal==='function'){if(!dialog.open)dialog.showModal();}else{dialog.setAttribute('open','');document.getElementById('image-save-close').onclick=function(){dialog.removeAttribute('open');dialog.onclose();};}
+          resolve();
+        },'image/png');});
+      }
       function composeExport(image,title,subtitle,notes) {
         var scale=2, w=Math.max(780,image.width/scale), imageH=image.height/scale, measure=document.createElement('canvas').getContext('2d'), lines=[];
         function wrap(t,font,color){measure.font=font;var line='';String(t).split(/\s+/).forEach(function(word){if(line&&measure.measureText(line+' '+word).width>w-48){lines.push({text:line,font:font,color:color});line=word;}else line+=(line?' ':'')+word;});if(line)lines.push({text:line,font:font,color:color});}
@@ -1691,7 +1731,7 @@
         head.forEach(function(l,i){ctx.font=l.font;ctx.fillStyle=l.color;ctx.fillText(l.text,24,24+i*24);});ctx.drawImage(image,(w-image.width/scale)/2,header,image.width/scale,imageH);
         lines.forEach(function(l,i){ctx.font=l.font;ctx.fillStyle=l.color;ctx.fillText(l.text,24,header+imageH+18+i*18);});return c;
       }
-      async function runExport(button,status,work){button.disabled=true;status.textContent='Preparing PNG…';try{await work();status.textContent='PNG download requested.';}catch(e){status.textContent='Unable to export: '+(e.message||'image unavailable')+'. Try again after the layers finish loading, or use your browser screenshot.';}finally{button.disabled=false;}}
+      async function runExport(button,status,work){button.disabled=true;status.textContent='Preparing PNG…';try{await work();status.textContent='PNG ready — choose Share or Download in the preview.';}catch(e){status.textContent='Unable to export: '+(e.message||'image unavailable')+'. Try again after the layers finish loading, or use your browser screenshot.';}finally{button.disabled=false;}}
       function initImageExports(){
         var mapBtn=document.getElementById('save-map-png'),chartBtn=document.getElementById('save-trend-png');
         mapBtn.addEventListener('click',function(){runExport(mapBtn,document.getElementById('map-export-status'),async function(){
@@ -1704,7 +1744,7 @@
           var imgs=Array.from(frame.querySelectorAll('img.leaflet-tile, img.leaflet-image-layer')).filter(function(i){var r=i.getBoundingClientRect();return r.right>rect.left&&r.left<rect.right&&r.bottom>rect.top&&r.top<rect.bottom&&r.width>0&&r.height>0;});
           if(!imgs.some(function(i){return i.classList.contains('leaflet-tile');}))throw Error('Basemap not ready');
           if(imgs.some(function(i){return !i.complete||!i.naturalWidth;}))throw Error('Map tiles still loading');
-          await Promise.all(Array.from(new Set(imgs.map(function(i){return i.currentSrc||i.src;}))).map(async function(url){var r=await fetch(url,{mode:'cors',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Map image service returned '+r.status);}));
+          await Promise.all(Array.from(new Set(imgs.map(function(i){return i.currentSrc||i.src;}))).map(async function(url){var r=await fetch(url,{mode:'cors',signal:typeof AbortSignal.timeout==='function'?AbortSignal.timeout(12000):undefined});if(!r.ok)throw Error('Map image service returned '+r.status);}));
           if(!map.getCenter().equals(pos)||map.getZoom()!==zoom)throw Error('Map moved during export');
           var capture=await html2canvas(frame,{scale:2,useCORS:true,allowTaint:false,backgroundColor:'#E6F2F9',imageTimeout:12000,logging:false,ignoreElements:function(el){return el.classList.contains('map-top-tools')||el.classList.contains('leaflet-control-zoom');}});
           if(!map.getCenter().equals(pos)||map.getZoom()!==zoom)throw Error('Map moved during export');
