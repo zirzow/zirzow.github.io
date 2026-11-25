@@ -1,43 +1,383 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cell Cycle Quest | Amanda Zirzow</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cell Cycle Quest | Amanda Zirzow</title>
 <style>
-:root{color-scheme:dark;--bg:#081827;--panel:#12283c;--ink:#eff7ff;--muted:#b9d0e5;--accent:#9bdcff;--on:#09283c;--edge:#42637f}html[data-theme=light]{color-scheme:light;--bg:#f3f8fd;--panel:#fff;--ink:#142d45;--muted:#405a73;--accent:#075b9a;--on:#fff;--edge:#9ebbd4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}header,main,footer{max-width:1100px;margin:auto;padding:20px}header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-bottom:1px solid var(--edge)}header a{font-weight:900;margin-right:auto}a{color:var(--accent)}button,input,select{font:inherit}button{cursor:pointer;min-height:44px;border:1px solid var(--edge);border-radius:10px;background:var(--panel);color:var(--ink);padding:9px 15px;font-weight:650}button.primary{background:var(--accent);color:var(--on);border-color:var(--accent)}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:4px}h1{font-size:clamp(38px,7vw,72px);line-height:1.05;margin:12px 0}h2,h3{line-height:1.2}p{margin:8px 0 16px}.muted{color:var(--muted)}.kicker{color:var(--accent);font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.panel{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:clamp(16px,4vw,30px);margin:18px 0}.hero{display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px}.orb{width:135px;aspect-ratio:1;position:relative;display:grid;place-items:center;font-size:58px}.orb:before,.orb:after{content:'';position:absolute;inset:0;border:1px dashed var(--accent);border-radius:50%;animation:spin 16s linear infinite}.orb:after{inset:13px;border-style:dotted;animation-direction:reverse}.orb span{animation:float 4s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-5px)}}html[data-paused] *,html[data-paused] *:before,html[data-paused] *:after{animation-play-state:paused!important}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important}}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr));gap:12px}.stage{border:1px solid var(--edge);border-radius:12px;padding:12px}.stage strong{display:block}.stage svg{width:100%;max-width:130px;display:block;margin:auto}.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:16px 0}.choices button{min-height:56px}.choices button.wrong{border:2px solid #ef9b9b}.choices button.correct{border:2px solid #9be4b4}.photo{width:min(100%,440px);aspect-ratio:1;margin:auto;background:#edf0e9;border-radius:14px;overflow:hidden;display:grid;place-items:center;border:3px solid var(--edge)}.photo img,.photo svg{display:block;width:100%;height:100%;object-fit:contain}.stats{display:flex;gap:20px;flex-wrap:wrap}.stats strong{font-size:1.5rem;display:block}.tally{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.bin{border:1px solid var(--edge);border-radius:10px;padding:8px;min-width:0;overflow-wrap:anywhere}.bin b{display:block;font-size:1.5rem}.thumbs{display:flex;flex-wrap:wrap;gap:3px}.thumbs img,.thumbs svg{width:32px;height:32px;object-fit:contain;background:#edf0e9;border-radius:3px}.progress{height:12px;width:100%;accent-color:var(--accent)}.feedback{min-height:3em;font-weight:650}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{padding:10px;border-bottom:1px solid var(--edge);text-align:left}input[type=text],input[type=number],select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:9px;width:100%}label{display:block;margin:10px 0 5px;font-weight:600}.small{font-size:14px}.notice{border-left:4px solid var(--accent);padding:12px;background:var(--bg)}canvas{width:100%;height:auto;background:white;border-radius:8px} [hidden]{display:none!important}@media(max-width:600px){.hero{grid-template-columns:1fr}.orb{width:95px}.tally{grid-template-columns:repeat(2,1fr)}header{gap:6px}}
-.slide-wrap{position:relative;width:min(100%,540px);margin:auto;line-height:0}.photo .slide-wrap img{width:100%;height:auto;max-height:none;object-fit:contain;display:block;border-radius:10px}.target{position:absolute;transform:translate(-50%,-50%);border:3px solid #ffdc55;outline:2px solid #172333;border-radius:50%;background:transparent;width:9%;aspect-ratio:1;min-height:0;padding:0;box-shadow:0 0 0 9999px #0002;cursor:pointer}.slide-wrap{overflow:hidden;border-radius:10px}.slide-wrap .target:focus-visible{outline:3px solid white}.target:after{content:'+';font-size:16px;color:#ffdc55;text-shadow:1px 1px #000;position:absolute;left:100%;top:0}.context{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}.context figure{margin:0}.context img{width:100%;height:170px;object-fit:contain;background:#081827;border-radius:10px}.photo:has(.slide-wrap){max-width:none;aspect-ratio:auto;height:auto;min-height:0}.thumbs .slide-wrap{width:42px;aspect-ratio:1;overflow:hidden}.thumbs .slide-wrap img{display:none}.thumbs .target{display:none}.thumbs .slide-wrap{background:var(--panel)}
-</style></head><body><header><a href="../../games.html">ZIRZOW. / Learning lab</a><button id="theme">Light mode</button><button id="motion">Pause animations</button></header><main>
-<section class="panel hero"><div><div class="kicker">Virtual microscopy · Cell biology</div><h1>Cell Cycle Quest.</h1><p class="muted">Observe. Classify. Count. Graph. Estimate the time cells spend in each phase.</p></div><div class="orb" aria-hidden="true"><span>🔬</span></div></section>
-<section id="setup" class="panel"><h2>1. Prepare for the investigation</h2><p>Onion root tips contain actively dividing cells. A stained microscope image captures a moment in a continuous cell cycle. Classify each target cell into one of five categories, then use your tally to estimate phase duration for an assumed 24-hour cycle.</p><div class="context"><figure><img src="photos/root-tip-100x.webp" alt="Whole onion root tip viewed through a microscope"><figcaption>Root tip overview (100×, supplied label)</figcaption></figure><figure><img src="photos/overview-a.webp" alt="Field containing numerous stained onion root cells"><figcaption>Microscope field</figcaption></figure></div><div id="reference" class="grid"></div><button type="button" id="practiceMode">Practice with diagrams</button><button type="button" id="scanMode">Scan real photographs</button><p class="notice" id="datasetStatus" role="status">Checking for instructor photographs…</p><label for="student">Name or lab identifier (optional; included only in your local exports)</label><input id="student" type="text" maxlength="80" autocomplete="off"><details><summary>Instructor: load a local photo bank</summary><p>Choose a JSON manifest and its corresponding image files. Your files stay in this browser. See README for the format.</p><label for="manifest">Photo manifest</label><input type="file" id="manifest" accept="application/json,.json"><label for="images">Photographs</label><input type="file" id="images" accept="image/*" multiple><button id="loadLocal">Load photographs</button></details><p class="small muted">Practice diagrams are synthetic illustrations, not microscope evidence. A practice result must not be submitted as experimental onion-root-tip data.</p><button id="start" class="primary" disabled>Start investigation</button></section>
-<section id="game" class="panel" hidden><div class="kicker" id="modeLabel"></div><h2 tabindex="-1" id="question">Classify the target cell</h2><div class="stats"><div><strong id="progressText">0/0</strong>Cells classified</div><div><strong id="accuracy">—</strong>First-try accuracy (practice)</div></div><progress class="progress" id="progress" value="0" max="36"></progress><p class="muted" id="specimen"></p><div class="photo" id="photo"></div><p class="small muted">Classify the highlighted cell only. Click its ring or use the phase buttons. The next target appears in a fixed scan sequence. If uncertain, use the reference guide and report ambiguous cells to your instructor.</p><div id="choices" class="choices" role="group" aria-label="Select the cell cycle phase"></div><p id="feedback" class="feedback" role="status" aria-live="polite"></p><button id="next" class="primary" disabled>Next cell</button><details><summary>Phase identification guide</summary><div id="help"></div></details><h3>Live tally</h3><div class="tally" id="tally" aria-label="Recorded phase counts"></div></section>
-<section id="results" class="panel" hidden><div class="kicker">Investigation complete</div><h2 tabindex="-1" id="resultHeading">2. Analyze your data</h2><p id="sessionInfo"></p><p class="notice" id="resultNotice"></p><p>Use count ÷ total × 100 to calculate percent of cells. Estimate hours per phase using count ÷ total × 24. This assumes a representative snapshot of an asynchronously cycling population; it does not directly measure individual cell duration.</p><div class="scroll"><table><thead><tr><th>Phase</th><th>Count</th><th>Percent (%)</th><th>Estimated hours</th></tr></thead><tbody id="analysisRows"></tbody><tfoot id="totals"></tfoot></table></div><p id="mitoticIndex"></p><h2>3. Build your graph</h2><label for="metric">Y-axis</label><select id="metric"><option value="percent">Percent of cells (%)</option><option value="count">Number of cells</option><option value="hours">Estimated time (hours)</option></select><label for="graphTitle">Figure title</label><input id="graphTitle" type="text" maxlength="100" value="Distribution of onion root tip cells by cell-cycle phase"><p class="small muted">Review the values and choose the graph that answers your lab question. The exported figure includes its dataset label, session ID, and completion timestamp.</p><canvas id="graph" width="1400" height="920" role="img" aria-label="Bar graph of cell cycle phase distribution; values are available in the table above"></canvas><div class="row"><button id="png" class="primary">Download graph PNG</button><button id="csv">Download data CSV</button><button id="record">Download investigation record</button><button id="restart">Start a new investigation</button></div><h3>4. Interpret your findings</h3><p>Which phase was most common? What does that imply about its relative duration? Why might estimates differ between fields of view? Write your own interpretation in your lab report.</p><p class="small muted">The completion record uses the browser's clock. It is useful for documenting work but is not tamper-proof or independent proof of authorship.</p></section></main><footer>© <span id="year"></span> Amanda Zirzow · <a href="https://biology.arizona.edu/cell_bio/activities/cell_cycle/cell_cycle.html">Activity inspiration: University of Arizona Biology Project</a></footer>
+:root{
+  color-scheme:dark;
+  --bg:#081827;--panel:#12283c;--ink:#eff7ff;--muted:#b9d0e5;--accent:#9bdcff;--accent-2:#78f0c9;--gold:#ffd85a;
+  --on:#09283c;--edge:#42637f;--danger:#ef9b9b;--good:#9be4b4;--glow:0 0 24px rgba(155,220,255,.32);
+}
+html[data-theme=light]{color-scheme:light;--bg:#f3f8fd;--panel:#fff;--ink:#142d45;--muted:#405a73;--accent:#075b9a;--accent-2:#0f8e72;--gold:#d08c00;--on:#fff;--edge:#9ebbd4;--glow:0 0 24px rgba(7,91,154,.15)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at top,rgba(155,220,255,.12),transparent 36%),var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}
+header,main,footer{max-width:1100px;margin:auto;padding:20px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-bottom:1px solid var(--edge)}
+header a{font-weight:900;margin-right:auto;text-decoration:none}
+a{color:var(--accent)}
+button,input,select{font:inherit}
+button{cursor:pointer;min-height:44px;border:1px solid var(--edge);border-radius:12px;background:var(--panel);color:var(--ink);padding:10px 16px;font-weight:700;transition:transform .15s ease, box-shadow .15s ease, background .15s ease}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--glow)}
+button.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--on);border-color:transparent}
+button.secondary{background:transparent}
+button.celebrate{animation:bounce .45s ease}
+button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+h1{font-size:clamp(38px,7vw,72px);line-height:1.02;margin:12px 0}
+h2,h3{line-height:1.2}p{margin:8px 0 16px}.muted{color:var(--muted)}
+.kicker{color:var(--accent);font-size:13px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01)),var(--panel);border:1px solid var(--edge);border-radius:22px;padding:clamp(16px,4vw,30px);margin:18px 0;box-shadow:0 12px 40px rgba(0,0,0,.15)}
+.hero{display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px}.orb{width:138px;aspect-ratio:1;position:relative;display:grid;place-items:center;font-size:58px}.orb:before,.orb:after{content:'';position:absolute;inset:0;border:1px dashed var(--accent);border-radius:50%;animation:spin 16s linear infinite}.orb:after{inset:13px;border-style:dotted;animation-direction:reverse}.orb span{animation:float 4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}} @keyframes float{50%{transform:translateY(-5px)}} @keyframes bounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}60%{transform:translateY(1px)}} @keyframes pulse{50%{transform:scale(1.05)}}
+html[data-paused] *,html[data-paused] *:before,html[data-paused] *:after{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:12px}.stage{border:1px solid var(--edge);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)}.stage strong{display:block}.stage svg{width:100%;max-width:130px;display:block;margin:auto}
+.context{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}.context figure{margin:0}.context img{width:100%;height:170px;object-fit:contain;background:#081827;border-radius:10px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.step{border:1px solid var(--edge);border-radius:16px;padding:14px;background:rgba(255,255,255,.02)}.step span{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--on);font-weight:900;margin-bottom:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row.between{justify-content:space-between}.notice{border-left:4px solid var(--accent);padding:12px;background:var(--bg);border-radius:8px}.mini{font-size:13px}.small{font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:14px 0}.stat{border:1px solid var(--edge);border-radius:16px;padding:12px;background:rgba(255,255,255,.03)}.stat strong{display:block;font-size:1.7rem;line-height:1}.stat .label{font-size:.9rem;color:var(--muted)}.score-pop{animation:pulse .5s ease}.progress{height:14px;width:100%;accent-color:var(--accent)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.badge{border:1px solid var(--edge);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:800;background:rgba(255,255,255,.06)}.badge.new{background:linear-gradient(135deg,var(--gold),var(--accent));color:#102131;border-color:transparent}
+.photo{width:min(100%,560px);margin:auto;background:#edf0e9;border-radius:16px;overflow:hidden;display:grid;place-items:center;border:3px solid var(--edge)}.photo img,.photo svg{display:block;width:100%;height:100%;object-fit:contain}
+.slide-wrap{position:relative;width:min(100%,540px);margin:auto;line-height:0;overflow:hidden;border-radius:12px}.photo .slide-wrap img{width:100%;height:auto;max-height:none;object-fit:contain;display:block}.target{position:absolute;transform:translate(-50%,-50%);border:3px solid var(--gold);outline:2px solid #172333;border-radius:10px;background:transparent;width:10.4%;height:7.6%;min-height:0;padding:0;box-shadow:0 0 0 9999px rgba(0,0,0,.14),0 0 18px rgba(255,216,90,.72);cursor:pointer}.target:after{content:attr(data-label);font-size:12px;font-weight:900;letter-spacing:.03em;color:#172333;background:var(--gold);border-radius:999px;padding:2px 7px;position:absolute;left:50%;top:-10px;transform:translate(-50%,-100%);box-shadow:0 1px 3px rgba(0,0,0,.25)}.slide-wrap .target:focus-visible{outline:3px solid white}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:16px 0}.choices button{min-height:56px}.choices button.wrong{border:2px solid var(--danger)}.choices button.correct{border:2px solid var(--good);background:rgba(155,228,180,.12)}
+.feedback{min-height:4.2em;font-weight:700;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03)}.feedback.good{border:1px solid rgba(155,228,180,.45)}.feedback.warn{border:1px solid rgba(239,155,155,.45)}.feedback.info{border:1px solid rgba(155,220,255,.35)}
+.tally{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.bin{border:1px solid var(--edge);border-radius:12px;padding:8px;min-width:0;overflow-wrap:anywhere;background:rgba(255,255,255,.02)}.bin b{display:block;font-size:1.5rem}.thumbs{display:flex;flex-wrap:wrap;gap:3px}.thumbs .token{width:32px;height:32px;display:grid;place-items:center;background:var(--bg);border-radius:4px;font-size:11px;font-weight:900;color:var(--accent)}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{padding:10px;border-bottom:1px solid var(--edge);text-align:left}input[type=text],select{background:var(--bg);color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:9px;width:100%}label{display:block;margin:10px 0 5px;font-weight:700}canvas{width:100%;height:auto;background:white;border-radius:8px}[hidden]{display:none!important}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.confetti-piece{position:absolute;top:-24px;width:10px;height:18px;border-radius:2px;opacity:.95;animation:confetti-fall linear forwards}.confetti-piece.round{border-radius:50%}.confetti-piece.star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}@keyframes confetti-fall{0%{transform:translate3d(var(--x),-6vh,0) rotate(0deg);opacity:1}100%{transform:translate3d(calc(var(--x) + var(--drift)),110vh,0) rotate(720deg);opacity:0}}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.orb{width:96px}.tally{grid-template-columns:repeat(2,1fr)}header{gap:6px}}
+</style>
+</head>
+<body>
+<div id="confetti" aria-hidden="true"></div>
+<header>
+  <a href="../../games.html">ZIRZOW. / Learning lab</a>
+  <button id="theme">Light mode</button>
+  <button id="motion">Pause animations</button>
+</header>
+<main>
+  <section class="panel hero">
+    <div>
+      <div class="kicker">Virtual microscopy · Cell biology</div>
+      <h1>Cell Cycle Quest.</h1>
+      <p class="muted">Train first with diagrams. Then scan a real onion root tip field, classify cells, count each stage, and export a graph for your lab report.</p>
+    </div>
+    <div class="orb" aria-hidden="true"><span>🔬</span></div>
+  </section>
+
+  <section id="setup" class="panel">
+    <h2>1. Mission briefing</h2>
+    <p>This activity is designed as a two-part investigation. Students complete a short guided practice set first, then move into a <strong>systematic serpentine scan</strong> of the real microscope field to count cells in each stage.</p>
+    <div class="steps">
+      <div class="step"><span>1</span><strong>Practice first</strong><div class="small muted">Identify diagram cells and learn what each stage looks like.</div></div>
+      <div class="step"><span>2</span><strong>Scan the slide</strong><div class="small muted">Follow the highlighted cells in a fixed up-and-down pattern.</div></div>
+      <div class="step"><span>3</span><strong>Count & graph</strong><div class="small muted">Build your tally, calculate percentages, and export your figure.</div></div>
+    </div>
+    <div class="context">
+      <figure><img src="photos/root-tip-100x.webp" alt="Whole onion root tip viewed through a microscope"><figcaption>Root tip overview</figcaption></figure>
+      <figure><img src="photos/overview-a.webp" alt="Field containing numerous stained onion root cells"><figcaption>Example microscope field</figcaption></figure>
+    </div>
+    <div id="reference" class="grid" aria-label="Phase reference guide"></div>
+    <p class="notice" id="datasetStatus" role="status">Practice set ready. When you begin, the game will launch with diagram training before the real field scan.</p>
+    <label for="student">Name or lab identifier (optional; included only in your local exports)</label>
+    <input id="student" type="text" maxlength="80" autocomplete="off">
+    <p class="small muted">Practice results are formative. The graph and counts at the end come from the real slide scan.</p>
+    <button id="start" class="primary">Start training mission</button>
+  </section>
+
+  <section id="game" class="panel" hidden>
+    <div class="row between">
+      <div>
+        <div class="kicker" id="modeLabel"></div>
+        <h2 tabindex="-1" id="question">Identify the phase</h2>
+      </div>
+      <div class="badges" id="badges"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><strong id="progressText">0/0</strong><div class="label">Progress</div></div>
+      <div class="stat"><strong id="score">0</strong><div class="label">Lab XP</div></div>
+      <div class="stat"><strong id="streak">0</strong><div class="label">Current streak</div></div>
+      <div class="stat"><strong id="accuracy">—</strong><div class="label">Practice accuracy</div></div>
+    </div>
+
+    <progress class="progress" id="progress" value="0" max="10"></progress>
+    <p class="muted" id="specimen"></p>
+    <div class="photo" id="photo"></div>
+    <p class="small muted" id="scanHelp">In practice mode, answer correctly to lock in the stage. In scan mode, classify only the highlighted cell and continue in the fixed serpentine sequence.</p>
+    <div id="choices" class="choices" role="group" aria-label="Select the cell cycle phase"></div>
+    <p id="feedback" class="feedback info" role="status" aria-live="polite">You’ve got this. Build your streak.</p>
+    <div class="row">
+      <button id="next" class="primary" disabled>Next cell</button>
+    </div>
+    <details>
+      <summary>Phase identification guide</summary>
+      <div id="help"></div>
+    </details>
+    <h3 id="tallyTitle">Live field tally</h3>
+    <div class="tally" id="tally" aria-label="Recorded phase counts"></div>
+  </section>
+
+  <section id="transition" class="panel" hidden>
+    <div class="kicker">Practice complete</div>
+    <h2>2. Nice work — now scan the real slide</h2>
+    <p id="transitionSummary"></p>
+    <div class="row" id="practiceRewards"></div>
+    <p class="notice">Next comes the real investigation. The highlighted rectangle will move through the field in a <strong>serpentine scan</strong> — down one column, up the next — so your counting stays systematic.</p>
+    <button id="continueScan" class="primary">Continue to field scan</button>
+  </section>
+
+  <section id="results" class="panel" hidden>
+    <div class="kicker">Investigation complete</div>
+    <h2 tabindex="-1" id="resultHeading">3. Analyze your data</h2>
+    <p id="sessionInfo"></p>
+    <p id="practiceSummary" class="notice"></p>
+    <p id="resultNotice" class="notice"></p>
+    <p>Use count ÷ total × 100 to calculate percent of cells. Estimate hours per phase using count ÷ total × 24. This assumes a representative snapshot of an asynchronously cycling population; it does not directly measure individual cell duration.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Phase</th><th>Count</th><th>Percent (%)</th><th>Estimated hours</th></tr></thead>
+        <tbody id="analysisRows"></tbody>
+        <tfoot id="totals"></tfoot>
+      </table>
+    </div>
+    <p id="mitoticIndex"></p>
+    <h2>4. Build your graph</h2>
+    <label for="metric">Y-axis</label>
+    <select id="metric">
+      <option value="percent">Percent of cells (%)</option>
+      <option value="count">Number of cells</option>
+      <option value="hours">Estimated time (hours)</option>
+    </select>
+    <label for="graphTitle">Figure title</label>
+    <input id="graphTitle" type="text" maxlength="100" value="Distribution of onion root tip cells by cell-cycle phase">
+    <p class="small muted">The exported figure includes your session ID and completion timestamp.</p>
+    <canvas id="graph" width="1400" height="920" role="img" aria-label="Bar graph of cell cycle phase distribution; values are available in the table above"></canvas>
+    <div class="row"><button id="png" class="primary">Download graph PNG</button><button id="csv">Download data CSV</button><button id="record">Download investigation record</button><button id="restart">Start a new investigation</button></div>
+    <h3>5. Interpret your findings</h3>
+    <p>Which phase was most common? What does that imply about its relative duration? Why might estimates differ between fields of view? Write your interpretation in your lab report.</p>
+    <p class="small muted">The completion record uses the browser's clock. It is useful for documenting work but is not tamper-proof or independent proof of authorship.</p>
+  </section>
+</main>
+<footer>© <span id="year"></span> Amanda Zirzow · <a href="https://biology.arizona.edu/cell_bio/activities/cell_cycle/cell_cycle.html">Activity inspiration: University of Arizona Biology Project</a></footer>
+
 <script>
 'use strict';
 const P=['Interphase','Prophase','Metaphase','Anaphase','Telophase'];
-const cues=['An intact nucleus with diffuse chromatin; a nucleolus may be visible.','Condensed chromosomes become distinguishable, but are not arranged along a central plate.','Condensed chromosomes are aligned near the middle of the cell.','Sister chromatids have separated into two groups moving toward opposite poles.','Two daughter nuclei are forming; a developing cell plate may be visible in plant cells.'];
-const $=id=>document.getElementById(id);let scan=false;let bank=[],dataset='Schematic practice',practice=true,session=null,order=[],i=0,counts=[],attempts=[],locked=false,first=true,records=[],objectURLs=[];
+const cues=[
+  'An intact nucleus with diffuse chromatin; a nucleolus may be visible.',
+  'Condensed chromosomes become distinguishable, but are not arranged along a central plate.',
+  'Condensed chromosomes are aligned near the middle of the cell.',
+  'Sister chromatids have separated into two groups moving toward opposite poles.',
+  'Two daughter nuclei are forming; a developing cell plate may be visible in plant cells.'
+];
 const colors=['#3479a9','#7059a5','#137b86','#b25b24','#a34375'];
-function schematic(p,seed=0){let inner='';const chr=(x,y,r=0)=>`<path d="M-5 -10 L5 10 M5 -10 L-5 10" transform="translate(${x} ${y}) rotate(${r})" stroke="#59375f" stroke-width="4" stroke-linecap="round"/>`;if(p===0){inner='<ellipse cx="100" cy="100" rx="45" ry="48" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><circle cx="112" cy="92" r="12" fill="#6d4c80"/>';for(let j=0;j<15;j++)inner+=`<circle cx="${75+(j*17)%49}" cy="${72+(j*23)%58}" r="2" fill="#826793" opacity=".45"/>`;}if(p===1){inner='<ellipse cx="100" cy="100" rx="48" ry="51" fill="#d6c6df" stroke="#826793" stroke-dasharray="5 4"/>';for(let j=0;j<8;j++)inner+=chr(68+(j*23+seed*3)%65,68+(j*31+seed*7)%65,j*29+seed*11);}if(p===2){for(let j=0;j<6;j++)inner+=chr(100+(j%2?4:-4),52+j*19,90);inner+='<path d="M33 100 L100 48 M33 100 L100 151 M167 100 L100 48 M167 100 L100 151" stroke="#769a91" fill="none"/>';}if(p===3){for(let j=0;j<5;j++){inner+=`<path d="M${52+j%2*9} ${60+j*20} l12 -7 m-12 7 l12 7 M${148-j%2*9} ${60+j*20} l-12 -7 m12 7 l-12 7" stroke="#59375f" stroke-width="4" fill="none"/>`;}}if(p===4){inner='<ellipse cx="57" cy="100" rx="31" ry="42" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><ellipse cx="143" cy="100" rx="31" ry="42" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><path d="M100 45 V155" stroke="#65866b" stroke-width="4" stroke-dasharray="5 3"/>';}return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="200" height="200" fill="#eef1e8"/><g transform="rotate(${(seed%5-2)*9} 100 100)"><rect x="15" y="21" width="170" height="158" rx="17" fill="#e0e8d5" stroke="#789278" stroke-width="5"/>${inner}</g></svg>`;}
-function demo(){practice=true;dataset='Schematic practice — not microscopy data';bank=[];[20,10,3,2,1].forEach((n,p)=>{for(let j=0;j<n;j++)bank.push({id:'demo-'+(bank.length+1),phase:P[p],diagram:schematic(p,j)});});ready();}
-function validate(data,resolve){if(!data||!Array.isArray(data.cells)||data.cells.length<5)throw Error('At least five valid cells are required.');const ids=new Set();const result=data.cells.map(c=>{if(!c||typeof c.id!=='string'||!c.id.trim()||ids.has(c.id)||!P.includes(c.phase)||typeof c.image!=='string')throw Error('Invalid or duplicate cell record.');ids.add(c.id);return {id:c.id,phase:c.phase,src:resolve(c.image),credit:typeof c.credit==='string'?c.credit:''};});if(!P.every(p=>result.some(c=>c.phase===p)))throw Error('Include at least one example of each phase.');return result;}
-function ready(){$('datasetStatus').textContent=dataset+' · '+bank.length+' cells. '+(practice?'Illustration practice only.':'Instructor photo bank.');$('start').disabled=false;}
-const positions=[[358, 216], [474, 183], [724, 121], [877, 115], [64, 265], [240, 258], [478, 300], [871, 312], [976, 298], [65, 422], [66, 339], [238, 365], [361, 391], [543, 438], [659, 425], [892, 438], [60, 514], [239, 476], [882, 542], [244, 574], [549, 562], [651, 560], [887, 640], [430, 661], [559, 714], [759, 689], [177, 824], [316, 850], [438, 791], [746, 842], [325, 970], [432, 893], [650, 887], [820, 919], [445, 1009], [822, 1035]];
-function realScan(){$('start').disabled=true;scan=true;practice=false;dataset='Onion root tip — field A, selected cells';bank=positions.map((p,n)=>({id:'A'+String(n+1).padStart(2,'0'),x:p[0]/1056,y:p[1]/1408,src:'photos/field-a.webp'}));const img=new Image();img.onload=ready;img.onerror=()=>{$('datasetStatus').textContent='Photo missing. Keep the photos folder beside index.html.';$('start').disabled=true;};img.src=bank[0].src;}
-function init(){realScan();}$('scanMode').onclick=realScan;$('practiceMode').onclick=()=>{scan=false;demo();};
-$('loadLocal').onclick=async()=>{try{const file=$('manifest').files[0];if(!file)throw Error('Choose a manifest.');const files=new Map([...$('images').files].map(f=>[f.name,f]));const data=JSON.parse(await file.text());const urls=[];const loaded=validate(data,path=>{const f=files.get(path.split('/').pop());if(!f)throw Error('Missing image: '+path);const url=URL.createObjectURL(f);urls.push(url);return url;});await Promise.all(loaded.map(c=>new Promise((resolve,reject)=>{const img=new Image();img.onload=resolve;img.onerror=()=>reject(Error('Invalid image '+c.id));img.src=c.src;})));objectURLs.forEach(URL.revokeObjectURL);objectURLs=urls;bank=loaded;dataset=data.title||'Instructor photo bank';scan=false;practice=false;ready();}catch(e){$('datasetStatus').textContent='Photo bank not loaded: '+e.message;}};
-function showImage(host,c){host.replaceChildren();if(scan&&c.x!==undefined){if(host.id!=='photo'){const small=document.createElement('span');small.textContent=c.id;host.append(small);return;}const wrap=document.createElement('div');wrap.className='slide-wrap';const img=document.createElement('img');img.src=c.src;img.alt='Onion root tip field, target '+c.id+' marked with a yellow ring';const marker=document.createElement('button');marker.type='button';marker.className='target';marker.style.left=(100*c.x)+'%';marker.style.top=(100*c.y)+'%';if(c.id==='A07'){marker.style.width='12%';marker.style.aspectRatio='0.8';}marker.setAttribute('aria-label','Select highlighted cell '+c.id+' and move to phase choices');marker.onclick=()=>{if(!locked)$('choices').querySelector('button')?.focus();};wrap.append(img,marker);host.append(wrap);return;}if(c.diagram){host.innerHTML=c.diagram;}else{const img=document.createElement('img');img.src=c.src;img.alt='Microscope photograph of target cell '+c.id;host.append(img);}}
-P.forEach((p,n)=>{const div=document.createElement('div');div.className='stage';div.innerHTML=schematic(n,2);const h=document.createElement('strong');h.textContent=p;const text=document.createElement('p');text.className='small';text.textContent=cues[n];div.append(h,text);$('reference').append(div);const help=document.createElement('p');help.textContent=p+': '+cues[n];$('help').append(help);});
-function shuffle(a){for(let j=a.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[a[j],a[k]]=[a[k],a[j]];}return a;}
-function updateStats(){const total=counts.reduce((a,b)=>a+b,0);$('progressText').textContent=total+'/'+order.length;$('progress').max=order.length;$('progress').value=total;$('accuracy').textContent=scan?'Not graded':total?Math.round(records.filter(r=>r.firstCorrect).length/total*100)+'%':'—';$('tally').replaceChildren();P.forEach((p,n)=>{const div=document.createElement('div');div.className='bin';const name=document.createElement('span');name.textContent=p;const b=document.createElement('b');b.textContent=counts[n];const thumbs=document.createElement('div');thumbs.className='thumbs';records.filter(r=>r.phase===p).forEach(r=>{const c=order.find(c=>c.id===r.id);const x=document.createElement('div');showImage(x,c);x.setAttribute('aria-hidden','true');thumbs.append(x);});div.append(name,b,thumbs);$('tally').append(div);});}
-function question(){locked=false;first=true;attempts=[];const c=order[i];$('question').textContent='Cell '+(i+1)+' of '+order.length+': identify the phase';$('specimen').textContent='Specimen '+c.id;$('feedback').textContent='';$('next').disabled=true;$('next').textContent=i===order.length-1?'Analyze my results':'Next cell';showImage($('photo'),c);$('choices').replaceChildren();P.forEach((p,n)=>{const b=document.createElement('button');b.textContent=p;b.onclick=()=>answer(n,b);$('choices').append(b);});$('question').focus();}
-function answer(n,b){if(locked)return;if(scan){const c=order[i];locked=true;counts[n]++;records.push({id:c.id,phase:P[n],firstCorrect:null,x:c.x,y:c.y,source:'field-a.webp',attempts:[{phase:P[n],at:new Date().toISOString()}],classifiedAt:new Date().toISOString()});b.setAttribute('aria-pressed','true');[...$('choices').children].forEach(x=>x.disabled=true);$('feedback').textContent='Observation recorded: '+P[n]+'. '+cues[n]+' Select Next cell to continue.';$('next').disabled=false;updateStats();$('next').focus();return;}const c=order[i];attempts.push({phase:P[n],at:new Date().toISOString()});if(P[n]!==c.phase){first=false;b.classList.add('wrong');b.disabled=true;$('feedback').textContent='Not quite. Look again at the nucleus and chromosome arrangement. Try another phase.';const available=$('choices').querySelector('button:not(:disabled)');available?.focus();return;}locked=true;counts[n]++;records.push({id:c.id,phase:c.phase,firstCorrect:first,attempts:[...attempts],classifiedAt:new Date().toISOString()});b.classList.add('correct');[...$('choices').children].forEach(x=>x.disabled=true);$('feedback').textContent='Correct — '+c.phase+'. '+cues[n];$('next').disabled=false;updateStats();$('next').focus();}
-$('start').onclick=()=>{order=scan?[...bank]:shuffle([...bank]);i=0;counts=P.map(()=>0);records=[];session={id:globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2),student:$('student').value.trim(),dataset,practice,scan,started:new Date().toISOString(),finished:null,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};$('setup').hidden=true;$('results').hidden=true;$('game').hidden=false;$('modeLabel').textContent=scan?'Systematic field scan · student observations':practice?'Practice diagrams · not lab data':'Instructor microscopy dataset';updateStats();question();};$('next').onclick=()=>{if(!locked)return;if(++i<order.length)question();else finish();};
-function val(n,metric){return metric==='count'?counts[n]:counts[n]/order.length*(metric==='hours'?24:100);}
-function finish(){session.finished=new Date().toISOString();$('game').hidden=true;$('results').hidden=false;$('resultHeading').focus();$('sessionInfo').textContent=(session.student?session.student+' · ':'')+session.dataset+' · Session '+session.id+' · Completed '+new Date(session.finished).toLocaleString()+' ('+session.timezone+')'+(scan?' · Independent classifications (ungraded)':' · First-try accuracy '+Math.round(records.filter(r=>r.firstCorrect).length/order.length*100)+'%');$('resultNotice').textContent=scan?'These are your observations of selected cells in one field. The targets were manually chosen for visibility, not randomly sampled; do not generalize phase durations to the whole root.':practice?'PRACTICE ONLY — these schematic counts are invented and do not represent a measured onion root sample.':'Counts reflect the confirmed classifications in this instructor-selected image bank; image selection may bias estimates.';$('analysisRows').replaceChildren();P.forEach((p,n)=>{const tr=document.createElement('tr');[p,counts[n],val(n,'percent').toFixed(2),val(n,'hours').toFixed(2)].forEach(x=>{const td=document.createElement('td');td.textContent=x;tr.append(td);});$('analysisRows').append(tr);});$('totals').innerHTML=`<tr><th>Total</th><td>${order.length}</td><td>100.00</td><td>24.00</td></tr>`;$('mitoticIndex').textContent='Mitotic index (P + M + A + T): '+((order.length-counts[0])/order.length*100).toFixed(2)+'%';draw();}
-function draw(){if(!session?.finished)return;const canvas=$('graph'),ctx=canvas.getContext('2d'),metric=$('metric').value,W=canvas.width,H=canvas.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#142d45';ctx.textAlign='left';ctx.font='bold 32px system-ui';const title=$('graphTitle').value.trim()||'Cell-cycle phase distribution';ctx.fillText(title,65,55,1270);ctx.font='21px system-ui';ctx.fillText(session.dataset,65,90,1270);ctx.fillText('n = '+order.length+' cells  |  Assumed cycle: 24 hours',65,120);const left=130,top=160,right=1325,bottom=660,scaleMax=metric==='percent'?100:metric==='hours'?24:Math.max(5,Math.ceil(Math.max(...counts)/5)*5);ctx.strokeStyle='#dbe3eb';ctx.fillStyle='#405a73';ctx.font='20px system-ui';ctx.textAlign='right';for(let j=0;j<=5;j++){const y=bottom-(bottom-top)*j/5;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText((scaleMax*j/5).toFixed(metric==='hours'?1:0),left-15,y+7);}ctx.strokeStyle='#142d45';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();ctx.save();ctx.translate(35,410);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.font='bold 23px system-ui';ctx.fillText($('metric').selectedOptions[0].textContent,0,0);ctx.restore();const step=(right-left)/5;P.forEach((p,n)=>{const v=val(n,metric),h=(bottom-top)*v/scaleMax,x=left+n*step+step*.22;ctx.fillStyle=colors[n];ctx.fillRect(x,bottom-h,step*.56,h);ctx.textAlign='center';ctx.fillStyle='#142d45';ctx.font='bold 23px system-ui';ctx.fillText(metric==='count'?String(v):v.toFixed(2),x+step*.28,bottom-h-10);ctx.font='22px system-ui';ctx.fillText(p,x+step*.28,bottom+35);});ctx.textAlign='center';ctx.font='bold 22px system-ui';ctx.fillText('Cell-cycle phase',W/2,735);ctx.textAlign='left';ctx.font='19px system-ui';ctx.fillStyle='#405a73';ctx.fillText('Completed: '+session.finished+' (UTC) | '+session.timezone,65,800,1270);ctx.fillText('Session: '+session.id,65,830,1270);ctx.fillText('Student: '+(session.student||'Not entered')+' | '+(practice?'SCHEMATIC PRACTICE ONLY':(scan?'Student classifications; selected field':'Instructor-selected sample')),65,860,1270);canvas.setAttribute('aria-label', $('metric').selectedOptions[0].textContent+': '+P.map((p,n)=>p+' '+val(n,metric).toFixed(2)).join(', '));}
-$('metric').onchange=draw;$('graphTitle').oninput=draw;
-function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
-function basename(){return 'cell-cycle-'+session.id.slice(0,12);}
-$('png').onclick=()=>{draw();$('graph').toBlob(b=>{if(b)download(b,basename()+'-graph.png');},'image/png');};
-function csvCell(v){let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';}
-$('csv').onclick=()=>{const rows=[['session_id','completed_utc','dataset','practice_only','phase','count','percent','estimated_hours'],...P.map((p,n)=>[session.id,session.finished,session.dataset,practice,p,counts[n],val(n,'percent').toFixed(4),val(n,'hours').toFixed(4)])];download(new Blob([rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),basename()+'-data.csv');};
-$('record').onclick=()=>{const data={...session,total:order.length,firstTryCorrect:scan?null:records.filter(r=>r.firstCorrect).length,counts:Object.fromEntries(P.map((p,n)=>[p,counts[n]])),assumedCycleHours:24,records,notice:'Client-side timestamps and records are not tamper-proof.'};download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),basename()+'-record.json');};$('restart').onclick=()=>{$('results').hidden=true;$('setup').hidden=false;session=null;$('start').focus();};
-let theme='dark',paused=false;try{theme=localStorage.getItem('az-theme')||'dark';paused=localStorage.getItem('az-motion')==='paused';}catch(e){}function ui(){document.documentElement.dataset.theme=theme;document.documentElement.toggleAttribute('data-paused',paused);$('theme').textContent=theme==='dark'?'Light mode':'Dark mode';$('motion').textContent=paused?'Resume animations':'Pause animations';$('motion').setAttribute('aria-pressed',String(paused));} $('theme').onclick=()=>{theme=theme==='dark'?'light':'dark';try{localStorage.setItem('az-theme',theme)}catch(e){}ui();};$('motion').onclick=()=>{paused=!paused;try{localStorage.setItem('az-motion',paused?'paused':'playing')}catch(e){}ui();};ui();$('year').textContent=new Date().getFullYear();init();
-</script></body></html>
+const POSITIONS=[[358,216],[474,183],[724,121],[877,115],[64,265],[240,258],[478,300],[871,312],[976,298],[65,422],[66,339],[238,365],[361,391],[543,438],[659,425],[892,438],[60,514],[239,476],[882,542],[244,574],[549,562],[651,560],[887,640],[430,661],[559,714],[759,689],[177,824],[316,850],[438,791],[746,842],[325,970],[432,893],[650,887],[820,919],[445,1009],[822,1035]];
+const SCAN_COLUMNS=[0.06,0.225,0.323,0.43,0.52,0.66,0.82,0.924];
+const PRACTICE_COUNTS=[3,3,2,2,2];
+const POSITIVE=['Nailed it!','Excellent eye!','Beautiful call!','Microscope mastery!','That’s correct!','Nice read!'];
+const MILESTONES={3:'🔥 Hot streak',5:'⚡ Precision run',8:'🏅 Practice ace',12:'🔬 Microscope master',24:'🧭 Systematic scanner',36:'📊 Data collector'};
+const $=id=>document.getElementById(id);
+let state='setup';
+let theme='dark',paused=false;
+let session=null;
+let practiceBank=[],scanBank=[],order=[];
+let currentIndex=0,counts=P.map(()=>0),locked=false,attempts=[],firstTry=true;
+let score=0,streak=0,bestStreak=0;
+let practiceFirstCorrect=0,practiceAsked=0,practiceRecords=[],scanRecords=[];
+let earnedBadges=[];
+
+function schematic(p,seed=0){
+  let inner='';
+  const chr=(x,y,r=0)=>`<path d="M-5 -10 L5 10 M5 -10 L-5 10" transform="translate(${x} ${y}) rotate(${r})" stroke="#59375f" stroke-width="4" stroke-linecap="round"/>`;
+  if(p===0){inner='<ellipse cx="100" cy="100" rx="45" ry="48" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><circle cx="112" cy="92" r="12" fill="#6d4c80"/>';for(let j=0;j<15;j++)inner+=`<circle cx="${75+(j*17)%49}" cy="${72+(j*23)%58}" r="2" fill="#826793" opacity=".45"/>`;}
+  if(p===1){inner='<ellipse cx="100" cy="100" rx="48" ry="51" fill="#d6c6df" stroke="#826793" stroke-dasharray="5 4"/>';for(let j=0;j<8;j++)inner+=chr(68+(j*23+seed*3)%65,68+(j*31+seed*7)%65,j*29+seed*11);}
+  if(p===2){for(let j=0;j<6;j++)inner+=chr(100+(j%2?4:-4),52+j*19,90);inner+='<path d="M33 100 L100 48 M33 100 L100 151 M167 100 L100 48 M167 100 L100 151" stroke="#769a91" fill="none"/>'}
+  if(p===3){for(let j=0;j<5;j++)inner+=`<path d="M${52+j%2*9} ${60+j*20} l12 -7 m-12 7 l12 7 M${148-j%2*9} ${60+j*20} l-12 -7 m12 7 l-12 7" stroke="#59375f" stroke-width="4" fill="none"/>`;}
+  if(p===4){inner='<ellipse cx="57" cy="100" rx="31" ry="42" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><ellipse cx="143" cy="100" rx="31" ry="42" fill="#b8a2c7" stroke="#604c75" stroke-width="3"/><path d="M100 45 V155" stroke="#65866b" stroke-width="4" stroke-dasharray="5 3"/>'}
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="200" height="200" fill="#eef1e8"/><g transform="rotate(${(seed%5-2)*9} 100 100)"><rect x="15" y="21" width="170" height="158" rx="17" fill="#e0e8d5" stroke="#789278" stroke-width="5"/>${inner}</g></svg>`;
+}
+function shuffle(a){for(let j=a.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[a[j],a[k]]=[a[k],a[j]]}return a}
+function formatPct(n,d){return d?Math.round(n/d*100):0}
+function say(msg,type='info'){const box=$('feedback');box.textContent=msg;box.className='feedback '+type;}
+function pulseScore(){ $('score').classList.remove('score-pop'); void $('score').offsetWidth; $('score').classList.add('score-pop'); }
+function addScore(points){score+=points;$('score').textContent=score;pulseScore();}
+function updateStreak(newValue){streak=newValue;bestStreak=Math.max(bestStreak,streak);$('streak').textContent=streak;}
+function burstConfetti(n=24){ if(paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; const host=$('confetti'); const palette=['#9bdcff','#78f0c9','#ffd85a','#ff86a2','#c6a0ff']; for(let i=0;i<n;i++){ const el=document.createElement('span'); const shape=Math.random(); el.className='confetti-piece'+(shape>.66?' star':shape>.33?' round':''); el.style.left=(Math.random()*100)+'vw'; el.style.setProperty('--x','0px'); el.style.setProperty('--drift',((Math.random()*220)-110)+'px'); el.style.width=(6+Math.random()*8)+'px'; el.style.height=(10+Math.random()*16)+'px'; el.style.background=palette[Math.floor(Math.random()*palette.length)]; el.style.animationDuration=(1.6+Math.random()*1.2)+'s'; host.append(el); setTimeout(()=>el.remove(),3000);} }
+function unlockBadge(label){ if(earnedBadges.includes(label)) return; earnedBadges.push(label); renderBadges(label); burstConfetti(34); }
+function renderBadges(newOne=''){ $('badges').replaceChildren(); earnedBadges.forEach(label=>{ const chip=document.createElement('span'); chip.className='badge'+(label===newOne?' new':''); chip.textContent=label; $('badges').append(chip); }); }
+function maybeMilestones(){ const practiceDone=practiceRecords.length; const scanDone=scanRecords.length; if(MILESTONES[streak]) unlockBadge(MILESTONES[streak]); if(scanDone && MILESTONES[scanDone]) unlockBadge(MILESTONES[scanDone]); if(practiceDone===practiceBank.length) unlockBadge('✅ Practice complete'); }
+function initReference(){
+  P.forEach((p,n)=>{
+    const div=document.createElement('div');div.className='stage';div.innerHTML=schematic(n,2);const h=document.createElement('strong');h.textContent=p;const text=document.createElement('p');text.className='small';text.textContent=cues[n];div.append(h,text);$('reference').append(div);const help=document.createElement('p');help.textContent=p+': '+cues[n];$('help').append(help);
+  });
+}
+function buildPracticeBank(){
+  const bank=[];PRACTICE_COUNTS.forEach((count,p)=>{ for(let j=0;j<count;j++) bank.push({id:`P${bank.length+1}`,phase:P[p],phaseIndex:p,diagram:schematic(p,j+1)}); });
+  return shuffle(bank);
+}
+function buildSystematicScan(points){
+  const targets=points.map(([x,y])=>({x:x/1056,y:y/1408,src:'photos/field-a.webp'}));
+  for(const cell of targets){ cell.col=SCAN_COLUMNS.reduce((best,center,idx)=>Math.abs(cell.x-center)<Math.abs(cell.x-SCAN_COLUMNS[best])?idx:best,0); }
+  const ordered=[];
+  [...new Set(targets.map(t=>t.col))].sort((a,b)=>a-b).forEach(col=>{
+    const columnCells=targets.filter(t=>t.col===col).sort((a,b)=>col%2===0?a.y-b.y:b.y-a.y);
+    ordered.push(...columnCells);
+  });
+  return ordered.map((cell,n)=>({...cell,id:'A'+String(n+1).padStart(2,'0')}));
+}
+function showImage(host,c){
+  host.replaceChildren();
+  if(state==='scan'){
+    if(host.id!=='photo'){ const t=document.createElement('span'); t.className='token'; t.textContent=c.id; host.append(t); return; }
+    const wrap=document.createElement('div'); wrap.className='slide-wrap';
+    const img=document.createElement('img'); img.src=c.src; img.alt='Onion root tip field, target '+c.id+' marked with a yellow rectangle';
+    const marker=document.createElement('button'); marker.type='button'; marker.className='target'; marker.style.left=(100*c.x)+'%'; marker.style.top=(100*c.y)+'%'; marker.dataset.label=c.id; marker.setAttribute('aria-label','Highlighted cell '+c.id+'. Move to the phase answer buttons.');
+    marker.onclick=()=>{ if(!locked) $('choices').querySelector('button')?.focus(); };
+    wrap.append(img,marker); host.append(wrap); return;
+  }
+  if(c.diagram){ host.innerHTML=c.diagram; }
+}
+function updateStats(){
+  const total= state==='practice' ? practiceRecords.length : scanRecords.length;
+  const max= state==='practice' ? practiceBank.length : scanBank.length;
+  $('progressText').textContent=`${total}/${max}`;
+  $('progress').max=max; $('progress').value=total;
+  $('accuracy').textContent=practiceAsked?`${formatPct(practiceFirstCorrect,practiceAsked)}%`:'—';
+  $('tally').replaceChildren();
+  $('tallyTitle').textContent= state==='practice' ? 'Practice stage key' : 'Live field tally';
+  P.forEach((p,n)=>{
+    const div=document.createElement('div'); div.className='bin';
+    div.innerHTML=`<span>${p}</span><b>${counts[n]}</b>`;
+    const thumbs=document.createElement('div'); thumbs.className='thumbs';
+    if(state==='scan' || state==='results'){ scanRecords.filter(r=>r.phase===p).forEach(r=>{ const x=document.createElement('span'); x.className='token'; x.textContent=r.id; thumbs.append(x); }); }
+    div.append(thumbs); $('tally').append(div);
+  });
+}
+function renderChoices(){
+  $('choices').replaceChildren();
+  P.forEach((p,n)=>{ const b=document.createElement('button'); b.textContent=p; b.onclick=()=>answer(n,b); $('choices').append(b); });
+}
+function question(){
+  locked=false; firstTry=true; attempts=[];
+  const current=order[currentIndex];
+  const max=order.length;
+  $('question').textContent=(state==='practice'?'Practice ':'Cell ')+(currentIndex+1)+' of '+max+': identify the phase';
+  $('modeLabel').textContent= state==='practice' ? 'Part 1 of 2 · Guided diagram practice' : 'Part 2 of 2 · Systematic field scan';
+  $('specimen').textContent= state==='practice'
+    ? `${current.id} · Build accuracy and streak before the live scan.`
+    : `Specimen ${current.id} · serpentine scan (down one column, up the next)`;
+  $('scanHelp').textContent= state==='practice'
+    ? 'Get the correct answer to move on. First-try answers build your Lab XP streak and unlock confetti rewards.'
+    : 'Classify only the highlighted cell. Your live tally updates after each recorded observation.';
+  $('next').disabled=true;
+  $('next').textContent= currentIndex===max-1 ? (state==='practice' ? 'Finish practice' : 'Analyze my results') : (state==='practice' ? 'Next practice cell' : 'Next cell');
+  showImage($('photo'),current); renderChoices();
+  say(state==='practice' ? 'Warm up your microscope brain. Start strong.' : 'Observe the highlighted cell and record its stage.', 'info');
+  $('question').focus(); updateStats();
+}
+function answer(choiceIndex,btn){
+  if(locked) return;
+  const current=order[currentIndex];
+  const allButtons=[...$('choices').children];
+  if(state==='practice'){
+    attempts.push({phase:P[choiceIndex],at:new Date().toISOString()});
+    if(choiceIndex!==current.phaseIndex){
+      firstTry=false; btn.classList.add('wrong'); btn.disabled=true; updateStreak(0);
+      say('Not quite. Re-check the chromosome arrangement and try again.', 'warn');
+      return;
+    }
+    locked=true; practiceAsked++;
+    if(firstTry){ practiceFirstCorrect++; updateStreak(streak+1); const points=100+Math.min(streak,5)*20; addScore(points); btn.classList.add('correct'); say(`${POSITIVE[Math.floor(Math.random()*POSITIVE.length)]} +${points} XP`, 'good'); burstConfetti(28); }
+    else { updateStreak(1); addScore(45); btn.classList.add('correct'); say(`Correct after a retry. +45 XP — keep the momentum going!`, 'good'); burstConfetti(16); }
+    allButtons.forEach(x=>x.disabled=true);
+    practiceRecords.push({id:current.id,phase:current.phase,firstCorrect:firstTry,attempts:[...attempts],classifiedAt:new Date().toISOString()});
+    maybeMilestones(); updateStats(); $('next').disabled=false; $('next').focus();
+    return;
+  }
+  locked=true;
+  counts[choiceIndex]++;
+  scanRecords.push({id:current.id,phase:P[choiceIndex],x:current.x,y:current.y,source:'field-a.webp',attempts:[{phase:P[choiceIndex],at:new Date().toISOString()}],classifiedAt:new Date().toISOString()});
+  allButtons.forEach(x=>x.disabled=true); btn.setAttribute('aria-pressed','true'); btn.classList.add('celebrate');
+  const milestone = ((scanRecords.length)%6===0);
+  addScore(milestone?90:25); ;
+  say(milestone ? `Awesome! ${scanRecords.length} cells recorded. Milestone bonus unlocked!` : `Observation recorded: ${P[choiceIndex]}. +${milestone?90:25} XP`, 'good');
+  if(milestone) burstConfetti(36); else burstConfetti(10);
+  maybeMilestones(); updateStats(); $('next').disabled=false; $('next').focus();
+}
+function startPractice(){
+  state='practice'; order=practiceBank; currentIndex=0; counts=P.map(()=>0); practiceAsked=0; practiceFirstCorrect=0; practiceRecords=[]; scanRecords=[]; score=0; streak=0; bestStreak=0; earnedBadges=[]; renderBadges(); $('score').textContent='0'; $('streak').textContent='0';
+  $('setup').hidden=true; $('transition').hidden=true; $('results').hidden=true; $('game').hidden=false;
+  session={id:globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2),student:$('student').value.trim(),dataset:'Cell Cycle Quest',started:new Date().toISOString(),finished:null,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone};
+  question();
+}
+function startScan(){
+  state='scan'; order=scanBank; currentIndex=0; counts=P.map(()=>0); updateStreak(0);
+  $('transition').hidden=true; $('game').hidden=false; question();
+}
+function finishPractice(){
+  $('game').hidden=true; $('transition').hidden=false;
+  const acc=formatPct(practiceFirstCorrect,practiceAsked);
+  $('transitionSummary').textContent=`Practice complete: ${practiceBank.length} guided cells, ${acc}% first-try accuracy, best streak ${bestStreak}, and ${score} Lab XP.`;
+  $('practiceRewards').replaceChildren();
+  ['Accuracy '+acc+'%','Best streak '+bestStreak,'Lab XP '+score].forEach(t=>{ const s=document.createElement('span'); s.className='badge new'; s.textContent=t; $('practiceRewards').append(s); });
+  burstConfetti(42);
+  $('continueScan').focus();
+}
+function finishInvestigation(){
+  state='results'; session.finished=new Date().toISOString(); $('game').hidden=true; $('results').hidden=false; $('resultHeading').focus(); updateStats();
+  $('sessionInfo').textContent=(session.student?session.student+' · ':'')+'Cell Cycle Quest · Session '+session.id+' · Completed '+new Date(session.finished).toLocaleString()+' ('+session.timezone+')';
+  $('practiceSummary').textContent=`Practice summary: ${practiceBank.length} diagram cells completed · ${formatPct(practiceFirstCorrect,practiceAsked)}% first-try accuracy · best streak ${bestStreak} · total Lab XP ${score}.`;
+  $('resultNotice').textContent='Field-scan data come from a systematic serpentine scan of selected cells in one field of view. Counts reflect your own ungraded classifications. Targets were selected for visibility, not randomly sampled; do not generalize estimated durations to the entire root.';
+  $('analysisRows').replaceChildren();
+  P.forEach((p,n)=>{ const tr=document.createElement('tr'); const pct=scanRecords.length?counts[n]/scanRecords.length*100:0; const hrs=scanRecords.length?counts[n]/scanRecords.length*24:0; [p,counts[n],pct.toFixed(2),hrs.toFixed(2)].forEach(x=>{ const td=document.createElement('td'); td.textContent=x; tr.append(td); }); $('analysisRows').append(tr); });
+  $('totals').innerHTML=`<tr><th>Total</th><td>${scanRecords.length}</td><td>100.00</td><td>24.00</td></tr>`;
+  $('mitoticIndex').textContent='Mitotic index (P + M + A + T): '+(scanRecords.length?((scanRecords.length-counts[0])/scanRecords.length*100).toFixed(2):'0.00')+'%';
+  draw(); burstConfetti(60);
+}
+function nextStep(){
+  if(!locked) return;
+  currentIndex++;
+  if(currentIndex<order.length){ question(); return; }
+  if(state==='practice'){ finishPractice(); return; }
+  finishInvestigation();
+}
+function val(n,metric){ return metric==='count'?counts[n]: (scanRecords.length? counts[n]/scanRecords.length*(metric==='hours'?24:100):0); }
+function draw(){
+  if(!session?.finished) return;
+  const canvas=$('graph'), ctx=canvas.getContext('2d'), metric=$('metric').value, W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#142d45'; ctx.textAlign='left'; ctx.font='bold 32px system-ui';
+  const title=$('graphTitle').value.trim()||'Cell-cycle phase distribution';
+  ctx.fillText(title,65,55,1270); ctx.font='21px system-ui'; ctx.fillText('Onion root tip · systematic field scan',65,90,1270); ctx.fillText('n = '+scanRecords.length+' cells  |  Assumed cycle: 24 hours',65,120);
+  const left=130, top=160, right=1325, bottom=660, scaleMax=metric==='percent'?100:metric==='hours'?24:Math.max(5,Math.ceil(Math.max(...counts,1)/5)*5);
+  ctx.strokeStyle='#dbe3eb'; ctx.fillStyle='#405a73'; ctx.font='20px system-ui'; ctx.textAlign='right';
+  for(let j=0;j<=5;j++){ const y=bottom-(bottom-top)*j/5; ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke(); ctx.fillText((scaleMax*j/5).toFixed(metric==='hours'?1:0),left-15,y+7); }
+  ctx.strokeStyle='#142d45'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(left,top); ctx.lineTo(left,bottom); ctx.lineTo(right,bottom); ctx.stroke();
+  ctx.save(); ctx.translate(35,410); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.font='bold 23px system-ui'; ctx.fillText($('metric').selectedOptions[0].textContent,0,0); ctx.restore();
+  const step=(right-left)/5;
+  P.forEach((p,n)=>{ const v=val(n,metric), h=(bottom-top)*v/scaleMax, x=left+n*step+step*.22; ctx.fillStyle=colors[n]; ctx.fillRect(x,bottom-h,step*.56,h); ctx.textAlign='center'; ctx.fillStyle='#142d45'; ctx.font='bold 23px system-ui'; ctx.fillText(metric==='count'?String(v):v.toFixed(2),x+step*.28,bottom-h-10); ctx.font='22px system-ui'; ctx.fillText(p,x+step*.28,bottom+35); });
+  ctx.textAlign='center'; ctx.font='bold 22px system-ui'; ctx.fillText('Cell-cycle phase',W/2,735); ctx.textAlign='left'; ctx.font='19px system-ui'; ctx.fillStyle='#405a73';
+  ctx.fillText('Completed: '+session.finished+' (UTC) | '+session.timezone,65,800,1270); ctx.fillText('Session: '+session.id,65,830,1270); ctx.fillText('Student: '+(session.student||'Not entered')+' | Practice accuracy: '+formatPct(practiceFirstCorrect,practiceAsked)+'% | Lab XP: '+score,65,860,1270);
+  canvas.setAttribute('aria-label',$('metric').selectedOptions[0].textContent+': '+P.map((p,n)=>p+' '+val(n,metric).toFixed(2)).join(', '));
+}
+function csvCell(v){let s=String(v??''); if(/^[=+\-@\t\r]/.test(s)) s="'"+s; return '"'+s.replaceAll('"','""')+'"';}
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function basename(){return 'cell-cycle-'+session.id.slice(0,12)}
+$('png').onclick=()=>{$('png').classList.add('celebrate'); draw(); $('graph').toBlob(b=>{if(b) download(b,basename()+'-graph.png')},'image/png')};
+$('csv').onclick=()=>{const rows=[['session_id','completed_utc','student','phase','count','percent','estimated_hours'],...P.map((p,n)=>[session.id,session.finished,session.student||'',p,counts[n],val(n,'percent').toFixed(4),val(n,'hours').toFixed(4)])]; download(new Blob([rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),basename()+'-data.csv')};
+$('record').onclick=()=>{const data={...session,practice:{cells:practiceBank.length,firstTryAccuracy:formatPct(practiceFirstCorrect,practiceAsked),bestStreak,records:practiceRecords},scan:{total:scanRecords.length,counts:Object.fromEntries(P.map((p,n)=>[p,counts[n]])),records:scanRecords,assumedCycleHours:24},badges:earnedBadges,notice:'Client-side timestamps and records are not tamper-proof.'}; download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),basename()+'-record.json')};
+$('metric').onchange=draw; $('graphTitle').oninput=draw; $('restart').onclick=()=>{ state='setup'; $('results').hidden=true; $('transition').hidden=true; $('game').hidden=true; $('setup').hidden=false; $('start').focus(); };
+$('continueScan').onclick=startScan; $('next').onclick=nextStep; $('start').onclick=startPractice;
+function init(){
+  initReference(); practiceBank=buildPracticeBank(); scanBank=buildSystematicScan(POSITIONS); const img=new Image(); img.onload=()=>{$('datasetStatus').textContent=`Practice set ready: ${practiceBank.length} diagram cells. Real scan ready: ${scanBank.length} highlighted cells in serpentine order.`}; img.onerror=()=>{$('datasetStatus').textContent='Microscope photo missing. Keep the photos folder beside index.html.'; $('start').disabled=true}; img.src='photos/field-a.webp';
+  try{ theme=localStorage.getItem('az-theme')||'dark'; paused=localStorage.getItem('az-motion')==='paused'; }catch(e){}
+  function ui(){ document.documentElement.dataset.theme=theme; document.documentElement.toggleAttribute('data-paused',paused); $('theme').textContent=theme==='dark'?'Light mode':'Dark mode'; $('motion').textContent=paused?'Resume animations':'Pause animations'; $('motion').setAttribute('aria-pressed',String(paused)); }
+  $('theme').onclick=()=>{ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('az-theme',theme)}catch(e){} ui() };
+  $('motion').onclick=()=>{ paused=!paused; try{localStorage.setItem('az-motion',paused?'paused':'playing')}catch(e){} ui() };
+  ui(); $('year').textContent=new Date().getFullYear(); updateStats();
+}
+init();
+</script>
+</body>
+</html>
