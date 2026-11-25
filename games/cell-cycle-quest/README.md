@@ -1,0 +1,2 @@
+# Cell Cycle Quest — real microscopy scan
+This is a staging branch. Before merging, upload the optimized photos folder from the supplied ZIP to this directory. The game uses field-a.webp, root-tip-100x.webp, and overview-a.webp. Review the 36 manually selected targets and the instructor guide in the ZIP. Student observations are not automatically graded against an unverified answer key. The graph, CSV and record are local exports. Do not publicly post classroom photographs without appropriate consent.
