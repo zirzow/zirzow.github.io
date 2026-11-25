@@ -1,0 +1,2 @@
+# Website redesign
+Shared site.css and site.js. Main navigation generated consistently as static markup for accessibility without JS; when editing navigation update each editorial page. Existing map JS, data sources and game files are unchanged. legacy-home.html is an exact copy of the previous home page. All assets remain in place. Add Sketchfab embeds in models.html and additional videos in nature.html. Race links are referral links with disclosure. Review map in both themes, external embeds, mobile keyboard navigation, game analytics and WCAG contrast before publishing.
