@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calusa Waterkeeper — Bacteria Monitoring Map &amp; Site Trends</title>
+  <meta name="description" content="Interactive Leaflet map of Calusa Waterkeeper water quality monitoring sites sampled within the last 45 days, toggleable historic sampling locations, site trend charts, and open CSV data downloads." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+  <style>
+    :root {
+      --bg-canvas: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --border-hairline: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #64748B;
+      --navy: #0B2D5B;
+      --teal: #007799;
+      --teal-dark: #005B75;
+      --safe: #16A34A;
+      --moderate: #CA8A04;
+      --high: #DC2626;
+      --critical: #8B0000;
+      --historic: #6B7280;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font-family: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+    /* Top Bar */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      height: 64px;
+    }
+    .brand-wordmark {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--navy);
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .brand-wordmark:hover { text-decoration: none; color: var(--teal); }
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .site-nav a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 150ms ease;
+    }
+    .site-nav a:hover { color: var(--navy); text-decoration: underline; text-underline-offset: 4px; }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--navy);
+      background: var(--navy);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .btn-primary:hover { background: var(--teal-dark); border-color: var(--teal-dark); text-decoration: none; }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+    .btn-secondary:hover { border-color: var(--teal); color: var(--teal); background: #FFFFFF; text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      padding: 40px 0 28px;
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+      gap: 40px;
+      align-items: end;
+    }
+    .hero-kicker {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      color: var(--navy);
+      margin: 0 0 14px;
+      text-wrap: balance;
+    }
+    .hero-lead {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 68ch;
+    }
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-hairline);
+    }
+    .metric-cell .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .metric-cell .metric-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--navy);
+      line-height: 1.1;
+    }
+    .metric-cell .metric-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Sections */
+    .section { padding: 36px 0; }
+    .section-bordered { border-top: 1px solid var(--border-hairline); }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--navy);
+      margin: 0 0 4px;
+    }
+    .section-sub {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 72ch;
+    }
+
+    /* Interactive Map Stage */
+    .map-frame {
+      position: relative;
+      width: 100%;
+      height: 620px;
+      min-height: 520px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      background: #E6F2F9;
+    }
+    #cwk-map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+    .map-frame img.leaflet-tile { max-width: none !important; max-height: none !important; }
+
+    .map-status-bar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 500;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    }
+    .map-status-meta { color: var(--text-muted); font-size: 12px; }
+
+    .map-top-tools {
+      position: absolute;
+      top: 14px;
+      right: 54px;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .map-tool-btn {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      transition: border-color 150ms ease, color 150ms ease;
+    }
+    .map-tool-btn:hover { border-color: var(--teal); color: var(--teal); background: #FFFFFF; }
+
+    /* Bottom-Right Controls */
+    .map-bottom-right {
+      position: absolute;
+      bottom: 22px;
+      right: 14px;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .hist-toggle-btn {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+    }
+    .hist-toggle-btn:hover { background: #FFFFFF; color: var(--navy); border-color: #6B7280; }
+    .hist-toggle-btn.is-on { background: #4B5563; border-color: #374151; color: #FFFFFF; }
+    .hist-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #6B7280;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 0 0 1px #9CA3AF;
+      flex-shrink: 0;
+    }
+    .hist-toggle-btn.is-on .hist-dot { background: #E5E7EB; box-shadow: none; }
+
+    .bacteria-segmented {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .seg-btn {
+      border: 0;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: background 150ms ease, color 150ms ease;
+    }
+    .seg-btn:hover { background: var(--bg-subtle); color: var(--navy); }
+    .seg-btn.active-both { background: var(--navy); color: #FFFFFF; }
+    .seg-btn.active-single { background: var(--teal); color: #FFFFFF; }
+
+    /* Bottom-Left Collapsible Legend */
+    .map-legend-wrap {
+      position: absolute;
+      bottom: 22px;
+      left: 14px;
+      z-index: 500;
+      max-width: 340px;
+    }
+    .legend-trigger {
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      white-space: nowrap;
+    }
+    .legend-panel {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 14px;
+      width: 320px;
+      max-width: calc(100vw - 44px);
+      font-size: 12px;
+      color: var(--text-primary);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+    }
+    .legend-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-hairline);
+      gap: 8px;
+    }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-canvas);
+    }
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+      flex-shrink: 0;
+    }
+    .legend-historic-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      font-size: 11.5px;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    /* Usage Guide */
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .guide-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .guide-step {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+    .guide-card h3 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 8px;
+    }
+    .guide-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    .guide-action-row { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+
+    /* Site Trend Workspace */
+    .trend-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .trend-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .station-picker-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      flex: 1 1 360px;
+    }
+    .station-picker-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+    .station-select {
+      flex: 1 1 260px;
+      max-width: 440px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+    }
+    .trend-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .scale-segmented {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hairline);
+    }
+    .scale-btn {
+      border: 0;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .scale-btn.active { background: #FFFFFF; color: var(--navy); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
+
+    .trend-station-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 18px 0 14px;
+    }
+    .trend-station-name {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+    .trend-meta-line {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 4px 0 0;
+    }
+
+    .trend-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .kpi-val {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .kpi-unit {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .kpi-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      display: block;
+    }
+
+    .chart-shell {
+      position: relative;
+      width: 100%;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 22px;
+    }
+    .chart-svg-wrap { width: 100%; overflow-x: auto; }
+    .chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      background: rgba(15, 23, 42, 0.95);
+      color: #FFFFFF;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      z-index: 20;
+      white-space: normal;
+      max-width: 260px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+    }
+    .chart-caption {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Sample History Table */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    table.data-table th {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      white-space: nowrap;
+    }
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    table.data-table tr:last-child td { border-bottom: 0; }
+    .status-text-safe { color: #15803D; font-weight: 600; }
+    .status-text-moderate { color: #A16207; font-weight: 600; }
+    .status-text-high { color: #B91C1C; font-weight: 600; }
+    .status-text-critical { color: #7F1D1D; font-weight: 700; }
+
+    /* Download Section */
+    .download-strip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 28px;
+      align-items: center;
+    }
+    .download-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+      padding: 28px 0;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid, .guide-grid, .download-strip { grid-template-columns: 1fr; }
+      .trend-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .download-buttons { justify-content: flex-start; }
+      .site-nav { display: none; }
+      .map-frame { height: 540px; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0 16px; }
+      .hero-metrics { grid-template-columns: 1fr; gap: 12px; }
+      .map-status-bar { max-width: calc(100% - 28px); }
+      .map-top-tools { top: 62px; right: 14px; }
+    }
+  
+    .rain-controls {display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0;padding:12px;border:1px solid var(--border-strong);border-radius:10px;background:white;}
+    .rain-controls select {padding:8px;border:1px solid var(--border-strong);border-radius:6px;font:inherit;max-width:100%;}
+    #rain-toggle[aria-pressed="true"] {background:var(--navy);color:white;}
+    #rain-details {margin:8px 0 16px;font-size:13px;color:var(--text-secondary);}
+    #rain-legend {display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+    #rain-legend span {display:inline-flex;align-items:center;gap:4px;}
+    #rain-legend img {width:18px;height:18px;object-fit:contain;}
+    @media(max-width:600px){.header-inner{gap:8px}.brand-wordmark{font-size:15px}.map-bottom-right{bottom:42px;max-width:calc(100% - 28px)}.map-legend-wrap{bottom:120px}.trend-panel{padding:12px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#top" class="brand-wordmark">Calusa Waterkeeper</a>
+      <nav class="site-nav" aria-label="Page sections">
+        <a href="#live-map">Live Map</a>
+        <a href="#how-to-use">How to Use</a>
+        <a href="#site-trends">Site Trends</a>
+        <a href="#download-data">Download Data</a>
+      </nav>
+      <button type="button" class="btn-primary" id="header-download-btn">Download CSV</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="hero-kicker">Southwest Florida Fecal Indicator Bacteria Monitoring · Live ArcGIS Dataset</p>
+          <h1>45-Day Active &amp; Historic Water Quality Sampling Map</h1>
+          <p class="hero-lead">
+            This page displays Calusa Waterkeeper monitoring sites sampled within the <strong>last 45 days</strong> alongside historically sampled data collection sites across Southwest Florida waterways. Use the map controls below to toggle historic stations on or off, inspect trends over time at any site, and download clean CSV datasets for Enterococcus and <em>E. coli</em>.
+          </p>
+        </div>
+        <div class="hero-metrics" aria-label="Dataset summary">
+          <div class="metric-cell">
+            <span class="metric-label">Sampled Last 45 Days</span>
+            <span class="metric-value" id="metric-active">--</span>
+            <span class="metric-sub">Active monitoring sites</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">Historic Collection Sites</span>
+            <span class="metric-value" id="metric-historic">--</span>
+            <span class="metric-sub">&gt; 45 days · toggleable</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">Latest Sample Run</span>
+            <span class="metric-value" id="metric-latest" style="font-size:20px;">--</span>
+            <span class="metric-sub" id="metric-total-records">Loading records...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="live-map">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Interactive Sampling Map</h2>
+            <p class="section-sub">
+              Colored markers indicate sites tested within the last 45 days. Click any marker to view its latest reading and load its historical trend chart below.
+            </p>
+          </div>
+          <div class="mono" style="font-size:12px;color:var(--text-muted);" id="map-window-note">
+            Active window: rolling 45 days
+          </div>
+        </div>
+
+        <div class="rain-controls" role="group" aria-label="NOAA precipitation controls">
+          <button type="button" class="btn-secondary" id="rain-toggle" aria-pressed="false" aria-controls="rain-details">NOAA Rainfall OFF</button>
+          <label for="rain-period">Accumulation</label>
+          <select id="rain-period"><option value="28">Last 24 hours</option><option value="24">Last 12 hours</option><option value="20">Last 6 hours</option><option value="40">Last 3 days (daily analysis)</option><option value="56">Last 7 days (daily analysis)</option></select>
+          <label for="rain-opacity">Opacity</label><input id="rain-opacity" type="range" min="20" max="90" value="55" />
+          <button type="button" class="btn-secondary" id="rain-refresh">Refresh NOAA</button>
+        </div>
+        <div id="rain-details" hidden>
+          <div id="rain-status" role="status">Rainfall layer not loaded.</div>
+          <div id="rain-station" role="status"></div>
+          <div id="rain-legend" aria-label="NOAA rainfall legend"></div>
+          <p>Regional NOAA/NWS multi-sensor estimated precipitation (inches), approximately 4 km grid. KFMY is a separate point observation at Fort Myers Page Field. Multi-day analysis ends at 12 UTC; rainfall shown is not necessarily contemporaneous with bacteria sampling. <a href="https://forecast.weather.gov/data/obhistory/KFMY.html" target="_blank" rel="noopener">KFMY observation history</a> · <a href="https://water.noaa.gov/precip" target="_blank" rel="noopener">NOAA precipitation map</a></p>
+        </div>
+        <div class="map-frame">
+          <div id="cwk-map" role="region" aria-label="Calusa Waterkeeper interactive Leaflet map"></div>
+
+          <div class="map-status-bar">
+            <strong id="cwk-pin-count">Loading Calusa Waterkeeper sites...</strong>
+            <span aria-hidden="true" style="color:#CBD5E1;">·</span>
+            <span class="map-status-meta" id="cwk-scope-label">Last 45 days only</span>
+          </div>
+
+          <div class="map-top-tools">
+            <button type="button" class="map-tool-btn" id="btn-basemap">Satellite</button>
+            <button type="button" class="map-tool-btn" id="btn-reset-view">Reset View</button>
+          </div>
+
+          <div class="map-legend-wrap">
+            <button type="button" class="legend-trigger" id="btn-legend-open">Map Legend &#9652;</button>
+            <div class="legend-panel" id="legend-panel" style="display:none;">
+              <div class="legend-head">
+                <strong id="legend-title" style="color:var(--navy);">Bacteria Screening Levels (<em>E. coli</em> &amp; Enterococcus)</strong>
+                <button type="button" id="btn-legend-close" style="border:0;background:transparent;color:var(--teal);font-weight:600;font-size:12px;">Hide &#9662;</button>
+              </div>
+              <div class="mono" id="legend-bav" style="margin-top:8px;font-size:11px;color:var(--text-secondary);"></div>
+              <div class="legend-grid" id="legend-grid"></div>
+              <div class="legend-historic-row">
+                <span class="hist-dot"></span>
+                <span><strong>Historic Site (&gt; 45 days):</strong> Small grey point with site code (off by default)</span>
+              </div>
+              <div id="legend-note" style="font-size:11.5px;color:var(--text-secondary);line-height:1.45;"></div>
+            </div>
+          </div>
+
+          <div class="map-bottom-right">
+            <button type="button" class="hist-toggle-btn" id="btn-toggle-historic" aria-pressed="false" title="Toggle historically sampled collection sites (> 45 days)">
+              <span class="hist-dot"></span>
+              <span id="lbl-historic">Historic Sites OFF</span>
+            </button>
+            <div class="bacteria-segmented" role="group" aria-label="Filter bacteria indicator">
+              <button type="button" class="seg-btn active-both" data-filter="both" id="lbl-both">Both</button>
+              <button type="button" class="seg-btn" data-filter="entero" id="lbl-entero">Entero</button>
+              <button type="button" class="seg-btn" data-filter="ecoli" id="lbl-ecoli"><em>E. coli</em></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="how-to-use">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">How to Use This Monitoring Page</h2>
+            <p class="section-sub">
+              Every control updates live from Calusa Waterkeeper’s public ArcGIS Online bacteria dataset with no login required.
+            </p>
+          </div>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">01. Toggle Historic Sites</div>
+              <h3>Compare 45-Day Active vs. Past Locations</h3>
+              <p>
+                By default, the map highlights only sites sampled within the <strong>last 45 days</strong>. Click <strong>Historic Sites OFF / ON</strong> at the bottom right of the map (or use the button below) to display historically sampled collection sites as small grey points labeled with their site codes.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <button type="button" class="btn-secondary" id="guide-toggle-historic-btn">Show Historic Sites on Map</button>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">02. Explore Trends Over Time</div>
+              <h3>Track EPA Exceedances by Station</h3>
+              <p>
+                Click any active or historic pin on the map—or choose a station from the dropdown in <strong>Site Trends Over Time</strong> below—to plot every historical Enterococcus or <em>E. coli</em> sample against the EPA Beach Action Value threshold line.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <a href="#site-trends" class="btn-secondary">Jump to Site Trends</a>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div>
+              <div class="guide-step">03. Download Open Data</div>
+              <h3>Export Clean CSV Spreadsheets</h3>
+              <p>
+                Download the complete Calusa Waterkeeper bacteria record, export only the active 45-day snapshot, or download the complete chronological history for a single selected monitoring site directly to CSV.
+              </p>
+            </div>
+            <div class="guide-action-row">
+              <a href="#download-data" class="btn-secondary">Go to CSV Downloads</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="site-trends">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Site Trends Over Time</h2>
+            <p class="section-sub">
+              Select any active or historic station (or click a marker on the map above) to inspect historical bacteria levels, EPA threshold exceedances, and full sample records.
+            </p>
+          </div>
+        </div>
+
+        <div class="trend-panel">
+          <div class="trend-controls">
+            <div class="station-picker-group">
+              <label for="station-select">Monitoring Site</label>
+              <select id="station-select" class="station-select" aria-label="Select a monitoring site to inspect trends">
+                <option value="">Loading stations...</option>
+              </select>
+            </div>
+            <div class="trend-actions">
+              <div class="scale-segmented" role="group" aria-label="Y-axis scale">
+                <button type="button" class="scale-btn active" data-scale="linear">Linear Scale</button>
+                <button type="button" class="scale-btn" data-scale="log">Log Scale</button>
+              </div>
+              <button type="button" class="btn-secondary" id="trend-rain-toggle" aria-pressed="false">KFMY Rainfall OFF</button>
+              <button type="button" class="btn-secondary" id="btn-download-site-csv">Download Site CSV</button>
+            </div>
+          </div>
+
+          <div class="trend-station-meta">
+            <div>
+              <h3 class="trend-station-name" id="trend-station-title">Select a site to view trends</h3>
+              <p class="trend-meta-line" id="trend-station-subtitle">Waiting for live Calusa Waterkeeper data...</p>
+            </div>
+            <button type="button" class="btn-secondary" id="btn-focus-on-map" style="font-size:12px;padding:7px 12px;">Locate Site on Map</button>
+          </div>
+
+          <div class="trend-kpis">
+            <div class="kpi-box">
+              <span class="kpi-label">Latest Reading</span>
+              <div><span class="kpi-val" id="kpi-latest">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-latest-date">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Geometric Mean</span>
+              <div><span class="kpi-val" id="kpi-geomean">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-sample-count">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Peak Recorded Value</span>
+              <div><span class="kpi-val" id="kpi-peak">--</span><span class="kpi-unit">MPN/100mL</span></div>
+              <span class="kpi-note" id="kpi-peak-date">--</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-label">Above EPA BAV Limit</span>
+              <div><span class="kpi-val" id="kpi-exceed">--</span><span class="kpi-unit">%</span></div>
+              <span class="kpi-note" id="kpi-bav-note">--</span>
+            </div>
+          </div>
+
+          <div id="trend-rain-panel" hidden style="margin-bottom:16px;padding:12px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-canvas)">
+            <strong>Historical rainfall · Fort Myers Page Field (KFMY)</strong>
+            <p id="trend-rain-status" role="status" aria-live="polite">Rainfall not loaded.</p>
+            <button type="button" class="btn-secondary" id="trend-rain-retry">Refresh rainfall</button>
+            <button type="button" class="btn-secondary" id="trend-rain-export" disabled>Download paired rainfall CSV</button>
+            <p style="font-size:12px;margin-bottom:0">Blue bars: daily NOAA GHCN precipitation (inches, right axis). Gray bands: missing or quality-rejected days. Antecedent totals use 1, 3 or 7 complete reported dates before sampling, excluding sample day; these are not exact hourly totals. Page Field is a regional point observation, not rainfall at each sampling site. <a href="https://www.ncei.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00012835/detail" target="_blank" rel="noopener">NOAA station record</a>.</p>
+          </div>
+          <div class="chart-shell">
+            <div id="chart-tooltip" class="chart-tooltip"></div>
+            <div class="chart-svg-wrap" id="trend-chart-container">
+              <div style="padding:48px 16px;text-align:center;color:var(--text-muted);font-size:14px;">Loading time-series chart...</div>
+            </div>
+            <div class="chart-caption">
+              <span id="chart-threshold-caption">Dashed line shows EPA Beach Action Value (BAV) threshold.</span>
+              <span>Hover or tap any point to inspect sample details.</span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sample Date</th>
+                  <th>Site Code</th>
+                  <th>Indicator</th>
+                  <th>Result (MPN/100mL)</th>
+                  <th>EPA Status</th>
+                  <th>Depth</th>
+                  <th>Water Temp (&deg;C)</th>
+                </tr>
+              </thead>
+              <tbody id="trend-table-body">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">Loading sample history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-bordered" id="download-data">
+      <div class="container">
+        <div class="download-strip">
+          <div>
+            <h2 class="section-title">Download Calusa Waterkeeper Data</h2>
+            <p class="section-sub">
+              Export live Enterococcus and <em>E. coli</em> measurements directly as CSV spreadsheets for analysis in Excel, R, Python, or GIS tools. Exports include station codes, waterbody names, coordinates, sample dates, indicator names, result values, EPA threshold classification, sample depth, and water temperature.
+            </p>
+          </div>
+          <div class="download-buttons">
+            <button type="button" class="btn-primary" id="btn-download-all">Download All Records (CSV)</button>
+            <button type="button" class="btn-secondary" id="btn-download-active">Download Last 45 Days (CSV)</button>
+            <a class="btn-secondary" href="https://experience.arcgis.com/experience/425e2b218b544225a5bba653ac1a8d90" target="_blank" rel="noopener noreferrer">Official ArcGIS Portal &#8599;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Calusa Waterkeeper · Southwest Florida Fecal Indicator Bacteria Monitoring</span>
+      <span>Data Sources: Calusa Waterkeeper ArcGIS Online · EPA 2012 Recreational Water Quality Criteria · NOAA/NWS</span>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      var DATA_URL = "https://calusawk.maps.arcgis.com/sharing/rest/content/items/2544102a6a3746d6be8b10ed26b91851/data";
+      var PORTAL_URL = "https://experience.arcgis.com/experience/425e2b218b544225a5bba653ac1a8d90";
+      var ACTIVE_WINDOW_DAYS = 45;
+      var WINDOW_MS = ACTIVE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+
+      var allFibRecords = [];
+      var activeStations = [];
+      var historicStations = [];
+      var recordsByStation = {};
+      var stationMetaById = {};
+      var activeFilter = "both";
+      var showHistoric = false;
+      var selectedStationId = "";
+      var chartScale = "linear";
+      // Historical NOAA daily precipitation, separate from the live map overlay.
+      var rainEnabled = false, rainDays = new Map(), rainState = "idle", rainToken = 0, rainRange = "", rainController = null;
+      var DAY = 86400000;
+      function dayKey(t){return new Date(t).toISOString().slice(0,10);}
+      function dayTime(d){return Date.parse(d+"T12:00:00Z");}
+      function rainTotal(d,n){var sum=0;for(var i=1;i<=n;i++){var v=rainDays.get(dayKey(dayTime(d)-i*DAY));if(v==null)return null;sum+=v;}return sum;}
+      function rainText(v){return v==null?"Unavailable":v.toFixed(2)+" in";}
+      function selectedHistory(){var m=stationMetaById[selectedStationId], a=recordsByStation[selectedStationId]||[];if(!m)return [];var b=a.filter(function(r){return r.isEcoli===(activeFilter==="both"?m.isEcoli:activeFilter==="ecoli");});return b.length?b:a.filter(function(r){return r.isEcoli===m.isEcoli;});}
+      function updateRainStatus(msg){document.getElementById("trend-rain-status").textContent=msg;document.getElementById("trend-rain-export").disabled=rainState!=="ready";}
+      async function ensureHistoricalRain(points,force){
+        if(!rainEnabled||!points.length)return;
+        var start=dayKey(dayTime(points[0].iso)-7*DAY),end=points[points.length-1].iso,key=start+"/"+end;
+        if(!force&&key===rainRange&&rainState!=="idle")return;
+        if(rainController)rainController.abort();rainController=new AbortController();var controller=rainController,token=++rainToken;
+        rainRange=key;rainState="loading";rainDays=new Map();updateRainStatus("Loading NOAA daily observations…");
+        var timer=setTimeout(function(){controller.abort();},30000);
+        try{
+          var params=new URLSearchParams({dataset:"daily-summaries",stations:"USW00012835",startDate:start,endDate:end,dataTypes:"PRCP",units:"standard",includeAttributes:"true",format:"json"});
+          var res=await fetch("https://www.ncei.noaa.gov/access/services/data/v1?"+params,{signal:controller.signal});if(!res.ok)throw Error("HTTP "+res.status);
+          var rows=await res.json();if(!Array.isArray(rows))throw Error("Unexpected NOAA response");if(token!==rainToken||!rainEnabled)return;
+          rows.forEach(function(r){var d=r.DATE,raw=r.PRCP,flags=String(r.PRCP_ATTRIBUTES||"").split(","),v=Number(raw);if(/^\d{4}-\d{2}-\d{2}$/.test(d)&&raw!=null&&String(raw).trim()!==""&&Number.isFinite(v)&&v>=0&&!flags[1]&&flags[0]!=="P"&&flags[0]!=="A")rainDays.set(d,v);});
+          rainState="ready";var count=0,total=0;for(var t=dayTime(points[0].iso);t<=dayTime(end);t+=DAY){total++;if(rainDays.has(dayKey(t)))count++;}
+          updateRainStatus("NOAA coverage: "+count.toLocaleString()+" of "+total.toLocaleString()+" chart dates have usable rainfall. Archive updates may lag; missing days are not zero.");
+        }catch(e){if(token!==rainToken||!rainEnabled)return;rainState="error";updateRainStatus("NOAA historical rainfall unavailable. Bacteria data remain visible. Try Refresh rainfall; browser cross-origin restrictions or NOAA outages may prevent access.");}
+        finally{clearTimeout(timer);}
+        if(token===rainToken&&rainEnabled&&selectedStationId)selectStation(selectedStationId,false);
+      }
+
+
+      var map = null;
+      var pinLayer = null;
+      var markersByStation = {};
+
+      function esc(str) {
+        return String(str == null ? "" : str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function fmtIndicatorHtml(str) {
+        return esc(str).replace(/E\.?\s*coli/gi, "<em>E. coli</em>");
+      }
+
+      function splitCsvLine(line) {
+        var out = [], cur = "", inQ = false;
+        for (var i = 0; i < line.length; i++) {
+          var c = line[i];
+          if (c === '"') {
+            if (inQ && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else {
+              inQ = !inQ;
+            }
+          } else if (c === ',' && !inQ) {
+            out.push(cur);
+            cur = "";
+          } else {
+            cur += c;
+          }
+        }
+        out.push(cur);
+        return out;
+      }
+
+      function evalEpa(charName, val) {
+        var p = (charName || "").toLowerCase();
+        var isEcoli = p.indexOf("coli") !== -1 && p.indexOf("total") === -1;
+        if (isEcoli) {
+          if (val <= 126) return { cat: "low", label: "Low (Below BAV)", short: "Low", color: "#16A34A", above: false, isEcoli: true, bav: 235 };
+          if (val <= 235) return { cat: "moderate", label: "Moderate (Caution)", short: "Moderate", color: "#EAB308", above: false, isEcoli: true, bav: 235 };
+          if (val <= 576) return { cat: "high", label: "High (Above BAV)", short: "High", color: "#DC2626", above: true, isEcoli: true, bav: 235 };
+          return { cat: "very_high", label: "Very high (Above BAV)", short: "Critical", color: "#8B0000", above: true, isEcoli: true, bav: 235 };
+        }
+        if (val <= 35) return { cat: "low", label: "Low (Below BAV)", short: "Low", color: "#16A34A", above: false, isEcoli: false, bav: 70 };
+        if (val <= 70) return { cat: "moderate", label: "Moderate (Caution)", short: "Moderate", color: "#EAB308", above: false, isEcoli: false, bav: 70 };
+        if (val <= 250) return { cat: "high", label: "High (Above BAV)", short: "High", color: "#DC2626", above: true, isEcoli: false, bav: 70 };
+        return { cat: "very_high", label: "Very high (Above BAV)", short: "Critical", color: "#8B0000", above: true, isEcoli: false, bav: 70 };
+      }
+
+      function parseCsv(text) {
+        var lines = text.split(/\r?\n/).filter(function (l) { return l.trim().length > 0; });
+        if (lines.length < 2) return [];
+        var hdr = splitCsvLine(lines[0]).map(function (h) { return h.trim().replace(/^"|"$/g, ""); });
+        var idx = function (n) { return hdr.indexOf(n); };
+
+        var iSt = idx("StationID");
+        var iWb = idx("WaterbodyName");
+        var iLat = idx("Latitude");
+        var iLon = idx("Longitude");
+        var iDt = idx("SampleDate");
+        var iCh = idx("Characteristic");
+        var iVal = idx("ResultValue");
+        var iUnit = idx("ResultUnit");
+        var iDep = idx("ActivityDepth");
+        var iDepU = idx("ActivityDepthUnit");
+        var iWt = idx("SiteWaterTemp_C");
+
+        if ([iSt,iLat,iLon,iDt,iCh,iVal].some(function(x){return x<0;})) throw Error("Missing required CSV fields");
+        var recs = [];
+        for (var i = 1; i < lines.length; i++) {
+          var cols = splitCsvLine(lines[i]).map(function (c) { return c.trim().replace(/^"|"$/g, ""); });
+          if (cols.length < 5) continue;
+
+          var ch = cols[iCh] || "";
+          var chLower = ch.toLowerCase();
+          if (chLower.indexOf("total") !== -1) continue;
+          if (chLower.indexOf("enterococc") === -1 && chLower.indexOf("coli") === -1) continue;
+
+          var lat = parseFloat(cols[iLat] || "0");
+          var lon = parseFloat(cols[iLon] || "0");
+          if (!lat || !lon) continue;
+
+          var rawResult = cols[iVal] || "";
+           var val = Number(rawResult.replace(/^[<>]=?\s*/, ""));
+           if (!rawResult || !Number.isFinite(val) || val < 0) continue;
+          if (isNaN(val)) continue;
+
+          var rawDate = cols[iDt] || "";
+          if (!rawDate) continue;
+          var dp = rawDate.split("/");
+          var iso = rawDate;
+          if (dp.length === 3) {
+            var yr = dp[2].length === 2 ? "20" + dp[2] : dp[2];
+            iso = yr + "-" + dp[0].padStart(2, "0") + "-" + dp[1].padStart(2, "0");
+          }
+
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || !Number.isFinite(Date.parse(iso))) continue;
+           var ev = evalEpa(ch, val);
+          recs.push({
+            stationId: (cols[iSt] || ("ST-" + i)).trim(),
+            waterbody: cols[iWb] || cols[iSt] || "Southwest Florida Waterway",
+            lat: lat,
+            lon: lon,
+            iso: iso,
+            displayDate: rawDate,
+            characteristic: ch,
+            val: val,
+            rawResult: rawResult,
+            unit: cols[iUnit] || "MPN/100mL",
+            depth: cols[iDep] ? (cols[iDep] + " " + (cols[iDepU] || "")).trim() : "",
+            waterTempC: cols[iWt] || "",
+            cat: ev.cat,
+            label: ev.label,
+            short: ev.short,
+            color: ev.color,
+            above: ev.above,
+            isEcoli: ev.isEcoli,
+            bav: ev.bav
+          });
+        }
+
+        recs.sort(function (a, b) { return b.iso.localeCompare(a.iso); });
+        return recs;
+      }
+
+      function processDataset(recs) {
+        allFibRecords = recs;
+        recordsByStation = {};
+        stationMetaById = {};
+        activeStations = [];
+        historicStations = [];
+
+        var nowMs = Date.now();
+        recs.forEach(function (r) {
+          if (!recordsByStation[r.stationId]) recordsByStation[r.stationId] = [];
+          recordsByStation[r.stationId].push(r);
+        });
+
+        Object.keys(recordsByStation).forEach(function (sid) {
+          var latest = recordsByStation[sid][0];
+          var rMs = new Date(latest.iso + "T12:00:00Z").getTime();
+          var isRecent = !isNaN(rMs) && (nowMs - rMs) <= WINDOW_MS && (nowMs - rMs) >= -86400000;
+          var entry = Object.assign({}, latest, {
+            isHistoric: !isRecent,
+            sampleCount: recordsByStation[sid].length
+          });
+          stationMetaById[sid] = entry;
+          if (isRecent) activeStations.push(entry);
+          else historicStations.push(entry);
+        });
+
+        activeStations.sort(function (a, b) { return a.stationId.localeCompare(b.stationId); });
+        historicStations.sort(function (a, b) { return a.stationId.localeCompare(b.stationId); });
+
+        document.getElementById("metric-active").textContent = String(activeStations.length);
+        document.getElementById("metric-historic").textContent = String(historicStations.length);
+        document.getElementById("metric-latest").textContent = recs[0] ? recs[0].iso : "--";
+        document.getElementById("metric-total-records").textContent = recs.length.toLocaleString() + " total bacteria samples";
+
+        populateStationDropdown();
+        var defaultStation = activeStations[0] || historicStations[0];
+        if (defaultStation) selectStation(defaultStation.stationId, false);
+      }
+
+      function makePinHtml(r) {
+        if (r.isHistoric) {
+          return '<div style="display:flex;flex-direction:column;align-items:center;width:48px;cursor:pointer;" title="' + esc(r.stationId) + ' - Historic Data Collection Site">' +
+            '<span style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:600;color:#374151;text-shadow:0 0 2px #FFF,0 0 3px #FFF,0 1px 2px #FFF;line-height:1;margin-bottom:2px;white-space:nowrap;">' + esc(r.stationId) + '</span>' +
+            '<span style="width:11px;height:11px;border-radius:50%;background:#6B7280;border:2px solid #FFF;box-shadow:0 0 0 2px rgba(107,114,128,0.28),0 1px 3px rgba(0,0,0,0.25);display:block;"></span>' +
+            '</div>';
+        }
+        var iconFill = r.cat === "moderate" ? "#0B2D5B" : "#FFFFFF";
+        var inner = r.above
+          ? '<g transform="translate(7,7)"><circle cx="11.5" cy="4" r="1.5" fill="#FFF"/><path d="M7 6.5c-.4 0-.8.2-1.1.4l-2 1.5.8 1.1 1.5-1.1v1.5l-1.8 1.2.7 1.1 2.3-1.6c.2-.1.3-.4.3-.7V7.5c0-.4-.4-.8-.7-.8z" fill="#FFF"/><path d="M1.5 12.5c1 0 1.6.5 2.5.5s1.6-.5 2.5-.5 1.6.5 2.5.5 1.6-.5 2.5-.5 1.6.5 2.5.5" stroke="#FFF" stroke-width="1.3" stroke-linecap="round" fill="none"/><circle cx="8" cy="8" r="6.8" stroke="#FFF" stroke-width="2" fill="none"/><line x1="3.2" y1="3.2" x2="12.8" y2="12.8" stroke="#FFF" stroke-width="2.2" stroke-linecap="round"/></g>'
+          : '<g transform="translate(7,6.5)"><circle cx="11.5" cy="4" r="1.6" fill="' + iconFill + '"/><path d="M8 6.8c-.4 0-.8.2-1.2.4L4.2 9l.8 1.1 2-1.4v1.8L4.8 12l.7 1.1 2.7-1.8c.3-.2.5-.5.5-.9V8c0-.5-.5-.9-1-.9z" fill="' + iconFill + '"/><path d="M11 6.5l2.6 1.1-.5 1.3-2.4-1z" fill="' + iconFill + '"/><path d="M1.5 11c1.1 0 1.7.6 2.7.6s1.7-.6 2.7-.6 1.7.6 2.7.6 1.7-.6 2.7-.6" stroke="' + iconFill + '" stroke-width="1.4" stroke-linecap="round" fill="none"/></g>';
+        return '<div style="display:flex;flex-direction:column;align-items:center;width:50px;cursor:pointer;">' +
+          '<span style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:600;color:#0F172A;text-shadow:0 0 2px #FFF,0 0 3px #FFF,0 1px 2px #FFF;line-height:1;margin-bottom:1px;white-space:nowrap;">' + esc(r.stationId) + '</span>' +
+          '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.28));"><circle cx="15" cy="15" r="13.5" fill="' + r.color + '" stroke="#FFF" stroke-width="2.5"/>' + inner + '</svg>' +
+          '</div>';
+      }
+
+      function makePopupHtml(r) {
+        var statusLine = r.isHistoric
+          ? "Historic Site · Not Sampled in Last 45 Days"
+          : r.above
+            ? "Above selected EPA BAV at time of sampling"
+            : r.cat === "moderate"
+              ? "Moderate Bacteria · Exercise Caution"
+              : "Below selected BAV at time of sampling";
+        var tone = r.isHistoric ? "#4B5563" : r.above ? "#DC2626" : r.cat === "moderate" ? "#A16207" : "#15803D";
+        var lim = r.isEcoli ? "235 MPN (<em>E. coli</em>)" : "70 MPN (Enterococcus)";
+        var tempRow = r.waterTempC ? "<div><strong>Water Temp:</strong> " + esc(r.waterTempC) + " &deg;C</div>" : "";
+
+        return '<div style="font-family:IBM Plex Sans,system-ui,sans-serif;font-size:12.5px;line-height:1.45;min-width:240px;max-width:295px;">' +
+          '<div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:600;color:#64748B;">' + esc(r.stationId) + ' · ' + r.sampleCount + ' historical samples</div>' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:#0B2D5B;margin:2px 0 8px;">' + esc(r.waterbody) + '</div>' +
+          '<div style="padding:8px 10px;border-radius:8px;background:#F8FAFC;border:1px solid #E2E8F0;margin-bottom:8px;">' +
+            '<div style="font-family:IBM Plex Mono,monospace;font-size:15px;font-weight:600;color:' + tone + ';">' + r.val + ' ' + esc(r.unit) + '</div>' +
+            '<div style="font-size:11.5px;font-weight:600;color:' + tone + ';margin-top:2px;">' + statusLine + '</div>' +
+          '</div>' +
+          '<div style="font-size:12px;color:#334155;line-height:1.55;">' +
+            '<div><strong>' + (r.isHistoric ? "Last Sampled:" : "Sample Date:") + '</strong> <span style="font-family:IBM Plex Mono,monospace;">' + esc(r.iso) + '</span></div>' +
+            '<div><strong>Indicator:</strong> ' + fmtIndicatorHtml(r.characteristic) + '</div>' +
+            '<div><strong>Sample Depth:</strong> ' + esc(r.depth) + '</div>' +
+            tempRow +
+            '<div style="color:#64748B;font-size:11px;margin-top:2px;">Selected EPA BAV: ' + lim + '</div>' +
+          '</div>' +
+          '<div style="margin-top:10px;padding-top:8px;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+            '<button type="button" data-view-trend="' + esc(r.stationId) + '" style="border:1px solid #0B2D5B;background:#0B2D5B;color:#FFF;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;">View Trend Over Time</button>' +
+            '<a href="' + PORTAL_URL + '" target="_blank" rel="noopener noreferrer" style="font-size:11.5px;font-weight:600;color:#007799;">ArcGIS &#8599;</a>' +
+          '</div>' +
+        '</div>';
+      }
+
+      function updateLegend() {
+        var titleEl = document.getElementById("legend-title");
+        var bavEl = document.getElementById("legend-bav");
+        var gridEl = document.getElementById("legend-grid");
+        var noteEl = document.getElementById("legend-note");
+
+        function sw(col, lbl, rng) {
+          return '<div class="legend-item">' +
+            '<span class="legend-swatch" style="background:' + col + ';"></span>' +
+            '<div><div style="font-weight:600;color:#0F172A;line-height:1.2;">' + lbl + '</div>' +
+            '<div class="mono" style="font-size:10.5px;color:#64748B;">' + rng + '</div></div></div>';
+        }
+
+        if (activeFilter === "ecoli") {
+          titleEl.innerHTML = "<em>E. coli</em> Legend (Freshwater)";
+          bavEl.innerHTML = "EPA BAV Limit: 235 MPN / 100 mL (<em>E. coli</em>)";
+          gridEl.innerHTML = sw("#16A34A", "Low", "0 – 126 MPN") +
+            sw("#EAB308", "Moderate", "127 – 235 MPN") +
+            sw("#DC2626", "High (Above BAV)", "236 – 576 MPN") +
+            sw("#8B0000", "Critical", "&gt; 576 MPN");
+          noteEl.innerHTML = "Freshwater sites evaluated against EPA 2012 <em>E. coli</em> Recreational Water Quality Criteria.";
+        } else if (activeFilter === "entero") {
+          titleEl.innerHTML = "Enterococcus Legend (Marine/Estuary)";
+          bavEl.innerHTML = "EPA BAV Limit: 70 MPN / 100 mL (Entero)";
+          gridEl.innerHTML = sw("#16A34A", "Low", "0 – 35 MPN") +
+            sw("#EAB308", "Moderate", "36 – 70 MPN") +
+            sw("#DC2626", "High (Above BAV)", "71 – 250 MPN") +
+            sw("#8B0000", "Critical", "&gt; 250 MPN");
+          noteEl.innerHTML = "Marine and estuarine sites evaluated against EPA Enterococcus Beach Action Values.";
+        } else {
+          titleEl.innerHTML = "Bacteria Screening Levels (<em>E. coli</em> &amp; Enterococcus)";
+          bavEl.innerHTML = "BAV: 235 MPN (<em>E. coli</em>) · 70 MPN (Entero)";
+          gridEl.innerHTML = sw("#16A34A", "Low", "&le; 126 <em>E. coli</em> / &le; 35 Entero") +
+            sw("#EAB308", "Moderate", "127–235 <em>E. coli</em> / 36–70 Entero") +
+            sw("#DC2626", "High (Above BAV)", "&gt; 235 <em>E. coli</em> / &gt; 70 Entero") +
+            sw("#8B0000", "Critical", "&gt; 576 <em>E. coli</em> / &gt; 250 Entero");
+          noteEl.innerHTML = "Active markers represent sites sampled within the last 45 days. Historic sites appear as small grey points when toggled on. Colors are display categories, not official swim advisories; historical samples cannot establish current safety.";
+        }
+      }
+
+      function syncHistoricButtons() {
+        var btn = document.getElementById("btn-toggle-historic");
+        var lbl = document.getElementById("lbl-historic");
+        var guideBtn = document.getElementById("guide-toggle-historic-btn");
+        var scopeLbl = document.getElementById("cwk-scope-label");
+
+        btn.className = "hist-toggle-btn" + (showHistoric ? " is-on" : "");
+        btn.setAttribute("aria-pressed", showHistoric ? "true" : "false");
+        lbl.textContent = "Historic Sites " + (showHistoric ? "ON" : "OFF") + " (" + historicStations.length + ")";
+        guideBtn.textContent = showHistoric ? "Hide Historic Sites on Map" : "Show Historic Sites on Map";
+        scopeLbl.textContent = showHistoric ? "Last 45 days + Historic sites" : "Last 45 days only";
+      }
+
+      function renderPins(fitBounds) {
+        if (!pinLayer) return;
+        pinLayer.clearLayers();
+        markersByStation = {};
+
+        var pool = (showHistoric ? activeStations.concat(historicStations) : activeStations).map(function(meta){
+          if(activeFilter === "both") return meta;
+          var r=recordsByStation[meta.stationId].find(function(x){return activeFilter === "ecoli" ? x.isEcoli : !x.isEcoli;});
+          if(!r)return null;
+          var historic=Date.now()-Date.parse(r.iso+"T12:00:00Z")>WINDOW_MS;
+          return Object.assign({},r,{isHistoric:historic,sampleCount:recordsByStation[meta.stationId].length});
+        }).filter(function(r){return r && (showHistoric || !r.isHistoric);});
+        var filtered = pool.filter(function (r) {
+          if (activeFilter === "ecoli") return r.isEcoli;
+          if (activeFilter === "entero") return !r.isEcoli;
+          return true;
+        });
+
+        var bounds = [];
+        filtered.forEach(function (r) {
+          var icon = L.divIcon({
+            className: r.isHistoric ? "cwk-div-hist" : "cwk-div-pin",
+            html: makePinHtml(r),
+            iconSize: r.isHistoric ? [48, 28] : [50, 42],
+            iconAnchor: r.isHistoric ? [24, 20] : [25, 27]
+          });
+          var marker = L.marker([r.lat, r.lon], {
+            icon: icon,
+            zIndexOffset: r.isHistoric ? 100 : r.above ? 800 : 300
+          });
+          marker.bindPopup(makePopupHtml(r), { maxWidth: 310 });
+          marker.on("click", function () {
+            selectStation(r.stationId, false);
+          });
+          marker.addTo(pinLayer);
+          markersByStation[r.stationId] = marker;
+          bounds.push([r.lat, r.lon]);
+        });
+
+        var scope = showHistoric ? activeStations.concat(historicStations) : activeStations;
+        function indicatorCount(isEcoli){return scope.filter(function(m){return recordsByStation[m.stationId].some(function(r){return r.isEcoli===isEcoli && (showHistoric || Date.now()-Date.parse(r.iso+"T12:00:00Z")<=WINDOW_MS);});}).length;}
+        var ecoliCount=indicatorCount(true), enteroCount=indicatorCount(false);
+        document.getElementById("lbl-both").innerHTML = "Both (" + scope.length + ")";
+        document.getElementById("lbl-entero").innerHTML = "Entero (" + enteroCount + ")";
+        document.getElementById("lbl-ecoli").innerHTML = "<em>E. coli</em> (" + ecoliCount + ")";
+        document.getElementById("cwk-pin-count").textContent = filtered.length + (filtered.length === 1 ? " Site Shown" : " Sites Shown");
+
+        syncHistoricButtons();
+        updateLegend();
+
+        if (fitBounds && bounds.length) {
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+        }
+      }
+
+      function populateStationDropdown() {
+        var sel = document.getElementById("station-select");
+        sel.innerHTML = "";
+
+        if (activeStations.length) {
+          var grpActive = document.createElement("optgroup");
+          grpActive.label = "Active — Sampled Within Last 45 Days (" + activeStations.length + ")";
+          activeStations.forEach(function (s) {
+            var opt = document.createElement("option");
+            opt.value = s.stationId;
+            opt.textContent = s.stationId + " — " + s.waterbody + " (" + s.sampleCount + " samples)";
+            grpActive.appendChild(opt);
+          });
+          sel.appendChild(grpActive);
+        }
+
+        if (historicStations.length) {
+          var grpHist = document.createElement("optgroup");
+          grpHist.label = "Historic Collection Sites — > 45 Days (" + historicStations.length + ")";
+          historicStations.forEach(function (s) {
+            var opt = document.createElement("option");
+            opt.value = s.stationId;
+            opt.textContent = s.stationId + " — " + s.waterbody + " (Last: " + s.iso + " · " + s.sampleCount + " samples)";
+            grpHist.appendChild(opt);
+          });
+          sel.appendChild(grpHist);
+        }
+      }
+
+      function selectStation(stationId, scrollToTrends) {
+        if (!recordsByStation[stationId]) return;
+        selectedStationId = stationId;
+        var sel = document.getElementById("station-select");
+        if (sel.value !== stationId) sel.value = stationId;
+
+        var meta = stationMetaById[stationId];
+        var fullHistory = recordsByStation[stationId];
+        var preferred = activeFilter === "both" ? meta.isEcoli : activeFilter === "ecoli";
+        var historyDesc = fullHistory.filter(function(r){return r.isEcoli === preferred;});
+        if(!historyDesc.length) historyDesc = fullHistory.filter(function(r){return r.isEcoli === meta.isEcoli;});
+        var historyAsc = historyDesc.slice().reverse();
+
+        document.getElementById("trend-station-title").textContent = meta.stationId + " — " + meta.waterbody;
+        var windowTag = meta.isHistoric ? "Historic Site (> 45 days since last sample)" : "Active Site (Sampled within last 45 days)";
+        document.getElementById("trend-station-subtitle").innerHTML =
+          windowTag + " · " + fmtIndicatorHtml(historyDesc[0].characteristic) + " · " +
+          '<span class="mono">' + meta.lat.toFixed(4) + ", " + meta.lon.toFixed(4) + "</span>";
+
+        var latest = historyDesc[0];
+        var logSum = 0;
+        var peak = historyDesc[0];
+        var exceedCount = 0;
+        historyDesc.forEach(function (r) {
+          logSum += Math.log(Math.max(r.val, 1));
+          if (r.val > peak.val) peak = r;
+          if (r.above) exceedCount++;
+        });
+        var geoMean = Math.exp(logSum / historyDesc.length);
+        var exceedPct = (exceedCount / historyDesc.length) * 100;
+
+        document.getElementById("kpi-latest").textContent = String(latest.val);
+        document.getElementById("kpi-latest-date").innerHTML = latest.iso + " · " + latest.label;
+        document.getElementById("kpi-geomean").textContent = geoMean < 10 ? geoMean.toFixed(1) : String(Math.round(geoMean));
+        document.getElementById("kpi-sample-count").textContent = "Across " + historyDesc.length + " samples (values below 1 treated as 1)";
+        document.getElementById("kpi-peak").textContent = String(peak.val);
+        document.getElementById("kpi-peak-date").textContent = "Recorded " + peak.iso;
+        document.getElementById("kpi-exceed").textContent = exceedPct.toFixed(0);
+        document.getElementById("kpi-bav-note").innerHTML = exceedCount + " of " + historyDesc.length + " above " + latest.bav + " MPN (" + (latest.isEcoli ? "<em>E. coli</em>" : "Entero") + ")";
+
+        ensureHistoricalRain(historyAsc,false);
+        renderTrendChart(historyAsc, latest);
+        renderHistoryTable(fullHistory);
+
+        if (scrollToTrends) {
+          document.getElementById("site-trends").scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      function renderTrendChart(points, latest) {
+        var container = document.getElementById("trend-chart-container");
+        var tooltip = document.getElementById("chart-tooltip");
+        tooltip.style.display = "none";
+
+        var bav = latest.bav;
+        document.getElementById("chart-threshold-caption").innerHTML =
+          "Dashed red line marks EPA Beach Action Value: <strong>" + bav + " MPN/100mL</strong> (" +
+          (latest.isEcoli ? "<em>E. coli</em>" : "Enterococcus") + ").";
+
+        if (!points.length) {
+          container.innerHTML = '<div style="padding:36px;text-align:center;color:var(--text-muted);">No historical samples available for this station.</div>';
+          return;
+        }
+
+        var W = 940, H = 290;
+        var withRain = rainEnabled && rainState === "ready";
+        var pad = { top: 30, right: withRain ? 82 : 24, bottom: 42, left: 72 };
+        var plotW = W - pad.left - pad.right;
+        var plotH = H - pad.top - pad.bottom;
+
+        var times = points.map(function (p) { return new Date(p.iso + "T12:00:00Z").getTime(); });
+        var minT = times[0], maxT = times[times.length - 1];
+        if (withRain) { minT -= DAY/2; maxT += DAY/2; } else if (minT === maxT) { minT -= DAY * 15; maxT += DAY * 15; }
+
+        var rawMax = Math.max(bav * 1.25, Math.max.apply(null, points.map(function (p) { return p.val; })) * 1.12);
+        var minValLog = 1;
+        var maxValLog = Math.pow(10, Math.ceil(Math.log10(Math.max(rawMax, 100))));
+
+        function xOf(t) {
+          return pad.left + ((t - minT) / (maxT - minT)) * plotW;
+        }
+        function yOf(v) {
+          if (chartScale === "log") {
+            var lv = Math.log10(Math.max(v, minValLog));
+            var lmax = Math.log10(maxValLog);
+            return pad.top + plotH - (lv / lmax) * plotH;
+          }
+          return pad.top + plotH - (Math.min(v, rawMax) / rawMax) * plotH;
+        }
+
+        var yTicks = [];
+        if (chartScale === "log") {
+          for (var p10 = 1; p10 <= maxValLog; p10 *= 10) yTicks.push(p10);
+        } else {
+          var step = Math.ceil(rawMax / 4 / 10) * 10 || 10;
+          for (var yv = 0; yv <= rawMax; yv += step) yTicks.push(yv);
+        }
+
+        var xTickCount = Math.min(6, points.length);
+        var xTicks = [];
+        for (var xi = 0; xi < xTickCount; xi++) {
+          var tVal = minT + ((maxT - minT) * (xTickCount === 1 ? 0.5 : xi / (xTickCount - 1)));
+          var dObj = new Date(tVal);
+          xTicks.push({ x: xOf(tVal), label: dObj.toISOString().slice(0, 7) });
+        }
+
+        var pathD = points.map(function (pt, idx) {
+          return (idx === 0 ? "M" : "L") + xOf(times[idx]).toFixed(1) + "," + yOf(pt.val).toFixed(1);
+        }).join(" ");
+
+        var bavY = yOf(bav);
+        var svgParts = [];
+        svgParts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:560px;height:auto;display:block;" role="img" aria-label="Bacteria concentration trend over time">');
+
+        yTicks.forEach(function (tv) {
+          var yy = yOf(tv);
+          svgParts.push('<line x1="' + pad.left + '" y1="' + yy.toFixed(1) + '" x2="' + (W - pad.right) + '" y2="' + yy.toFixed(1) + '" stroke="#E2E8F0" stroke-width="1"/>');
+          svgParts.push('<text x="' + (pad.left - 10) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="11" fill="#64748B">' + tv.toLocaleString() + '</text>');
+        });
+
+        svgParts.push('<line x1="' + pad.left + '" y1="' + (pad.top + plotH) + '" x2="' + (W - pad.right) + '" y2="' + (pad.top + plotH) + '" stroke="#CBD5E1" stroke-width="1"/>');
+        xTicks.forEach(function (xt) {
+          svgParts.push('<text x="' + xt.x.toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="#64748B">' + xt.label + '</text>');
+        });
+
+        if(withRain){
+          var rainMax=1;for(var rt=times[0];rt<=times[times.length-1];rt+=DAY){var rv=rainDays.get(dayKey(rt));if(rv!=null)rainMax=Math.max(rainMax,rv);}
+          rainMax=Math.ceil(rainMax);var bw=plotW*DAY/(maxT-minT);
+          for(var rt=times[0];rt<=times[times.length-1];rt+=DAY){var dk=dayKey(rt),rv=rainDays.get(dk),xx=xOf(rt)-bw/2,hh=rv==null?plotH:rv/rainMax*plotH;
+            if(rv==null||rv>0)svgParts.push('<rect x="'+xx.toFixed(2)+'" y="'+(pad.top+plotH-hh).toFixed(2)+'" width="'+bw.toFixed(3)+'" height="'+hh.toFixed(2)+'" fill="'+(rv==null?'#94A3B8':'#2563EB')+'" opacity="'+(rv==null?'.19':'.48')+'"><title>'+dk+' · '+rainText(rv)+'</title></rect>');
+          }
+          for(var j=0;j<=4;j++){var yy=pad.top+plotH-j*plotH/4;svgParts.push('<text x="'+(W-pad.right+8)+'" y="'+(yy+4)+'" font-size="11" fill="#1D4ED8">'+(rainMax*j/4).toFixed(2)+'</text>');}
+          svgParts.push('<text x="'+(W-pad.right+8)+'" y="15" font-size="11" fill="#1D4ED8">Rain (in)</text>');
+        }
+        svgParts.push('<text x="'+pad.left+'" y="15" font-size="11" fill="#475569">Bacteria (MPN/100mL)</text>');
+        svgParts.push('<line x1="' + pad.left + '" y1="' + bavY.toFixed(1) + '" x2="' + (W - pad.right) + '" y2="' + bavY.toFixed(1) + '" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6,4"/>');
+        svgParts.push('<text x="' + (W - pad.right - 4) + '" y="' + (bavY - 6).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600" fill="#B91C1C">EPA BAV (' + bav + ' MPN)</text>');
+
+        if (points.length > 1) {
+          svgParts.push('<path d="' + pathD + '" fill="none" stroke="#007799" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+        }
+
+        points.forEach(function (pt, idx) {
+          var cx = xOf(times[idx]).toFixed(1);
+          var cy = yOf(pt.val).toFixed(1);
+          svgParts.push('<circle class="cwk-pt" data-idx="' + idx + '" cx="' + cx + '" cy="' + cy + '" r="5" fill="' + pt.color + '" stroke="#FFFFFF" stroke-width="2" style="cursor:pointer;"/>');
+        });
+
+        svgParts.push('</svg>');
+        container.innerHTML = svgParts.join("");
+
+        var shell = container.parentElement;
+        container.querySelectorAll(".cwk-pt").forEach(function (dot) {
+          function showTip(evt) {
+            var idx = parseInt(dot.getAttribute("data-idx"), 10);
+            var pt = points[idx];
+            if (!pt) return;
+            tooltip.innerHTML =
+              '<div style="font-family:IBM Plex Mono,monospace;font-weight:600;">' + esc(pt.iso) + ' · ' + pt.val + ' ' + esc(pt.unit) + '</div>' +
+              '<div>' + fmtIndicatorHtml(pt.characteristic) + ' · ' + esc(pt.label) + '</div>' + (withRain ? '<div>KFMY prior 1 day: '+rainText(rainTotal(pt.iso,1))+'<br>Prior 3 days: '+rainText(rainTotal(pt.iso,3))+'<br>Prior 7 days: '+rainText(rainTotal(pt.iso,7))+'</div>' : '');
+            tooltip.style.display = "block";
+            var rect = shell.getBoundingClientRect();
+            var x = evt.clientX - rect.left + 12;
+            var y = evt.clientY - rect.top - 52;
+            if (x + 220 > rect.width) x = Math.max(12, rect.width - 235);
+            if (y < 8) y = evt.clientY - rect.top + 16;
+            tooltip.style.left = x + "px";
+            tooltip.style.top = y + "px";
+          }
+          dot.addEventListener("mouseenter", showTip);
+          dot.addEventListener("mousemove", showTip);
+          dot.addEventListener("click", showTip);
+          dot.addEventListener("mouseleave", function () { tooltip.style.display = "none"; });
+        });
+      }
+
+      function renderHistoryTable(recordsDesc) {
+        var tbody = document.getElementById("trend-table-body");
+        if (!recordsDesc.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No records found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = recordsDesc.map(function (r) {
+          var cls = r.cat === "very_high" ? "status-text-critical" : r.cat === "high" ? "status-text-high" : r.cat === "moderate" ? "status-text-moderate" : "status-text-safe";
+          return '<tr>' +
+            '<td class="mono">' + esc(r.iso) + '</td>' +
+            '<td class="mono">' + esc(r.stationId) + '</td>' +
+            '<td>' + fmtIndicatorHtml(r.characteristic) + '</td>' +
+            '<td class="mono" style="font-weight:600;">' + r.val + '</td>' +
+            '<td class="' + cls + '">' + esc(r.label) + '</td>' +
+            '<td class="mono">' + esc(r.depth) + '</td>' +
+            '<td class="mono">' + (r.waterTempC ? esc(r.waterTempC) : "—") + '</td>' +
+          '</tr>';
+        }).join("");
+      }
+
+      function csvCell(v) {
+        var s = String(v == null ? "" : v);
+        if(typeof v === "string" && /^[=+@\-\t\r]/.test(s)) s = "\'" + s;
+        if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }
+
+      function downloadCsv(rows, filename) {
+        var headers = [
+          "StationID", "WaterbodyName", "Latitude", "Longitude",
+          "SampleDate", "Indicator", "ResultValue", "ResultUnit", "ReportedResult",
+          "EPA_Status", "EPA_BAV_Limit", "ActivityDepth", "WaterTemp_C"
+        ];
+        var lines = [headers.join(",")];
+        rows.forEach(function (r) {
+          lines.push([
+            r.stationId, r.waterbody, r.lat, r.lon,
+            r.iso, r.characteristic, r.val, r.unit, r.rawResult,
+            r.label, r.bav, r.depth, r.waterTempC
+          ].map(csvCell).join(","));
+        });
+        var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+
+      // NOAA regional QPE and independent KFMY point observation.
+      function initRainfall() {
+        var service = "https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer";
+        var btn = document.getElementById("rain-toggle"), period = document.getElementById("rain-period"), opacity = document.getElementById("rain-opacity");
+        var details = document.getElementById("rain-details"), status = document.getElementById("rain-status"), station = document.getElementById("rain-station"), legend = document.getElementById("rain-legend");
+        var enabled = false, imageLayer = null, stationMarker = null, generation = 0, stationGeneration = 0;
+        map.createPane("rainPane"); map.getPane("rainPane").style.zIndex = 350; map.getPane("rainPane").style.pointerEvents = "none";
+        function drawRain() {
+          if (!enabled) return;
+          var token = ++generation, bounds = map.getBounds(), size = map.getSize(), crs = L.CRS.EPSG3857;
+          var sw = crs.project(bounds.getSouthWest()), ne = crs.project(bounds.getNorthEast());
+          var params = new URLSearchParams({bbox:[sw.x,sw.y,ne.x,ne.y].join(","),bboxSR:"3857",imageSR:"3857",size:Math.min(size.x,2048)+","+Math.min(size.y,2048),format:"png32",transparent:"true",layers:"show:"+period.value,f:"image",_t:String(Date.now())});
+          status.textContent = "Loading NOAA precipitation estimate…";
+          var next = L.imageOverlay(service+"/export?"+params,bounds,{pane:"rainPane",opacity:Number(opacity.value)/100,interactive:false});
+          next.on("load",function(){if(!enabled || token!==generation){map.removeLayer(next);return;} if(imageLayer)map.removeLayer(imageLayer);imageLayer=next;next.setOpacity(Number(opacity.value)/100);status.textContent="NOAA rainfall: "+period.options[period.selectedIndex].text+" · retrieved "+new Date().toLocaleString();});
+          next.on("error",function(){map.removeLayer(next);if(token===generation&&enabled){if(imageLayer)map.removeLayer(imageLayer);imageLayer=null;status.textContent="NOAA rainfall image unavailable. Try Refresh NOAA.";}});
+          next.addTo(map);
+        }
+        async function loadLegend(){
+          var id=period.value;legend.textContent="Loading NOAA legend…";
+          try{var res=await fetch(service+"/legend?f=json");if(!res.ok)throw Error(res.status);var data=await res.json();if(!enabled||period.value!==id)return;
+            var layer=(data.layers||[]).find(function(l){return String(l.layerId)===id;});legend.replaceChildren();
+            if(!layer||!layer.legend.length)throw Error("No legend");
+            layer.legend.forEach(function(item){var el=document.createElement("span"), img=document.createElement("img");img.alt="";img.src="data:image/png;base64,"+item.imageData;el.append(img,document.createTextNode(item.label||"See NOAA scale"));legend.append(el);});
+          }catch(e){if(enabled&&period.value===id)legend.textContent="Legend unavailable; use the linked NOAA precipitation map for its color scale.";}
+        }
+        function inches(q){if(!q||q.value===null||!Number.isFinite(q.value))return "Not reported";var v=q.value,u=q.unitCode||"";if(u.endsWith(":mm"))v/=25.4;else if(u.endsWith(":m"))v/=0.0254;else if(!u.endsWith(":in"))return "Unknown unit";return v.toFixed(2)+" in";}
+        async function loadStation(){var token=++stationGeneration;station.textContent="Loading KFMY observation…";
+          try{var res=await fetch("https://api.weather.gov/stations/KFMY/observations/latest",{headers:{Accept:"application/geo+json"},cache:"no-store"});if(!res.ok)throw Error(res.status);var data=await res.json(), p=data.properties;if(!enabled||token!==stationGeneration)return;
+            var text="KFMY · Page Field | Observed "+new Date(p.timestamp).toLocaleString("en-US",{timeZone:"America/New_York",timeZoneName:"short"})+" | 1 h: "+inches(p.precipitationLastHour)+" | 3 h: "+inches(p.precipitationLast3Hours)+" | 6 h: "+inches(p.precipitationLast6Hours);
+            station.textContent=text;if(stationMarker)map.removeLayer(stationMarker);var c=data.geometry&&data.geometry.coordinates;if(c&&Number.isFinite(c[0])&&Number.isFinite(c[1])){stationMarker=L.marker([c[1],c[0]],{title:"KFMY weather station",alt:"KFMY weather station",icon:L.divIcon({className:"",html:'<span style="display:block;background:#0B2D5B;color:white;border:2px solid white;border-radius:6px;padding:3px;font-weight:bold">KFMY</span>',iconSize:[48,24],iconAnchor:[24,12]})}).addTo(map);var popup=document.createElement("div");popup.textContent=text;stationMarker.bindPopup(popup);}
+          }catch(e){if(enabled&&token===stationGeneration){station.textContent="KFMY live observation unavailable; use the station history link below.";if(stationMarker)map.removeLayer(stationMarker);stationMarker=null;}}
+        }
+        function refresh(){if(enabled){drawRain();loadLegend();loadStation();}}
+        btn.addEventListener("click",function(){enabled=!enabled;btn.setAttribute("aria-pressed",String(enabled));btn.textContent="NOAA Rainfall "+(enabled?"ON":"OFF");details.hidden=!enabled;if(enabled)refresh();else{generation++;stationGeneration++;if(imageLayer)map.removeLayer(imageLayer);if(stationMarker)map.removeLayer(stationMarker);imageLayer=stationMarker=null;}});
+        period.addEventListener("change",function(){if(enabled){if(imageLayer)map.removeLayer(imageLayer);imageLayer=null;drawRain();loadLegend();}});
+        opacity.addEventListener("input",function(){if(imageLayer)imageLayer.setOpacity(Number(opacity.value)/100);});
+        document.getElementById("rain-refresh").addEventListener("click",refresh);
+        map.on("moveend resize",drawRain);setInterval(refresh,15*60*1000);
+      }
+
+      function initMap() {
+        map = L.map("cwk-map", { center: [26.58, -81.92], zoom: 10, zoomControl: false });
+        L.control.zoom({ position: "topright" }).addTo(map);
+
+        var tileStreet = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles &copy; Esri", maxZoom: 18 });
+        var tileSat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles &copy; Esri", maxZoom: 18 });
+        var tileOcean = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles &copy; Esri", maxZoom: 16 });
+        var bases = [{ name: "Street", layer: tileStreet }, { name: "Satellite", layer: tileSat }, { name: "Ocean", layer: tileOcean }];
+        var baseIdx = 0;
+        tileStreet.addTo(map);
+        pinLayer = L.layerGroup().addTo(map);
+        initRainfall();
+
+        document.getElementById("btn-basemap").addEventListener("click", function () {
+          map.removeLayer(bases[baseIdx].layer);
+          baseIdx = (baseIdx + 1) % bases.length;
+          bases[baseIdx].layer.addTo(map);
+          this.textContent = bases[(baseIdx + 1) % bases.length].name;
+        });
+
+        document.getElementById("btn-reset-view").addEventListener("click", function () {
+          renderPins(true);
+        });
+
+        function toggleHistoricHandler() {
+          showHistoric = !showHistoric;
+          renderPins(false);
+        }
+        document.getElementById("btn-toggle-historic").addEventListener("click", toggleHistoricHandler);
+        document.getElementById("guide-toggle-historic-btn").addEventListener("click", function () {
+          toggleHistoricHandler();
+          document.getElementById("live-map").scrollIntoView({ behavior: "smooth" });
+        });
+
+        document.querySelectorAll("[data-filter]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            activeFilter = btn.getAttribute("data-filter") || "both";
+            document.querySelectorAll("[data-filter]").forEach(function (b) { b.className = "seg-btn"; });
+            btn.className = "seg-btn " + (activeFilter === "both" ? "active-both" : "active-single");
+            renderPins(false);
+            if(selectedStationId) selectStation(selectedStationId,false);
+          });
+        });
+
+        var legOpen = document.getElementById("btn-legend-open");
+        var legPanel = document.getElementById("legend-panel");
+        var legClose = document.getElementById("btn-legend-close");
+        legOpen.addEventListener("click", function () { legOpen.style.display = "none"; legPanel.style.display = "block"; });
+        legClose.addEventListener("click", function () { legPanel.style.display = "none"; legOpen.style.display = "inline-block"; });
+
+        document.addEventListener("click", function (evt) {
+          var t = evt.target;
+          if (t && t.getAttribute && t.getAttribute("data-view-trend")) {
+            selectStation(t.getAttribute("data-view-trend"), true);
+          }
+        });
+
+        document.getElementById("station-select").addEventListener("change", function () {
+          if (this.value) selectStation(this.value, false);
+        });
+
+        document.querySelectorAll("[data-scale]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            chartScale = btn.getAttribute("data-scale") || "linear";
+            document.querySelectorAll("[data-scale]").forEach(function (b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+            if (selectedStationId) selectStation(selectedStationId, false);
+          });
+        });
+
+        document.getElementById("trend-rain-toggle").addEventListener("click",function(){
+          rainEnabled=!rainEnabled;this.setAttribute("aria-pressed",String(rainEnabled));this.textContent="KFMY Rainfall "+(rainEnabled?"ON":"OFF");document.getElementById("trend-rain-panel").hidden=!rainEnabled;
+          if(!rainEnabled){if(rainController)rainController.abort();rainToken++;rainState="idle";rainRange="";}
+          if(selectedStationId)selectStation(selectedStationId,false);
+        });
+        document.getElementById("trend-rain-retry").addEventListener("click",function(){ensureHistoricalRain(selectedHistory().slice().reverse(),true);});
+        document.getElementById("trend-rain-export").addEventListener("click",function(){
+          if(rainState!=="ready")return;
+          var lines=["StationID,SampleDate,Indicator,ReportedResult,ResultValue,ResultUnit,KFMY_sample_day_in,KFMY_prior_1_day_in,KFMY_prior_3_days_in,KFMY_prior_7_days_in,NOAA_station"];
+          selectedHistory().forEach(function(r){var fmt=function(v){return v==null?"":v.toFixed(2);};lines.push([r.stationId,r.iso,r.characteristic,r.rawResult,r.val,r.unit,fmt(rainDays.get(r.iso)),fmt(rainTotal(r.iso,1)),fmt(rainTotal(r.iso,3)),fmt(rainTotal(r.iso,7)),"USW00012835"].map(csvCell).join(","));});
+          var url=URL.createObjectURL(new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"})),a=document.createElement("a");a.href=url;a.download="cwk-kfmy-paired-rainfall.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+        });
+
+        document.getElementById("btn-focus-on-map").addEventListener("click", function () {
+          if (!selectedStationId || !stationMetaById[selectedStationId]) return;
+          var meta = stationMetaById[selectedStationId];
+          if (meta.isHistoric && !showHistoric) {
+            showHistoric = true;
+            renderPins(false);
+          }
+          if ((activeFilter === "ecoli" && !meta.isEcoli) || (activeFilter === "entero" && meta.isEcoli)) {
+            activeFilter = "both";
+            document.querySelectorAll("[data-filter]").forEach(function (b) {
+              b.className = b.getAttribute("data-filter") === "both" ? "seg-btn active-both" : "seg-btn";
+            });
+            renderPins(false);
+          }
+          document.getElementById("live-map").scrollIntoView({ behavior: "smooth" });
+          map.setView([meta.lat, meta.lon], 13, { animate: true });
+          var m = markersByStation[selectedStationId];
+          if (m) m.openPopup();
+        });
+
+        function downloadAllHandler() {
+          if (!allFibRecords.length) return;
+          downloadCsv(allFibRecords, "calusa-waterkeeper-all-bacteria-data.csv");
+        }
+        document.getElementById("header-download-btn").addEventListener("click", downloadAllHandler);
+        document.getElementById("btn-download-all").addEventListener("click", downloadAllHandler);
+
+        document.getElementById("btn-download-active").addEventListener("click", function () {
+          if (!activeStations.length) return;
+          downloadCsv(allFibRecords.filter(function(r){var age=Date.now()-Date.parse(r.iso+"T12:00:00Z");return age>=-86400000 && age<=WINDOW_MS;}), "calusa-waterkeeper-last-45-days.csv");
+        });
+
+        document.getElementById("btn-download-site-csv").addEventListener("click", function () {
+          if (!selectedStationId || !recordsByStation[selectedStationId]) return;
+          downloadCsv(recordsByStation[selectedStationId], "calusa-waterkeeper-" + selectedStationId.toLowerCase() + "-history.csv");
+        });
+
+        fetch(DATA_URL)
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+          })
+          .then(function (csvText) {
+            var recs = parseCsv(csvText);
+            if(!recs.length) throw Error("No valid records returned");
+            processDataset(recs);
+            renderPins(true);
+          })
+          .catch(function () {
+            document.getElementById("cwk-pin-count").textContent = "Unable to load ArcGIS data";
+            document.getElementById("trend-station-subtitle").textContent = "Could not connect to Calusa Waterkeeper ArcGIS Online dataset.";
+          });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initMap);
+      } else {
+        initMap();
+      }
+    })();
+  </script>
+</body>
+</html>
