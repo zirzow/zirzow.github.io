@@ -1,0 +1,5 @@
+---
+layout: null
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>The Curious Life — Amanda Zirzow</title><link>https://amandazirzow.com/blog.html</link><description>Field notes from a life of exploration.</description>{% for post in site.posts limit: 30 %}<item><title>{{ post.title | xml_escape }}</title><link>https://amandazirzow.com{{ post.url | relative_url }}</link><guid isPermaLink="true">https://amandazirzow.com{{ post.url | relative_url }}</guid><pubDate>{{ post.date | date_to_rfc822 }}</pubDate><description>{{ post.description | xml_escape }}</description></item>{% endfor %}</channel></rss>
