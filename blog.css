@@ -9,6 +9,7 @@
 .az-footer-compact .az-footer-links a{color:var(--az-muted);font-size:13px;text-decoration:none}
 .az-footer-compact .az-footer-links a:hover{color:var(--az-accent);text-decoration:underline}
 .az-footer-compact .az-footer-copy{margin:16px 0 0;font-size:12px;color:var(--az-muted)}
+.az-footer-brand{align-self:end}
 .az-footer-contact{min-width:0}
 .az-footer-contact .journal-signup{border:0;background:none;border-radius:0;margin:0;padding:0}
 .az-footer-contact .journal-signup>.az-kicker{display:none}
