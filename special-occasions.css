@@ -8,24 +8,32 @@
 /* Living seasonal badge: counter-rotating rings, orbiting lights, floating icon.
    Motion is controlled by the shared top navigation. */
 .so-card{position:relative;isolation:isolate}
-.so-icon span{display:block;position:relative;z-index:2;filter:drop-shadow(0 0 12px #9bdcff88)}
+.so-icon>span:first-child{display:grid;place-items:center;position:absolute;inset:0;z-index:2;line-height:1;filter:drop-shadow(0 0 9px #9bdcff66)}
 .so-card.so-motion .so-icon:before{animation:so-spin 14s linear infinite}
 .so-card.so-motion .so-icon:after{animation:so-reverse 10s linear infinite}
-.so-card.so-motion .so-icon span{animation:so-float 3.8s ease-in-out infinite}
+.so-card.so-motion .so-icon>span:first-child{animation:so-float 4.8s ease-in-out infinite}
 .so-particle-track{position:absolute;inset:4px;border-radius:50%;pointer-events:none}
-.so-particle-track:before{content:"";position:absolute;top:-3px;left:50%;width:9px;height:9px;border-radius:50%;background:var(--az-accent);box-shadow:0 0 8px var(--az-accent),0 0 18px var(--az-accent)}
-.so-particle-track.second{inset:17px}
-.so-particle-track.second:before{width:6px;height:6px}
-.so-card.so-motion .so-particle-track{animation:so-spin 7s linear infinite}
-.so-card.so-motion .so-particle-track.second{animation:so-reverse 5s linear infinite}
-.so-sparkle{position:absolute;pointer-events:none;color:var(--az-accent);font-size:22px;line-height:1;text-shadow:0 0 12px var(--az-accent)}
+.so-particle-track:before{content:"";position:absolute;top:0;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:var(--az-accent);box-shadow:0 0 8px var(--az-accent),0 0 18px var(--az-accent)}
+.so-particle-track.second{inset:13px}
+.so-particle-track.second:before{width:5px;height:5px}
+.so-card.so-motion .so-particle-track{animation:so-spin 10s linear infinite}
+.so-card.so-motion .so-particle-track.second{animation:so-reverse 8s linear infinite}
+.so-sparkle{position:absolute;pointer-events:none;color:var(--az-accent);font-size:15px;line-height:1;text-shadow:0 0 12px var(--az-accent)}
 .so-sparkle.s1{top:8%;left:6%}.so-sparkle.s2{bottom:9%;right:7%}.so-sparkle.s3{top:18%;right:2%;font-size:13px}
 .so-card.so-motion .so-sparkle{animation:so-twinkle 3s ease-in-out infinite}
 .so-card.so-motion .so-sparkle.s2{animation-delay:-1s}.so-card.so-motion .so-sparkle.s3{animation-delay:-2s}
 .so-card.so-motion .so-icon{animation:so-glow 4s ease-in-out infinite}
 
 @keyframes so-spin{to{transform:rotate(360deg)}}@keyframes so-reverse{to{transform:rotate(-360deg)}}
-@keyframes so-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes so-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes so-twinkle{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1.2)}}
-@keyframes so-glow{0%,100%{filter:drop-shadow(0 0 2px #9bdcff33)}50%{filter:drop-shadow(0 0 9px #9bdcff88)}}
+@keyframes so-glow{0%,100%{filter:drop-shadow(0 0 2px #9bdcff33)}50%{filter:drop-shadow(0 0 5px #9bdcff55)}}
 @media(prefers-reduced-motion:reduce){.so-card,.so-card *,.so-card *:before,.so-card *:after{animation:none!important}}
+
+/* Keep all decorative layers centered on the same square; only the center glyph floats. */
+.so-icon{height:auto;aspect-ratio:1;grid-template:1fr/1fr;transform-origin:center}
+.so-icon::before,.so-icon::after,.so-particle-track{transform-origin:50% 50%}
+.so-icon::before,.so-icon::after{z-index:0}
+.so-particle-track{z-index:1}
+.so-sparkle{z-index:3}
+.so-sparkle.s1{top:5%;left:5%}.so-sparkle.s2{bottom:5%;right:5%}.so-sparkle.s3{top:12%;right:9%;font-size:10px}
