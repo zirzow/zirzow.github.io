@@ -1525,7 +1525,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
 
         var W = 940, H = 360;
         var withRain = rainEnabled && rainState === "ready";
-        var pad = { top: 44, right: withRain ? 98 : 30, bottom: 54, left: 105 };
+        var pad = { top: 44, right: withRain ? 112 : 30, bottom: 54, left: 105 };
         var plotW = W - pad.left - pad.right;
         var plotH = H - pad.top - pad.bottom;
 
@@ -1595,7 +1595,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
             if(rv==null||rv>0)svgParts.push('<rect x="'+xx.toFixed(2)+'" y="'+(pad.top+plotH-hh).toFixed(2)+'" width="'+bw.toFixed(3)+'" height="'+hh.toFixed(2)+'" fill="'+(rv==null?'#94A3B8':'#2563EB')+'" opacity="'+(rv==null?'.19':'.48')+'"><title>'+dk+' · '+rainText(rv)+'</title></rect>');
           }
           for(var j=0;j<=4;j++){var yy=pad.top+plotH-j*plotH/4;svgParts.push('<text x="'+(W-pad.right+8)+'" y="'+(yy+4)+'" font-size="12" fill="#1D4ED8" class="cwk-rain-text">'+(rainMax*j/4).toFixed(2)+'</text>');}
-          svgParts.push('<text x="'+(W-pad.right+8)+'" y="15" font-size="12" fill="#1D4ED8" class="cwk-rain-text">Rain (in)</text>');
+          svgParts.push('<text x="'+(W-19)+'" y="'+(pad.top+plotH/2)+'" transform="rotate(90 '+(W-19)+' '+(pad.top+plotH/2)+')" text-anchor="middle" font-size="14" font-weight="600" fill="#1D4ED8" class="cwk-rain-text">Rainfall (inches)</text>');
         }
         storms.forEach(function(e,i){var x=xOf(dayTime(e[0])),color=hurricaneColor(e),cl=e[2]==="major"?"cwk-storm-major":"cwk-storm-regional";svgParts.push('<g class="cwk-storm-mark '+cl+'" pointer-events="none"><line x1="'+x+'" y1="'+pad.top+'" x2="'+x+'" y2="'+(pad.top+plotH)+'" stroke="'+color+'" stroke-width="2" stroke-dasharray="5 4"/><path d="M '+(x-5)+' '+pad.top+' L '+(x+5)+' '+pad.top+' L '+x+' '+(pad.top+8)+' Z" fill="'+color+'"/></g>');});
         // Adjacent storms get separate nonoverlapping hit regions; sample points remain above them.
