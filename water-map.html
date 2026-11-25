@@ -923,8 +923,8 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
             </div>
             <div class="trend-actions">
               <div class="scale-segmented" role="group" aria-label="Y-axis scale">
-                <button type="button" class="scale-btn active" data-scale="linear">Linear Scale</button>
-                <button type="button" class="scale-btn" data-scale="log">Log Scale</button>
+                <button type="button" class="scale-btn active" data-scale="linear" aria-pressed="true">Linear</button>
+                <button type="button" class="scale-btn" data-scale="log" aria-pressed="false">Semi-log (log₁₀)</button>
               </div>
               <button type="button" class="btn-secondary" id="trend-hurricane-toggle" aria-pressed="false" aria-controls="trend-hurricane-summary">Hurricane Dates OFF</button>
               <button type="button" class="btn-secondary" id="trend-rain-toggle" aria-pressed="false">KFMY Rainfall OFF</button>
@@ -979,7 +979,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
               <div style="padding:48px 16px;text-align:center;color:var(--text-muted);font-size:14px;">Loading time-series chart...</div>
             </div>
             <div class="chart-caption">
-              <span id="chart-threshold-caption">Dashed line shows EPA Beach Action Value (BAV) threshold.</span>
+              <span id="chart-scale-caption" style="flex-basis:100%">Linear: equal vertical distances represent equal concentration differences. Rainfall, if shown, remains linear.</span><span id="chart-threshold-caption">Dashed line shows EPA Beach Action Value (BAV) threshold.</span>
               <span>Hover or tap sample points for readings; hover, tap or Tab to a hurricane line for storm details.</span>
             </div>
           </div>
@@ -1514,6 +1514,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
         tooltip.style.display = "none";
 
         var bav = latest.bav;
+        document.getElementById("chart-scale-caption").textContent=chartScale==="log"?"Semi-log: logarithmic bacteria Y-axis (base 10), linear date axis. Equal vertical distances represent tenfold changes. Values below 1 are displayed at 1 MPN/100 mL; original reported values remain in the data and tooltips. Rainfall remains linear.":"Linear: equal vertical distances represent equal concentration differences. Rainfall, if shown, remains linear.";
         document.getElementById("chart-threshold-caption").innerHTML =
           "Dashed red line marks EPA Beach Action Value: <strong>" + bav + " MPN/100mL</strong> (" +
           (latest.isEcoli ? "<em>E. coli</em>" : "Enterococcus") + ").";
@@ -1600,7 +1601,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
         storms.forEach(function(e,i){var x=xOf(dayTime(e[0])),color=hurricaneColor(e),cl=e[2]==="major"?"cwk-storm-major":"cwk-storm-regional";svgParts.push('<g class="cwk-storm-mark '+cl+'" pointer-events="none"><line x1="'+x+'" y1="'+pad.top+'" x2="'+x+'" y2="'+(pad.top+plotH)+'" stroke="'+color+'" stroke-width="2" stroke-dasharray="5 4"/><path d="M '+(x-5)+' '+pad.top+' L '+(x+5)+' '+pad.top+' L '+x+' '+(pad.top+8)+' Z" fill="'+color+'"/></g>');});
         // Adjacent storms get separate nonoverlapping hit regions; sample points remain above them.
         storms.forEach(function(e,i){var x=xOf(dayTime(e[0])),prev=i?xOf(dayTime(storms[i-1][0])):pad.left-20,next=i+1<storms.length?xOf(dayTime(storms[i+1][0])):W-pad.right+20,left=Math.max(pad.left,x-14,(prev+x)/2),right=Math.min(W-pad.right,x+14,(next+x)/2);svgParts.push('<rect class="cwk-storm-hit" data-storm="'+i+'" tabindex="0" role="button" aria-label="'+esc(hurricaneLabel(e))+'" x="'+left+'" y="'+(pad.top-8)+'" width="'+Math.max(.5,right-left)+'" height="'+(plotH+8)+'" fill="transparent" style="cursor:help"/>');});
-        svgParts.push('<text x="23" y="'+(pad.top+plotH/2)+'" transform="rotate(-90 23 '+(pad.top+plotH/2)+')" text-anchor="middle" font-size="14" font-weight="600" fill="#475569" class="cwk-axis-text">Bacteria concentration (MPN/100 mL)</text>');svgParts.push('<text x="'+(pad.left+plotW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" font-weight="600" fill="#475569" class="cwk-axis-text">Sample date</text>');
+        svgParts.push('<text x="23" y="'+(pad.top+plotH/2)+'" transform="rotate(-90 23 '+(pad.top+plotH/2)+')" text-anchor="middle" font-size="14" font-weight="600" fill="#475569" class="cwk-axis-text">Bacteria concentration (MPN/100 mL)'+(chartScale==='log'?' · log₁₀':'')+'</text>');svgParts.push('<text x="'+(pad.left+plotW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" font-weight="600" fill="#475569" class="cwk-axis-text">Sample date</text>');
         svgParts.push('<line x1="' + pad.left + '" y1="' + bavY.toFixed(1) + '" x2="' + (W - pad.right) + '" y2="' + bavY.toFixed(1) + '" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6,4"/>');
         svgParts.push('<text x="' + (W - pad.right - 4) + '" y="' + (bavY - 6).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600" fill="#B91C1C" class="cwk-bav-label">EPA BAV (' + bav + ' MPN)</text>');
 
@@ -1815,7 +1816,7 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
           var svg=document.querySelector('#trend-chart-container svg');if(!svg)throw Error('Select a site with trend data');
           var clone=svg.cloneNode(true), vb=svg.viewBox.baseVal;clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('width',vb.width);clone.setAttribute('height',vb.height);clone.removeAttribute('style');
           var url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'}));
-          var title=exportText('trend-station-title'), subtitle=exportText('trend-station-subtitle')+' | '+(chartScale==='log'?'Logarithmic':'Linear')+' bacteria scale', sid=selectedStationId, notes=['Data: Calusa Waterkeeper ArcGIS Online | '+exportText('chart-threshold-caption')];
+          var title=exportText('trend-station-title'), subtitle=exportText('trend-station-subtitle')+' | '+(chartScale==='log'?'Semi-log (base 10)':'Linear')+' bacteria scale', sid=selectedStationId, notes=['Data: Calusa Waterkeeper ArcGIS Online | '+exportText('chart-threshold-caption'),exportText('chart-scale-caption')];
           if(rainEnabled&&rainState==='ready')notes.push('Blue bars: daily KFMY precipitation (inches); gray shading: unavailable or rejected rainfall. NOAA NCEI GHCN-Daily, USW00012835.',exportText('trend-rain-status'),'Page Field rainfall is a regional reference, not a site-specific measurement.');else if(rainEnabled)notes.push('Historical rainfall requested but not available in this chart.');
           if(hurricaneEnabled)notes.push(exportText('trend-hurricane-summary'),'Storm date source: NOAA/NHC historical records; regional reference dates are not evidence of causation.');
           try{var img=await exportImage(url),c=document.createElement('canvas');c.width=vb.width*2;c.height=vb.height*2;var ctx=c.getContext('2d');ctx.fillStyle='#F8FAFC';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);await downloadPng(composeExport(c,'Calusa Waterkeeper | '+title,subtitle,notes),'cwk-trend-'+String(sid).replace(/[^a-z0-9_-]/gi,'_')+'-'+exportDate()+'.png');}finally{URL.revokeObjectURL(url);}
@@ -1888,8 +1889,8 @@ html[data-az-theme=dark] .cwk-storm-regional path{fill:#A7B7CC}
         document.querySelectorAll("[data-scale]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             chartScale = btn.getAttribute("data-scale") || "linear";
-            document.querySelectorAll("[data-scale]").forEach(function (b) { b.classList.remove("active"); });
-            btn.classList.add("active");
+            document.querySelectorAll("[data-scale]").forEach(function (b) { b.classList.remove("active"); b.setAttribute("aria-pressed","false"); });
+            btn.classList.add("active"); btn.setAttribute("aria-pressed","true");
             if (selectedStationId) selectStation(selectedStationId, false);
           });
         });
