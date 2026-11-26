@@ -1,0 +1,2 @@
+# Athletics photographs
+Upload the optimized WebP files here, preserving filenames. Charlotte finish-line photo credit: Narrie M. Event-branded race photography retains its visible event branding. Confirm publication rights with the respective photographers. No full-resolution originals or EXIF metadata are needed.
