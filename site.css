@@ -15,14 +15,3 @@ html[data-az-motion-paused] .gg-hero,html[data-az-motion-paused] .gg-hero *,html
 
 /* Cross-page discovery and interactive model features. */
 .az-bridge{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(22px,4vw,48px);align-items:center}.az-model-preview{margin:0;min-width:0}.az-model-preview iframe{display:block;width:100%;aspect-ratio:4/3;background:var(--az-soft)}.az-model-preview figcaption{font-size:13px;color:var(--az-muted);margin-top:8px}.az-action-grid .az-card{display:flex;flex-direction:column;align-items:flex-start}.az-action-grid .az-card>.az-button:first-of-type{margin-top:auto}.journal-filter{margin:12px 0 22px}.journal-filter label{display:block;font-weight:700}.journal-filter input{display:block;width:min(100%,450px);min-height:44px;font:inherit;border:1px solid var(--az-edge);border-radius:8px;background:var(--az-card);color:var(--az-ink);padding:8px 12px}.journal-card[hidden]{display:none!important}.az-related{margin:36px 0 16px;padding:20px 0;border-top:1px solid var(--az-edge)}@media(max-width:750px){.az-bridge{grid-template-columns:1fr}}
-
-/* Shared link hover: color only, no glow or hover underline. */
-:root{--az-link-hover:#9b4310;--az-button-hover-text:#fff4b0}
-:root[data-az-theme=dark]{--az-link-hover:#ffc477;--az-button-hover-text:#754000}
-@media(hover:hover){
-  a[href]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):hover{color:var(--az-link-hover)!important;text-decoration:none!important;text-shadow:none!important}
-  a[href].az-button:not(.secondary):hover,a[href].btn-primary:hover,.az-map-action a[href]:hover{color:var(--az-button-hover-text)!important}
-  .cause-hero-actions a.az-button:not(.secondary):hover{color:#754000!important}
-  .cause-hero-actions a.az-button.secondary:hover{color:#ffc477!important}
-}
-a[href]:focus-visible{outline:3px solid var(--az-accent);outline-offset:3px}
