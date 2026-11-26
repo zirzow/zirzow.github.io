@@ -17,3 +17,26 @@
 html[data-az-motion-paused] .cause-hero-copy>*{animation:none!important;opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.cause-hero-copy>*{animation:none!important;opacity:1;transform:none}}
 @media(max-width:700px){.cause-hero-banner{min-height:570px;min-height: min(650px,85svh)}.cause-hero-image{object-position:50% 48%}.cause-hero-overlay{padding-top:100px}.cause-hero-copy.az-wrap{padding:20px 18px 24px}.cause-hero-actions{gap:6px}.cause-hero-actions .az-button{font-size:14px;padding:8px 12px}}
+
+/* Three equal-height community cards with aligned actions and consistent visuals. */
+.community-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:18px}
+.community-grid .az-card{display:flex;flex-direction:column;min-width:0;padding:16px}
+.community-grid .az-card>.az-kicker,.community-grid .az-card>h3,.community-grid .az-card>p:not(.az-kicker){margin-left:10px;margin-right:10px}
+.community-grid .az-card>.az-kicker{margin-top:0;margin-bottom:10px}
+.community-grid .az-card>h3{font-size:clamp(20px,2vw,25px);margin-bottom:10px}
+.community-grid .az-card>p:not(.az-kicker){font-size:15px;line-height:1.65;margin-top:0;margin-bottom:18px}
+.community-grid .az-card>.az-button{align-self:flex-start;margin: auto 10px 8px;font-size:14px;max-width:calc(100% - 20px);white-space:normal;box-sizing:border-box}
+.community-visual{margin:0 0 16px;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:var(--az-soft);min-width:0}
+.community-visual img{width:100%;height:100%;max-width:none;object-fit:contain;display:block;border-radius:0}
+.strava-visual{display:flex;flex-direction:column;background:#fff;color:#172331;padding:10px;gap:5px;box-sizing:border-box;border:1px solid #dce1e7;font:500 12px/1.25 system-ui,sans-serif}
+.strava-brand{display:flex;gap:5px;align-items:center;color:#c43b00;font-weight:900;letter-spacing:.06em}
+.strava-brand small{margin-left:auto;color:#475569;font-size:10px;font-weight:500;letter-spacing:0}
+.strava-ride{font-weight:750;font-size:12px}
+.strava-ride span{font-weight:400;font-size:10px;color:#475569}
+.strava-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.strava-stats b{display:block;font-size:clamp(12px,1.45vw,19px);white-space:nowrap}
+.strava-stats small{display:block;font-size:10px;color:#475569}
+.strava-route{width:100%;min-height:28px;flex:1;border-radius:5px}
+.strava-visual figcaption{font-size:9px;color:#475569;line-height:1.2}
+@media(max-width:850px){.community-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.community-grid{grid-template-columns:1fr}.strava-stats b{font-size:20px}}
