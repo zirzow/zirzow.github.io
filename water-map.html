@@ -1221,7 +1221,9 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
           if (!lat || !lon) continue;
 
           var rawResult = cols[iVal] || "";
-           var val = Number(rawResult.replace(/^[<>]=?\s*/, ""));
+           var numericResult = rawResult.replace(/^[<>]=?\s*/, "").trim();
+           if (!numericResult) continue;
+           var val = Number(numericResult);
            if (!rawResult || !Number.isFinite(val) || val < 0) continue;
           if (isNaN(val)) continue;
 
@@ -1544,13 +1546,18 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
         tooltip.style.display = "none";
 
         var bav = latest.bav;
-        document.getElementById("chart-scale-caption").textContent=chartScale==="log"?"Semi-log: logarithmic bacteria Y-axis (base 10), linear date axis. Equal vertical distances represent tenfold changes. Values below 1 are displayed at 1 MPN/100 mL; original reported values remain in the data and tooltips. Rainfall remains linear.":"Linear: equal vertical distances represent equal concentration differences. Rainfall, if shown, remains linear.";
+        var plotEligible = function(p){return p && Number.isFinite(p.val) && p.val > 0;};
+        var positivePoints = points.filter(plotEligible);
+        var omittedCount = points.length - positivePoints.length;
+        document.getElementById("chart-scale-caption").textContent=chartScale==="log"?"Semi-log: logarithmic bacteria Y-axis (base 10), linear date axis. Equal vertical distances represent tenfold changes. Positive values below 1 are displayed at 1 MPN/100 mL. Rainfall remains linear.":"Linear: equal vertical distances represent equal concentration differences. Rainfall, if shown, remains linear.";
+        document.getElementById("chart-scale-caption").textContent += " Zero and missing bacteria values are not plotted."+(omittedCount?" "+omittedCount+" zero/nonpositive record(s) omitted from this graph.":"")+" Reported zeros remain in the history table, CSV and existing summary calculations.";
         document.getElementById("chart-threshold-caption").innerHTML =
           "Dashed red line marks EPA Beach Action Value: <strong>" + bav + " MPN/100mL</strong> (" +
           (latest.isEcoli ? "<em>E. coli</em>" : "Enterococcus") + ").";
 
-        if (!points.length) {
-          container.innerHTML = '<div style="padding:36px;text-align:center;color:var(--text-muted);">No historical samples available for this station.</div>';
+        if (!positivePoints.length) {
+          container.innerHTML = '<div style="padding:36px;text-align:center;color:var(--text-muted);">No positive bacteria readings available to plot for this station and indicator.</div>';
+          document.getElementById("trend-hurricane-summary").textContent="No positive bacteria readings available for comparison.";
           return;
         }
 
@@ -1564,7 +1571,7 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
         var minT = times[0], maxT = times[times.length - 1];
         if (withRain) { minT -= DAY/2; maxT += DAY/2; } else if (minT === maxT) { minT -= DAY * 15; maxT += DAY * 15; }
 
-        var rawMax = Math.max(bav * 1.25, Math.max.apply(null, points.map(function (p) { return p.val; })) * 1.12);
+        var rawMax = Math.max(bav * 1.25, Math.max.apply(null, positivePoints.map(function (p) { return p.val; })) * 1.12);
         var minValLog = 1;
         var maxValLog = Math.pow(10, Math.ceil(Math.log10(Math.max(rawMax, 100))));
 
@@ -1596,8 +1603,11 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
           xTicks.push({ x: xOf(tVal), label: dObj.toISOString().slice(0, 7) });
         }
 
+        var previousPlottable = false;
         var pathD = points.map(function (pt, idx) {
-          return (idx === 0 ? "M" : "L") + xOf(times[idx]).toFixed(1) + "," + yOf(pt.val).toFixed(1);
+          if(!plotEligible(pt)){previousPlottable=false;return "";}
+          var command=previousPlottable?"L":"M";previousPlottable=true;
+          return command + xOf(times[idx]).toFixed(1) + "," + yOf(pt.val).toFixed(1);
         }).join(" ");
 
         var storms=hurricaneEnabled?hurricaneEvents.filter(function(e){var t=dayTime(e[0]);return t>=minT&&t<=maxT;}):[];
@@ -1635,11 +1645,12 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
         svgParts.push('<line x1="' + pad.left + '" y1="' + bavY.toFixed(1) + '" x2="' + (W - pad.right) + '" y2="' + bavY.toFixed(1) + '" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6,4"/>');
         svgParts.push('<text x="' + (W - pad.right - 4) + '" y="' + (bavY - 6).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600" fill="#B91C1C" class="cwk-bav-label">EPA BAV (' + bav + ' MPN)</text>');
 
-        if (points.length > 1) {
+        if (positivePoints.length > 1) {
           svgParts.push('<path d="' + pathD + '" fill="none" stroke="#007799" class="cwk-series" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>');
         }
 
         points.forEach(function (pt, idx) {
+          if(!plotEligible(pt))return;
           var cx = xOf(times[idx]).toFixed(1);
           var cy = yOf(pt.val).toFixed(1);
           svgParts.push('<circle class="cwk-pt" data-idx="' + idx + '" cx="' + cx + '" cy="' + cy + '" r="5" fill="' + pt.color + '" stroke="#FFFFFF" stroke-width="2" style="cursor:pointer;"/>');
