@@ -40,3 +40,17 @@ html[data-az-motion-paused] .cause-hero-copy>*{animation:none!important;opacity:
 .strava-visual figcaption{font-size:9px;color:#475569;line-height:1.2}
 @media(max-width:850px){.community-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.community-grid{grid-template-columns:1fr}.strava-stats b{font-size:20px}}
+
+/* Mobile only: preserve the wide race photograph instead of stretching it
+   behind the entire text block. Blend the animated copy into its lower edge. */
+@media(max-width:700px){
+  .cause-hero-banner{display:block;min-height:0}
+  .cause-hero-image{position:relative;inset:auto;display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;object-position:center 64%;z-index:auto}
+  .cause-hero-overlay{position:relative;margin-top:-54px;padding-top:34px;background:linear-gradient(to bottom,rgba(5,18,30,0) 0,#102535 54px,#102535 100%)}
+  .cause-hero-copy.az-wrap{padding:8px 18px 24px}
+  .cause-hero-copy h1{font-size:clamp(30px,8.4vw,48px);line-height:1.05}
+  .cause-hero-copy .az-kicker{margin-bottom:8px;font-size:12px}
+  .cause-hero-tagline{font-size:clamp(18px,4.8vw,24px);margin-bottom:8px}
+  .cause-hero-description{font-size:15px;line-height:1.55;margin-bottom:12px}
+  .cause-hero-actions .az-button{min-height:44px}
+}
