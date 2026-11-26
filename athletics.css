@@ -1,1 +1,19 @@
 .race-photo{margin:0;min-width:0}.race-photo[hidden]{display:none!important}.race-photo img{display:block;width:100%;height:auto;max-width:none;border-radius:14px}.race-photo figcaption{color:var(--az-muted);font-size:13px;margin-top:6px}.race-hero .az-wrap{display:block}.race-hero .race-banner{max-width:1160px;margin:0 auto;padding:0 24px 26px}.race-hero .race-banner img{width:100%;max-width:none;aspect-ratio: 2.5/1;object-fit:cover;object-position:center 53%}.race-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.race-grid .race-photo:first-child img{aspect-ratio:4/3;object-fit:cover;object-position:center 35%}.race-grid .race-photo:last-child img{max-height:370px;object-fit:contain;background:var(--az-soft)}.race-grid h3{margin-top:18px}.race-family{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:30px;align-items:center}.race-family .race-photo{margin-bottom:14px}.race-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:start}.race-gallery img{aspect-ratio:4/3;object-fit:contain;background:var(--az-soft)}.race-card-photo{margin:-10px -10px 14px}.race-card-photo img{aspect-ratio:16/9;object-fit:cover}.race-card-photo:not([hidden])+.az-icon{display:none}@media(max-width:700px){.race-grid,.race-family,.race-gallery{grid-template-columns:1fr}.race-hero .race-banner img{aspect-ratio:16/9}}
+/* Full-bleed photographic hero. Text animates once and stays visible. */
+.cause-hero-banner{position:relative;isolation:isolate;display:grid;align-items:end;width:100%;min-height:clamp(470px,75vh,760px);overflow:hidden;background:#102535;color:#fff}
+.cause-hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 57%;z-index:-2}
+.cause-hero-overlay{width:100%;background:linear-gradient(0deg,rgba(5,18,30,.96),rgba(5,18,30,.74) 60%,transparent);padding-top:clamp(60px,12vw,175px)}
+.cause-hero-copy.az-wrap{padding:20px 24px 38px;max-width:1160px}
+.cause-hero-copy .az-kicker{color:#b9e7ff;margin:0 0 12px}
+.cause-hero-copy h1{color:#fff;max-width:none;font-size:clamp(2.8rem,7.5vw,6.7rem);margin:0 0 8px;line-height:.98;text-shadow:0 3px 24px #0008}
+.cause-hero-tagline{font-size:clamp(1.25rem,3vw,2rem);font-weight:800;color:#b9e7ff;margin:0 0 8px}
+.cause-hero-description{max-width:62ch;color:#fff;margin:0 0 14px}
+.cause-hero-actions{display:flex;flex-wrap:wrap;gap:8px}
+.cause-hero-actions .az-button{background:#9bdcff;color:#09283c!important;margin:0}
+.cause-hero-actions .az-button.secondary{background:#102535;color:#fff!important;border-color:#b9e7ff}
+@keyframes raceHeroReveal{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.cause-hero-copy>*{animation:raceHeroReveal .75s ease-out backwards}
+.cause-hero-copy h1{animation-delay:.15s}.cause-hero-tagline{animation-delay:.3s}.cause-hero-description{animation-delay:.45s}.cause-hero-actions{animation-delay:.6s}
+html[data-az-motion-paused] .cause-hero-copy>*{animation:none!important;opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.cause-hero-copy>*{animation:none!important;opacity:1;transform:none}}
+@media(max-width:700px){.cause-hero-banner{min-height:570px;min-height: min(650px,85svh)}.cause-hero-image{object-position:50% 48%}.cause-hero-overlay{padding-top:100px}.cause-hero-copy.az-wrap{padding:20px 18px 24px}.cause-hero-actions{gap:6px}.cause-hero-actions .az-button{font-size:14px;padding:8px 12px}}
