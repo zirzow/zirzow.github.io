@@ -1,67 +1,104 @@
 /**
- * Add to the existing Apps Script project as WIN_Staged.gs.
- * Rename the existing doGet(e) to winLegacyGet(e), then deploy a new version.
- * Existing sync functions and triggers are unchanged.
+ * WIN staged feed v3. Replace the existing WIN_Staged.gs, not the sync code.
+ * Keep the original doGet renamed winLegacyGet. Run setupWINStationIndex once,
+ * authorize Drive/Sheets access, then deploy a new version of the existing web app.
+ * Private Drive snapshot: no Drive sharing changes; only public summary/selected
+ * surface-water measurements are returned by doGet. No source data is deleted.
  */
-function doGet(e) {
-  const p=(e&&e.parameter)||{};
-  if(p.mode!=='stations' && p.mode!=='station') return winLegacyGet(e);
-  const out=x=>ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON);
-  try {
-    const ss=SpreadsheetApp.openById('18RlmRCj94sIy0zLzfgMzM34jcS946znfObeu6ucmEfQ');
-    const sh=ss.getSheetByName('WIN_Results');
-    if(!sh) return out({error:'Results sheet missing'});
-    const last=sh.getLastRow(), count=Math.max(0,last-1);
-    const cache=CacheService.getScriptCache();
-    const cacheKey='win-stations-v1-'+last;
-    if(p.mode==='stations'){
-      const cached=cache.get(cacheKey);
-      if(cached) return ContentService.createTextOutput(cached).setMimeType(ContentService.MimeType.JSON);
-    }
-    const org=String(p.org||''), id=String(p.id||'');
-    if(p.mode==='station'&&(!['21FLEECO','21FLCOFM'].includes(org)||!id||id.length>250))return out({error:'Invalid station'});
-    const groups=new Map(), rows=[];
-    const date=v=>{let s=String(v||''),m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0'):s.slice(0,10)};
-    // Read only the public readable fields for the index. Raw JSON is read
-    // only for matching station rows when returning historical measurements.
-    for(let start=2;start<=last;start+=10000){
-      const n=Math.min(10000,last-start+1);
-      const data=sh.getRange(start,4,n,16).getValues();
-      const orgs=sh.getRange(start,1,n,1).getValues();
+const WIN_INDEX_SHEET_ID='18RlmRCj94sIy0zLzfgMzM34jcS946znfObeu6ucmEfQ';
+const WIN_INDEX_PROPERTY='WIN_STATION_SNAPSHOT_V3';
+const WIN_INDEX_AGENCIES=['21FLEECO','21FLCOFM'];
+function winIndexDate(v){
+  const s=String(v??'').trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/) || null;
+  if(!m){const t=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(t)m=[t[0],t[3],t[1],t[2]];}
+  if(!m)return '';
+  const d=m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return Number.isFinite(Date.parse(d))&&new Date(d).toISOString().slice(0,10)===d?d:'';
+}
+function winIndexCoord(lat,lon){return lat!==''&&lon!==''&&lat!=null&&lon!=null&&Number.isFinite(+lat)&&Number.isFinite(+lon)&&Math.abs(+lat)<=90&&Math.abs(+lon)<=180&&+lat!==0&&+lon!==0;}
+function winIndexSheet(){
+  const sh=SpreadsheetApp.openById(WIN_INDEX_SHEET_ID).getSheetByName('WIN_Results');
+  if(!sh)throw Error('WIN_Results missing');
+  const expected=['OrganizationID','ResultKey','RawJSON','monitoringLocId','monitoringLocationName','activityStartDate','depAnalytePrimaryName','depResultValue','depResultUnit','valueQualifier','sampleFraction','latitude','longitude','laboratoryLongName','labAccreditationAuthName','analysisMethodName','depMdl','depPql','matrix'];
+  if(sh.getRange(1,1,1,19).getDisplayValues()[0].join('|')!==expected.join('|'))throw Error('WIN_Results headers changed');
+  return sh;
+}
+function rebuildWINStationIndex(){
+  const lock=LockService.getScriptLock();
+  if(!lock.tryLock(1000))throw Error('Another index rebuild is running');
+  try{
+    const sh=winIndexSheet(),last=sh.getLastRow(),groups=new Map(),rowIndex={};
+    let included=0,excluded=0,invalid=0,unknownDates=0;
+    for(let start=2;start<=last;start+=8000){
+      const n=Math.min(8000,last-start+1);
+      const data=sh.getRange(start,4,n,16).getDisplayValues(),orgs=sh.getRange(start,1,n,1).getDisplayValues();
       for(let i=0;i<n;i++){
         const [sid,name,dt,ch,value,unit,qual,fraction,lat,lon,lab,accr,method,mdl,pql,matrix]=data[i];
-        const a=String(orgs[i][0]), s=String(sid||'');
-        if(!['21FLEECO','21FLCOFM'].includes(a)||!s||!ch||!/surface water/i.test(String(matrix)))continue;
-        if(p.mode==='station'){
-          if(a===org&&s===id)rows.push(start+i);
-          continue;
-        }
-        const k=a+'|'+s,d=date(dt instanceof Date?Utilities.formatDate(dt,ss.getSpreadsheetTimeZone(),'yyyy-MM-dd'):dt);
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(d))continue;
+        const org=String(orgs[i][0]).trim(),id=String(sid).trim();
+        if(!WIN_INDEX_AGENCIES.includes(org)||!/surface\s*water/i.test(matrix)){excluded++;continue;}
+        if(!id||!ch){invalid++;continue;}
+        const d=winIndexDate(dt),k=org+'|'+id;
+        if(!d)unknownDates++;
         let g=groups.get(k);
-        if(!g){g={org:a,id:s,name:String(name||s),lat:null,lon:null,date:d,count:0,parameters:{}};groups.set(k,g)}
-        if(lat!==''&&lon!==''&&Number.isFinite(+lat)&&Number.isFinite(+lon)&&Math.abs(+lat)<=90&&Math.abs(+lon)<=180&&+lat!==0&&+lon!==0){g.lat=+lat;g.lon=+lon}
-        if(d>g.date)g.date=d;g.count++;
-        const pk=JSON.stringify([String(ch),String(unit||'')]);g.parameters[pk]=(g.parameters[pk]||0)+1;
+        if(!g){g={org,id,name:name||id,lat:null,lon:null,date:'',count:0,parameters:{},coordDate:''};groups.set(k,g);rowIndex[k]=[];}
+        if(winIndexCoord(lat,lon)&&(g.lat===null||d>=g.coordDate)){g.lat=+lat;g.lon=+lon;g.coordDate=d;}
+        if(d>g.date){g.date=d;g.name=name||g.name;}
+        g.count++;included++;
+        const p=JSON.stringify([ch,unit||'']);g.parameters[p]=(g.parameters[p]||0)+1;
+        const rr=rowIndex[k],row=start+i,prev=rr[rr.length-1];
+        if(prev&&prev[1]===row-1)prev[1]=row;else rr.push([row,row]);
       }
     }
-    if(p.mode==='stations'){
-      const result=JSON.stringify({schema:2,mode:'stations',sourceRows:count,generatedAt:new Date().toISOString(),stations:[...groups.values()]});
-      if(Utilities.newBlob(result).getBytes().length<95000)cache.put(cacheKey,result,600);
-      return ContentService.createTextOutput(result).setMimeType(ContentService.MimeType.JSON);
-    }
-    // Preserve legacy row layout; bounded pages prevent oversized responses.
-    const offset=Number(p.offset||0);
-    if(!Number.isSafeInteger(offset)||offset<0||offset>rows.length)return out({error:'Invalid station offset'});
-    const selected=rows.slice(offset,offset+2500), result=[];
-    for(let i=0;i<selected.length;){
-      let j=i+1;while(j<selected.length&&selected[j]===selected[j-1]+1)j++;
-      const vals=sh.getRange(selected[i],1,j-i,3).getValues();
-      for(const [a,rid,raw] of vals){let r;try{r=JSON.parse(raw)}catch(_){continue}
-        if(String(a)!==org||String(r.monitoringLocId)!==id||String(r.organizationId)!==org||String(r.resultKey)!==String(rid))continue;
+    if(sh.getLastRow()<last)throw Error('Source shrank during index build; retry');
+    const stations=[...groups.values()].map(g=>{delete g.coordDate;return g;});
+    const summary={schema:2,mode:'stations',sourceRows:Math.max(0,last-1),indexedResults:included,excludedRows:excluded,invalidRows:invalid,unknownDateRows:unknownDates,generatedAt:new Date().toISOString(),stations};
+    const props=PropertiesService.getScriptProperties(),previous=props.getProperty(WIN_INDEX_PROPERTY);
+    const file=DriveApp.createFile('WIN-station-snapshot-'+Date.now()+'.json',JSON.stringify({summary,rowIndex}),MimeType.PLAIN_TEXT);
+    props.setProperty(WIN_INDEX_PROPERTY,file.getId());
+    if(previous&&previous!==file.getId()){try{DriveApp.getFileById(previous).setTrashed(true);}catch(e){console.warn(e);}}
+    console.log(JSON.stringify({sourceRows:summary.sourceRows,indexedResults:included,stations:stations.length,unknownDateRows:unknownDates,generatedAt:summary.generatedAt}));
+    return summary;
+  }finally{lock.releaseLock();}
+}
+function setupWINStationIndex(){
+  rebuildWINStationIndex();
+  // Replace only index triggers, leaving original sync triggers intact.
+  for(const t of ScriptApp.getProjectTriggers())if(t.getHandlerFunction()==='rebuildWINStationIndex')ScriptApp.deleteTrigger(t);
+  ScriptApp.newTrigger('rebuildWINStationIndex').timeBased().everyHours(6).create();
+}
+function winIndexSnapshot(){
+  const id=PropertiesService.getScriptProperties().getProperty(WIN_INDEX_PROPERTY);
+  if(!id)throw Error('Station index not initialized; administrator must run setupWINStationIndex');
+  return JSON.parse(DriveApp.getFileById(id).getBlob().getDataAsString());
+}
+function winIndexOutput(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);}
+function doGet(e){
+  const p=(e&&e.parameter)||{};
+  if(p.mode!=='stations'&&p.mode!=='station')return winLegacyGet(e);
+  try{
+    const snapshot=winIndexSnapshot();
+    if(p.mode==='stations')return winIndexOutput(snapshot.summary);
+    const org=String(p.org||''),id=String(p.id||''),offset=Number(p.offset||0);
+    if(!WIN_INDEX_AGENCIES.includes(org)||!id||id.length>250||!Number.isSafeInteger(offset)||offset<0)return winIndexOutput({error:'Invalid station request'});
+    const spans=snapshot.rowIndex[org+'|'+id];
+    if(!spans)return winIndexOutput({error:'Station not indexed'});
+    const end=spans.reduce((n,r)=>n+r[1]-r[0]+1,0);
+    if(offset>end)return winIndexOutput({error:'Invalid offset'});
+    const next=Math.min(end,offset+1000),wanted=[];
+    let position=0;
+    for(const [a,b] of spans){const len=b-a+1;if(position+len>offset&&position<next){const lo=a+Math.max(0,offset-position),hi=a+Math.min(len,next-position)-1;for(let row=lo;row<=hi;row++)wanted.push(row);}position+=len;if(position>=next)break;}
+    const sh=winIndexSheet(),result=[];
+    // Coalesce adjacent and nearby matches to reduce Sheet read calls.
+    for(let i=0;i<wanted.length;){
+      let j=i+1;while(j<wanted.length&&wanted[j]-wanted[j-1]<=30&&wanted[j]-wanted[i]<2000)j++;
+      const first=wanted[i],data=sh.getRange(first,1,wanted[j-1]-first+1,3).getValues();
+      for(let k=i;k<j;k++){
+        const [a,rid,raw]=data[wanted[k]-first];let r;try{r=JSON.parse(raw);}catch(_){continue;}
+        if(String(a)!==org||String(r.organizationId)!==org||String(r.monitoringLocId)!==id||String(r.resultKey)!==String(rid)||!/surface\s*water/i.test(String(r.matrix)))continue;
         result.push([org,String(rid),r.monitoringLocId,r.monitoringLocationName,r.latitude,r.longitude,r.activityStartDate,r.depAnalytePrimaryName,r.depResultValue,r.depResultUnit,r.valueQualifier,r.activityDepth,r.depthUnit,r.laboratoryLongName,r.labAccreditationAuthName,r.analysisMethodName,r.depMdl,r.depPql,r.matrix,r.wbid,r.resultModifyTs,Boolean(r.resultCommentText),r.sampleFraction]);
       }i=j;
     }
-    return out({schema:2,mode:'station',org,id,offset,next:offset+selected.length,end:rows.length,rows:result});
-  }catch(err){console.error(err);return out({error:'Staged WIN feed unavailable; retry later'});}
+    return winIndexOutput({schema:2,mode:'station',org,id,offset,next,end,rows:result,generatedAt:snapshot.summary.generatedAt});
+  }catch(err){console.error(err);return winIndexOutput({error:String(err.message||err)});}
 }
