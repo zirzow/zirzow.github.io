@@ -8,3 +8,5 @@
 .research-result button{margin-top:8px}.research-parameter label{flex:1}.research-parameter select{width:100%}.research-marker-label{font-weight:800;color:#fff;background:#10283c;border:0;border-radius:20px;box-shadow:none}
 #resultStation{width:min(100%,440px);margin-bottom:12px}#progress{display:none}.research-selected:empty::after{content:"No stations selected. Click a map marker or add a station from the list.";color:var(--az-muted);font-size:14px}
 @media(max-width:600px){#researchMap{height:340px}.research-selection-head button{min-height:44px}.research-results{grid-template-columns:1fr}}
+
+.trend-graph{height:clamp(350px,55vh,600px)}#time-trends{scroll-margin-top:24px}#trendStatus{overflow-wrap:anywhere}#trendRows td{white-space:normal}@media(max-width:600px){.trend-graph{height:390px}}
