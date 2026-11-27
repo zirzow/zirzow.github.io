@@ -12,3 +12,19 @@
 .trend-graph{height:clamp(350px,55vh,600px)}#time-trends{scroll-margin-top:24px}#trendStatus{overflow-wrap:anywhere}#trendRows td{white-space:normal}@media(max-width:600px){.trend-graph{height:390px}}
 
 .figure-caption{border-left:3px solid var(--az-accent);background:var(--az-soft);padding:14px 16px;border-radius:6px;margin:12px 0 20px;font-size:14px;line-height:1.65}.figure-caption p{margin:0 0 10px}.figure-caption span{margin-left:8px;color:var(--az-muted)}
+
+/* Real-time parameter readiness, adjacent to the selector. */
+.research-parameter-workspace{border:1px solid var(--az-edge);border-radius:12px;padding:14px;background:var(--az-card);margin-top:12px}
+.research-parameter{align-items:flex-end}.research-parameter label{min-width:0}
+.parameter-badge{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid var(--az-edge);border-radius:8px;color:var(--az-muted);font-size:13px;font-weight:700;white-space:nowrap}
+.parameter-state-icon{display:inline-block;width:13px;height:13px;flex:none;border:2px solid currentColor;border-radius:50%}
+.parameter-badge[data-state=loading]{color:var(--az-accent);background:var(--az-soft)}.parameter-badge[data-state=loading] .parameter-state-icon{border-right-color:transparent;animation:parameter-spin .85s linear infinite}
+.parameter-badge[data-state=ready]{color:#087f5b}.parameter-badge[data-state=ready] .parameter-state-icon{background:currentColor;box-shadow:inset 0 0 0 3px var(--az-card)}
+html[data-az-theme=dark] .parameter-badge[data-state=ready]{color:#82e6b8}
+.parameter-badge[data-state=error]{color:#b45309}html[data-az-theme=dark] .parameter-badge[data-state=error]{color:#ffc477}
+.parameter-loading{margin-top:12px;padding:12px;border-radius:8px;background:var(--az-soft)}.parameter-loading[hidden]{display:none!important}
+.parameter-loading-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px}.parameter-loading progress{margin:8px 0;height:8px}.parameter-station-progress{display:grid;gap:5px;font-size:12px}.parameter-station-progress>div{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.parameter-station-progress>div span:last-child{color:var(--az-muted)}
+#parameterStatus{margin:8px 0 0}#param:disabled{opacity:.7;cursor:wait}
+@keyframes parameter-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.parameter-state-icon{animation:none!important}}html[data-az-motion-paused] .parameter-state-icon{animation:none!important}
+@media(max-width:600px){.research-parameter-workspace{padding:10px}.parameter-badge{min-height:36px}.parameter-station-progress>div{display:block}.parameter-station-progress>div span{display:block}}
