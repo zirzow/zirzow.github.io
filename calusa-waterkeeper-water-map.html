@@ -753,7 +753,7 @@ html[data-az-theme=dark] .map-frame .leaflet-control-zoom a{background:var(--bg-
 html[data-az-theme=dark] .map-frame .leaflet-control-zoom a:hover{background:var(--bg-subtle);}
 html[data-az-theme=dark] .map-frame .leaflet-control-attribution{background:#12283cf2;color:#e0edf7;}
 html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff;}
-</style><style>.az-water-nav{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;padding:10px 16px;margin:0;max-width:none;background:var(--az-card);border-bottom:1px solid var(--az-edge);font:600 14px/1.4 system-ui,sans-serif}.az-water-nav a{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;color:var(--az-ink);text-decoration:none;border-radius:8px;border:1px solid var(--az-edge)}.az-water-nav a[aria-current=page]{background:var(--az-accent);color:var(--az-on)}.az-water-nav a:hover{color:var(--az-nav-hover);text-decoration:none}.az-water-nav a[aria-current=page]:hover{color:var(--az-on)}.az-water-nav a:focus-visible{outline:3px solid var(--az-accent);outline-offset:3px}.az-header,.az-footer{padding:0;max-width:none}.az-header .az-nav nav{margin:0;padding:0;max-width:none;justify-content:flex-start;align-items:stretch}.az-header .az-nav nav a:not([aria-current=page]):hover{text-decoration:none}.az-header .az-theme,.az-header .az-motion{border-radius:999px}.az-footer .az-wrap{max-width:1160px;margin:auto;padding:30px 24px}.az-footer p{font:500 16px/1.5 system-ui,sans-serif;margin:1em 0}.az-header a.az-brand:hover{text-decoration:none}</style></head>
+</style><style>.az-water-nav{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;padding:10px 16px;margin:0;max-width:none;background:var(--az-card);border-bottom:1px solid var(--az-edge);font:600 14px/1.4 system-ui,sans-serif}.az-water-nav a{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;color:var(--az-ink);text-decoration:none;border-radius:8px;border:1px solid var(--az-edge)}.az-water-nav a[aria-current=page]{background:var(--az-accent);color:var(--az-on)}.az-water-nav a:hover{color:var(--az-nav-hover);text-decoration:none}.az-water-nav a[aria-current=page]:hover{color:var(--az-on)}.az-water-nav a:focus-visible{outline:3px solid var(--az-accent);outline-offset:3px}.az-header,.az-footer{padding:0;max-width:none}.az-header .az-nav nav{margin:0;padding:0;max-width:none;justify-content:flex-start;align-items:stretch}.az-header .az-nav nav a:not([aria-current=page]):hover{text-decoration:none}.az-header .az-theme,.az-header .az-motion{border-radius:999px}.az-footer .az-wrap{max-width:1160px;margin:auto;padding:30px 24px}.az-footer p{font:500 16px/1.5 system-ui,sans-serif;margin:1em 0}.az-header a.az-brand:hover{text-decoration:none}</style><style>#trend-chart-container.is-expanded svg{min-width:1800px!important}#trend-chart-container:focus-visible{outline:2px solid var(--teal);outline-offset:3px}#trend-chart-container{overscroll-behavior-x:contain}</style></head>
 <body><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html" aria-current="page">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><nav class="az-water-nav" aria-label="Water quality maps"><a href="water-map.html">Water Quality Home</a><a href="calusa-waterkeeper-water-map.html" aria-current="page">CWK Water Map</a><a href="win-water-map.html">WIN Water Map</a></nav>
   <header class="site-header">
     <div class="container header-inner">
@@ -952,6 +952,8 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
               </select>
             </div>
             <div class="trend-actions">
+              <label for="trend-indicator" style="font-size:13px;font-weight:600;color:var(--navy);">Trend indicator</label><select id="trend-indicator" class="station-select" style="flex:0 1 auto;width:auto;max-width:100%;" aria-describedby="trend-coverage"><option value="auto">Most records (all dates)</option><option value="entero">Enterococcus</option><option value="ecoli">E. coli</option></select>
+              <button type="button" class="btn-secondary" id="expand-trend" aria-pressed="false" aria-controls="trend-chart-container">Expand timeline</button>
               <div class="scale-segmented" role="group" aria-label="Y-axis scale">
                 <button type="button" class="scale-btn active" data-scale="linear" aria-pressed="true">Linear</button>
                 <button type="button" class="scale-btn" data-scale="log" aria-pressed="false">Semi-log (log₁₀)</button>
@@ -1005,7 +1007,7 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
           <div class="export-row"><span id="trend-export-status" role="status" aria-live="polite"></span></div>
           <div class="chart-shell">
             <div id="chart-tooltip" class="chart-tooltip"></div>
-            <div class="chart-svg-wrap" id="trend-chart-container">
+            <p id="trend-coverage" role="status" style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;"></p><div class="chart-svg-wrap" id="trend-chart-container" tabindex="0" aria-label="Historical trend chart; scroll horizontally when expanded">
               <div style="padding:48px 16px;text-align:center;color:var(--text-muted);font-size:14px;">Loading time-series chart...</div>
             </div>
             <div class="chart-caption">
@@ -1093,6 +1095,7 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
       var showHistoric = false;
       var selectedStationId = "";
       var chartScale = "linear";
+      var trendIndicator = "auto";
       // Selected regional reference dates, separate from measured bacteria and rainfall.
       var hurricaneEvents = [["1873-10-07","Unnamed 1873","major",3,"SW Florida coast, near Captiva (historical estimate)"],["1926-09-18","Great Miami","regional",4,"Miami area; Category 3 winds in SW Florida"],["1928-09-16","Lake Okeechobee","regional",4,"Southeast Florida, near Palm Beach"],["1935-09-02","Labor Day","regional",5,"Middle Florida Keys"],["1944-10-19","Cuba–Florida","regional",2,"Near Sarasota; Category 3 at Dry Tortugas on Oct 18"],["1947-09-17","Fort Lauderdale","regional",4,"Fort Lauderdale"],["1948-09-21","Unnamed 1948","major",4,"Near Everglades City, Sept 22 UTC; Sept 21 Keys landfall Category 3"],["1960-09-10","Donna","major",4,"Florida Keys / southwest Florida"],["2004-08-13","Charley","major",4,"Cayo Costa, Florida"],["2004-09-05","Frances","regional",2,"Hutchinson Island, Florida"],["2004-09-25","Jeanne","regional",3,"Near Stuart, Florida; landfall Sept 26 local"],["2005-08-25","Katrina","regional",1,"Southeast Florida"],["2005-09-20","Rita","regional",3,"Texas–Louisiana border, Sept 24; no Florida landfall (Category 2 offshore Keys)"],["2005-10-24","Wilma","major",3,"Cape Romano, Florida"],["2017-09-10","Irma","major",3,"Marco Island; Category 4 at Cudjoe Key earlier that day"],["2022-09-28","Ian","major",4,"Cayo Costa, Florida"],["2023-08-30","Idalia","regional",3,"Florida Big Bend, near Keaton Beach"],["2024-08-04","Debby","regional",1,"Near Steinhatchee, Florida, Aug 5"],["2024-09-26","Helene","regional",4,"Florida Big Bend, near Perry"],["2024-10-09","Milton","major",3,"Near Siesta Key, Florida"]];
       var hurricaneEnabled = false;
@@ -1112,7 +1115,8 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
       function dayTime(d){return Date.parse(d+"T12:00:00Z");}
       function rainTotal(d,n){var sum=0;for(var i=1;i<=n;i++){var v=rainDays.get(dayKey(dayTime(d)-i*DAY));if(v==null)return null;sum+=v;}return sum;}
       function rainText(v){return v==null?"Unavailable":v.toFixed(2)+" in";}
-      function selectedHistory(){var m=stationMetaById[selectedStationId], a=recordsByStation[selectedStationId]||[];if(!m)return [];var b=a.filter(function(r){return r.isEcoli===(activeFilter==="both"?m.isEcoli:activeFilter==="ecoli");});return b.length?b:a.filter(function(r){return r.isEcoli===m.isEcoli;});}
+      function trendHistory(a){var e=a.filter(function(r){return r.isEcoli;}), n=a.filter(function(r){return !r.isEcoli;});if(trendIndicator==="ecoli"&&e.length)return e;if(trendIndicator==="entero"&&n.length)return n;return n.length>=e.length?n:e;}
+      function selectedHistory(){return trendHistory(recordsByStation[selectedStationId]||[]);}
       function updateRainStatus(msg){document.getElementById("trend-rain-status").textContent=msg;document.getElementById("trend-rain-export").disabled=rainState!=="ready";}
       async function ensureHistoricalRain(points,force){
         if(!rainEnabled||!points.length)return;
@@ -1499,9 +1503,16 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
 
         var meta = stationMetaById[stationId];
         var fullHistory = recordsByStation[stationId];
-        var preferred = activeFilter === "both" ? meta.isEcoli : activeFilter === "ecoli";
-        var historyDesc = fullHistory.filter(function(r){return r.isEcoli === preferred;});
-        if(!historyDesc.length) historyDesc = fullHistory.filter(function(r){return r.isEcoli === meta.isEcoli;});
+        var ecoliCount=fullHistory.filter(function(r){return r.isEcoli;}).length, enteroCount=fullHistory.length-ecoliCount;
+        var indicatorControl=document.getElementById("trend-indicator");
+        indicatorControl.options[1].textContent="Enterococcus ("+enteroCount+")";
+        indicatorControl.options[2].textContent="E. coli ("+ecoliCount+")";
+        indicatorControl.options[1].disabled=!enteroCount;
+        indicatorControl.options[2].disabled=!ecoliCount;
+        if((trendIndicator==="entero"&&!enteroCount)||(trendIndicator==="ecoli"&&!ecoliCount))trendIndicator="auto";
+        indicatorControl.value=trendIndicator;
+        var historyDesc=trendHistory(fullHistory);
+        document.getElementById("trend-coverage").textContent="Showing "+historyDesc.length+" of "+fullHistory.length+" station records • "+(historyDesc[0].isEcoli?"E. coli":"Enterococcus")+" • "+historyDesc[historyDesc.length-1].iso+" to "+historyDesc[0].iso+". Select the other indicator to view its complete history. The table below includes both indicators. Expand timeline to scroll horizontally." ;
         var historyAsc = historyDesc.slice().reverse();
 
         document.getElementById("trend-station-title").textContent = meta.stationId + " — " + meta.waterbody;
@@ -1923,6 +1934,8 @@ html[data-az-theme=dark] .map-frame .leaflet-control-attribution a{color:#9bdcff
           }
         });
 
+        document.getElementById("trend-indicator").addEventListener("change",function(){trendIndicator=this.value;if(selectedStationId)selectStation(selectedStationId,false);});
+        document.getElementById("expand-trend").addEventListener("click",function(){var wrap=document.getElementById("trend-chart-container");var expanded=wrap.classList.toggle("is-expanded");this.setAttribute("aria-pressed",String(expanded));this.textContent=expanded?"Fit timeline":"Expand timeline";if(expanded)wrap.focus();});
         document.getElementById("station-select").addEventListener("change", function () {
           if (this.value) selectStation(this.value, false);
         });
