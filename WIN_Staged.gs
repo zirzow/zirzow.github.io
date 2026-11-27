@@ -32,12 +32,16 @@ function rebuildWINStationIndex(){
     let included=0,excluded=0,invalid=0,unknownDates=0;
     for(let start=2;start<=last;start+=8000){
       const n=Math.min(8000,last-start+1);
-      const data=sh.getRange(start,4,n,16).getDisplayValues(),orgs=sh.getRange(start,1,n,1).getDisplayValues();
+      // RawJSON is authoritative: historical sync writes A:C only.
+      const data=sh.getRange(start,1,n,3).getValues();
       for(let i=0;i<n;i++){
-        const [sid,name,dt,ch,value,unit,qual,fraction,lat,lon,lab,accr,method,mdl,pql,matrix]=data[i];
-        const org=String(orgs[i][0]).trim(),id=String(sid).trim();
-        if(!WIN_INDEX_AGENCIES.includes(org)||!/surface\s*water/i.test(matrix)){excluded++;continue;}
-        if(!id||!ch){invalid++;continue;}
+        const [a,rid,raw]=data[i];
+        let record;try{record=JSON.parse(raw);}catch(e){invalid++;continue;}
+        if(!record||typeof record!=='object'){invalid++;continue;}
+        const org=String(a??'').trim(),id=String(record.monitoringLocId??'').trim();
+        if(!WIN_INDEX_AGENCIES.includes(org)||!/surface\s*water/i.test(String(record.matrix??''))){excluded++;continue;}
+        if(String(record.organizationId??'')!==org||String(record.resultKey??'')!==String(rid)||!id||!record.depAnalytePrimaryName){invalid++;continue;}
+        const name=String(record.monitoringLocationName??''),dt=record.activityStartDate,ch=String(record.depAnalytePrimaryName),unit=String(record.depResultUnit??''),lat=record.latitude,lon=record.longitude;
         const d=winIndexDate(dt),k=org+'|'+id;
         if(!d)unknownDates++;
         let g=groups.get(k);
@@ -52,12 +56,12 @@ function rebuildWINStationIndex(){
     }
     if(sh.getLastRow()<last)throw Error('Source shrank during index build; retry');
     const stations=[...groups.values()].map(g=>{delete g.coordDate;return g;});
-    const summary={schema:2,mode:'stations',sourceRows:Math.max(0,last-1),indexedResults:included,excludedRows:excluded,invalidRows:invalid,unknownDateRows:unknownDates,generatedAt:new Date().toISOString(),stations};
+    const summary={schema:2,mode:'stations',sourceRows:Math.max(0,last-1),indexedResults:included,excludedRows:excluded,invalidRows:invalid,unknownDateRows:unknownDates,indexVersion:4,generatedAt:new Date().toISOString(),stations};
     const props=PropertiesService.getScriptProperties(),previous=props.getProperty(WIN_INDEX_PROPERTY);
     const file=DriveApp.createFile('WIN-station-snapshot-'+Date.now()+'.json',JSON.stringify({summary,rowIndex}),MimeType.PLAIN_TEXT);
     props.setProperty(WIN_INDEX_PROPERTY,file.getId());
     if(previous&&previous!==file.getId()){try{DriveApp.getFileById(previous).setTrashed(true);}catch(e){console.warn(e);}}
-    console.log(JSON.stringify({sourceRows:summary.sourceRows,indexedResults:included,stations:stations.length,unknownDateRows:unknownDates,generatedAt:summary.generatedAt}));
+    console.log(JSON.stringify({sourceRows:summary.sourceRows,indexedResults:included,excludedRows:excluded,invalidRows:invalid,stations:stations.length,unknownDateRows:unknownDates,generatedAt:summary.generatedAt}));
     return summary;
   }finally{lock.releaseLock();}
 }
