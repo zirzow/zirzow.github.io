@@ -10,3 +10,5 @@
 @media(max-width:600px){#researchMap{height:340px}.research-selection-head button{min-height:44px}.research-results{grid-template-columns:1fr}}
 
 .trend-graph{height:clamp(350px,55vh,600px)}#time-trends{scroll-margin-top:24px}#trendStatus{overflow-wrap:anywhere}#trendRows td{white-space:normal}@media(max-width:600px){.trend-graph{height:390px}}
+
+.figure-caption{border-left:3px solid var(--az-accent);background:var(--az-soft);padding:14px 16px;border-radius:6px;margin:12px 0 20px;font-size:14px;line-height:1.65}.figure-caption p{margin:0 0 10px}.figure-caption span{margin-left:8px;color:var(--az-muted)}
