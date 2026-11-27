@@ -1,0 +1,10 @@
+/* Research lab: map-first comparison workspace. */
+#researchMap{height:clamp(350px,53vh,570px);width:100%;border:1px solid var(--az-edge);border-radius:12px;margin:16px 0;background:#dce8ee;z-index:0}
+.research-legend{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:12px;color:var(--az-muted);margin-bottom:16px}.research-legend span{display:inline-flex;align-items:center;gap:5px}.research-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.research-selection-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.research-selection-head h3{margin:0}.research-selection-head h3 span{font-size:13px;color:var(--az-muted)}
+.research-selected,.research-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));gap:10px;margin:12px 0}
+.research-station,.research-result{min-width:0;padding:13px;border:1px solid var(--az-edge);border-left:5px solid var(--station-color,var(--az-accent));border-radius:9px;background:var(--az-soft);overflow-wrap:anywhere}
+.research-station strong,.research-result strong{display:block}.research-station p,.research-result p{font-size:13px;margin:5px 0}.research-station button{min-height:36px;padding:4px 10px;margin-top:6px}
+.research-result button{margin-top:8px}.research-parameter label{flex:1}.research-parameter select{width:100%}.research-marker-label{font-weight:800;color:#fff;background:#10283c;border:0;border-radius:20px;box-shadow:none}
+#resultStation{width:min(100%,440px);margin-bottom:12px}#progress{display:none}.research-selected:empty::after{content:"No stations selected. Click a map marker or add a station from the list.";color:var(--az-muted);font-size:14px}
+@media(max-width:600px){#researchMap{height:340px}.research-selection-head button{min-height:44px}.research-results{grid-template-columns:1fr}}
