@@ -1,0 +1,39 @@
+/* Shared water observatory design; scoped to water pages. Existing map/chart styles and scientific colors remain intact. */
+.water-observatory{--wq-accent:#076c84;--wq-edge:#c8dbe4;--wq-panel:#fff;--wq-soft:#edf5f8;--wq-ink:#153449;--wq-muted:#466273;--wq-hero:#0b3049}
+html[data-az-theme=dark] .water-observatory{--wq-accent:#91d9e9;--wq-edge:#36566b;--wq-panel:#12283c;--wq-soft:#19364f;--wq-ink:#eef8ff;--wq-muted:#b9d0e5;--wq-hero:#0b3049}
+.water-observatory .az-header,.water-observatory .az-footer{padding:0;max-width:none}
+.water-observatory .az-header .az-nav nav{margin:0;padding:0;max-width:none;justify-content:flex-start;align-items:stretch}
+.water-observatory .az-header .az-nav nav a:not([aria-current=page]):hover,.water-observatory .az-brand:hover{text-decoration:none}
+.water-observatory .az-header .az-theme,.water-observatory .az-header .az-motion{border-radius:999px}
+.water-observatory .az-footer .az-wrap{max-width:1160px;margin:auto;padding:30px 24px}
+.water-observatory .az-footer p{font:500 16px/1.5 system-ui,sans-serif;margin:1em 0}
+.water-observatory .az-water-nav{display:block;max-width:none;margin:0;padding:0;background:var(--wq-panel);border-top:3px solid var(--wq-accent);border-bottom:1px solid var(--wq-edge);font:500 14px/1.4 system-ui,sans-serif}
+.wq-nav-inner{max-width:1240px;margin:auto;padding:16px 24px;display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,3.4fr);gap:20px;align-items:center}
+.wq-nav-heading{display:flex;gap:10px;align-items:center;color:var(--wq-ink)}
+.wq-nav-mark{display:grid;place-items:center;width:42px;height:42px;flex:none;color:var(--wq-accent);background:var(--wq-soft);border-radius:10px}
+.wq-nav-heading strong{display:block;font-size:15px;line-height:1.3;letter-spacing:-.02em}.wq-nav-kicker{display:block;font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.09em;color:var(--wq-accent)}
+.wq-nav-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.water-observatory .wq-nav-links a{box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:11px 9px;min-height:64px;border:1px solid var(--wq-edge);border-radius:9px;background:var(--wq-panel);color:var(--wq-ink);text-decoration:none;font-weight:600;line-height:1.3;min-width:0}
+.wq-nav-index{font:600 11px/1 ui-monospace,monospace;color:var(--wq-accent);flex:none;align-self:flex-start;margin-top:3px}.wq-nav-links strong{display:block;font-size:13px}.wq-nav-links small{display:block;font-size:11px;font-weight:400;margin-top:3px;color:var(--wq-muted)}
+.water-observatory .wq-nav-links a:hover{border-color:var(--wq-accent);background:var(--wq-soft);color:var(--wq-accent);text-decoration:none}.water-observatory .wq-nav-links a[aria-current=page]{background:var(--wq-hero);border-color:var(--wq-hero);box-shadow:inset 0 -3px #43bdd0;color:#fff}.wq-nav-links a[aria-current=page] .wq-nav-index,.wq-nav-links a[aria-current=page] small{color:#b9e9f2}.water-observatory .wq-nav-links a:focus-visible{outline:3px solid var(--wq-accent);outline-offset:3px}
+.water-observatory main{font-family:system-ui,-apple-system,sans-serif}
+.water-observatory main h1,.water-observatory main h2,.water-observatory main h3{letter-spacing:-.025em}
+.water-observatory main .hero-kicker,.water-observatory main .eyebrow{font-family:ui-monospace,SFMono-Regular,monospace;letter-spacing:.1em}
+.water-observatory .wq-section-label{font:700 11px/1.4 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--wq-accent);margin-bottom:10px}
+.water-observatory .wq-landing-intro{padding:clamp(22px,4vw,44px);border:1px solid var(--wq-edge);border-radius:16px;background:var(--wq-panel);border-left:4px solid var(--wq-accent)}
+.water-observatory .wq-landing-intro h1{max-width:24ch;color:var(--wq-ink)}
+.water-observatory .wq-landing-intro .lead{margin-bottom:0}
+.water-observatory .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.water-observatory .cards .card{border-color:var(--wq-edge);box-shadow:0 6px 22px #082e4a0b;border-radius:14px}
+.water-observatory .cards .content{padding:20px}.water-observatory .cards .art{height:140px}
+.water-observatory .metric,.water-observatory .kpi-box{border-radius:10px;border-color:var(--wq-edge);font-variant-numeric:tabular-nums}
+.water-observatory .metric strong,.water-observatory .kpi-val,.water-observatory .metric-value{font-family:ui-monospace,SFMono-Regular,monospace;letter-spacing:-.035em}
+.water-observatory.wq-win main>section,.water-observatory.wq-research main>section:not(.hero){border:1px solid var(--wq-edge);border-radius:14px;box-shadow:0 4px 18px #082e4a08;padding:clamp(14px,2vw,24px)}
+.water-observatory.wq-win main>.hero,.water-observatory.wq-research main>.hero{background:linear-gradient(120deg,#0b3049,#075b70);border:1px solid #326578;border-radius:16px}
+.water-observatory.wq-win main>.hero h1,.water-observatory.wq-research main>.hero h1{color:#fff}
+.water-observatory.wq-win main>.hero p,.water-observatory.wq-research main>.hero p{color:#e0f5fa}
+.water-observatory .trend-panel{border-radius:14px;border-color:var(--wq-edge)}
+.water-observatory .site-header{border-bottom-color:var(--wq-edge)}
+@media(max-width:1050px){.wq-nav-inner{grid-template-columns:1fr;gap:10px}.water-observatory .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.wq-nav-inner{padding:12px 16px}.wq-nav-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.water-observatory .wq-nav-links a{min-height:58px;padding:9px}.water-observatory .cards{grid-template-columns:1fr}.water-observatory .cards .art{height:125px}.water-observatory .wq-landing-intro{padding:20px}}
+@media(prefers-reduced-motion:reduce){.water-observatory .wq-nav-links a{transition:none}}
