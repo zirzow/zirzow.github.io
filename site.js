@@ -78,3 +78,19 @@ document.querySelectorAll('[data-shared-footer]').forEach(async host => {
  wrap.append(btn,panel);original.replaceWith(wrap);
  });
 })();
+
+
+/* Moderated comments: opt-in editorial pages, inert until owner deploys endpoint. */
+(async()=>{
+ const page=location.pathname;
+ if(!/^\/(?:science|shells|shell-morphometrics|models|nature|diving|cycling|caloosa-riders|art|calusa-waterkeeper|calusa-waterkeeper-water-map|cwk-water-map|win-water-map|water-research|water-map|blog)\.html$/.test(page)&&!/^\/(?:blog|posts|field-notes|journal)\/[a-z0-9/_-]+(?:\.html|\/)?$/.test(page))return;
+ const main=document.querySelector('main');if(!main)return;
+ try{
+ const config=await fetch('/comments-config.json',{cache:'no-store'}).then(r=>r.json());
+ if(!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(config.endpoint||''))return;
+ const section=document.createElement('section');section.className='az-wrap';section.id='community-comments';section.setAttribute('aria-label','Community comments');
+ const iframe=document.createElement('iframe');iframe.title='Moderated community comments';iframe.loading='lazy';iframe.style.cssText='width:100%;height:780px;border:1px solid var(--az-edge,#888);border-radius:12px;background:var(--az-card,transparent)';
+ const url=new URL(config.endpoint);url.searchParams.set('page',page);url.searchParams.set('theme',document.documentElement.dataset.azTheme==='light'?'light':'dark');iframe.src=url.href;
+ section.append(iframe);main.append(section);
+ }catch(e){console.warn('Community comments unavailable',e)}
+})();
