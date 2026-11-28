@@ -145,7 +145,7 @@ $('meshReset').addEventListener('click', resetView);
 
 const examples = {
   A: {title: 'Horse Conch', filename: 'horse-conch.obj'},
-  B: {title: 'Filamentous Horse Conch', filename: 'filamentous-horse-conch.obj'}
+  B: {title: 'Filamentous Horse Conch', filename: 'filamentous-horse-conch.obj', parts: 4}
 };
 const inputs = {A: $('meshA'), B: $('meshB')};
 const scale = $('meshScale');
@@ -225,32 +225,25 @@ function selectExample(slot) {
 
 async function readSelection(selection) {
   if (selection instanceof File) return selection;
-  const response = await fetch(exampleURL(selection));
-  if (!response.ok || !response.body) {
-    throw Error('Could not load ' + selection.title + ' (HTTP ' + response.status + ').');
+  if (typeof DecompressionStream === 'undefined') {
+    throw Error('This browser cannot open the compressed examples. Use a current browser or upload an OBJ file.');
   }
+  const path = '/shell-samples/' + selection.filename + '.gz';
+  const urls = selection.parts
+    ? Array.from({length: selection.parts}, (_, index) => path + '.' + (index + 1) + '.bin')
+    : [path];
+  const parts = await Promise.all(urls.map(async url => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw Error('Could not load ' + selection.title + ' (HTTP ' + response.status + ').');
+    }
+    return response.blob();
+  }));
+  const compressed = new Blob(parts);
   const mesh = await new Response(
-    response.body.pipeThrough(new DecompressionStream('gzip'))
+    compressed.stream().pipeThrough(new DecompressionStream('gzip'))
   ).blob();
   return new File([mesh], selection.filename);
-}
-
-function exampleURL(example) {
-  return '/shell-samples/' + example.filename + '.gz';
-}
-
-async function showAvailableExamples() {
-  if (typeof DecompressionStream === 'undefined') return;
-  const availability = await Promise.all(Object.entries(examples).map(async ([slot, example]) => {
-    try {
-      const response = await fetch(exampleURL(example), {method: 'HEAD'});
-      $('example' + slot).hidden = !response.ok;
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }));
-  pair.hidden = !availability.every(Boolean);
 }
 
 for (const slot of ['A', 'B']) {
@@ -365,4 +358,3 @@ async function runAnalysis() {
 exp.onclick=()=>{if(!report)return;const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='shell-surface-analysis.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
 clearResults();
 updateControls();
-showAvailableExamples();
