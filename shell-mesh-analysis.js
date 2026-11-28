@@ -903,7 +903,154 @@ for (const slot of ['A', 'B']) {
   });
 }
 
+const clusterFiles = $('clusterFiles');
+const clusterRun = $('clusterRun');
+const clusterStatus = $('clusterStatus');
+let clusterReport = null;
+
+function shapeDendrogram(features) {
+  const distances = features.map(a => features.map(b =>
+    Math.hypot(...a.map((value, index) => value - b[index]))));
+  const active = features.map((_, index) => ({distance: 0, leaves: [index]}));
+  while (active.length > 1) {
+    let nearest = Infinity;
+    let first = 0;
+    let second = 1;
+    for (let i = 0; i < active.length; i++) {
+      for (let j = i + 1; j < active.length; j++) {
+        const a = active[i].leaves;
+        const b = active[j].leaves;
+        const total = a.reduce((sum, x) => sum + b.reduce((subtotal, y) =>
+          subtotal + distances[x][y], 0), 0);
+        const average = total / (a.length * b.length);
+        if (average < nearest) {
+          nearest = average;
+          first = i;
+          second = j;
+        }
+      }
+    }
+    const a = active[first];
+    const b = active[second];
+    active.splice(second, 1);
+    active.splice(first, 1, {distance: nearest, leaves: [...a.leaves, ...b.leaves], children: [a, b]});
+  }
+  return {distances, tree: active[0]};
+}
+
+function renderCluster(result) {
+  const {specimens, distances, tree} = result;
+  const baseline = 28 + specimens.length * 31;
+  const chart = shellPlot($('clusterPlot'), baseline + 60, 'Shell shape similarity dendrogram',
+    'Branches connect shells at average-linkage merge distances. The tables list exact pairwise distances and specimen measurements.');
+  const maximum = tree.distance || 1;
+  const x = distance => 413 - 365 * distance / maximum;
+  const names = specimens.map(specimen => specimen.id);
+  for (let i = 0; i <= (tree.distance ? 4 : 0); i++) {
+    const value = tree.distance * i / 4;
+    const position = x(value);
+    chart.line(position, 15, position, baseline, '#dce5eb');
+    chart.text(position, baseline + 19, String(Number(value.toPrecision(3))), {'text-anchor': 'middle'});
+  }
+  function branch(node) {
+    const position = x(node.distance);
+    if (!node.children) {
+      const index = node.leaves[0];
+      const y = 29 + tree.leaves.indexOf(index) * 31;
+      const {id, filename} = specimens[index];
+      const label = filename.length > 32 ? filename.slice(0, 29) + '…' : filename;
+      chart.text(426, y + 5, id + ' · ' + label);
+      return {position, y};
+    }
+    const [a, b] = node.children.map(branch);
+    chart.line(position, a.y, a.position, a.y, '#006989');
+    chart.line(position, b.y, b.position, b.y, '#006989');
+    chart.line(position, a.y, position, b.y, '#006989');
+    return {position, y: (a.y + b.y) / 2};
+  }
+  branch(tree);
+  chart.text(230, baseline + 44, 'Average-linkage merge distance', {'text-anchor': 'middle'});
+  const head = $('clusterDistanceHead');
+  head.replaceChildren();
+  const header = head.insertRow();
+  for (const label of ['Specimen', ...names]) {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.textContent = label;
+    header.append(cell);
+  }
+  const distanceBody = $('clusterDistances');
+  const featuresBody = $('clusterFeatures');
+  distanceBody.replaceChildren();
+  featuresBody.replaceChildren();
+  for (const [index, specimen] of specimens.entries()) {
+    appendMeasurementRow(distanceBody, specimen.id, distances[index].map(value => value.toPrecision(4)));
+    appendMeasurementRow(featuresBody, specimen.id + ' · ' + specimen.filename,
+      specimen.features.map(value => value.toPrecision(5)));
+  }
+}
+
+clusterFiles.addEventListener('change', () => {
+  clusterReport = null;
+  $('clusterResult').hidden = true;
+  const count = clusterFiles.files.length;
+  clusterStatus.textContent = count > 8 ? 'Select up to eight files.' : count ? count + ' files selected.' : '';
+  updateControls();
+});
+
+clusterRun.addEventListener('click', async () => {
+  const files = [...clusterFiles.files];
+  if (busy || files.length < 2 || files.length > 8) return;
+  clusterReport = null;
+  $('clusterResult').hidden = true;
+  busy = true;
+  updateControls();
+  let filename = '';
+  try {
+    const specimens = [];
+    for (const [index, file] of files.entries()) {
+      filename = file.name;
+      clusterStatus.textContent = 'Measuring ' + (index + 1) + ' of ' + files.length + ' · ' + filename;
+      await pause();
+      const geometry = await load(file);
+      try {
+        const shape = shellShape(sample(geometry, 5000), new MeshBVH(geometry), true);
+        if (!(shape.axialSpan > 0)) throw Error('Mesh has no measurable axial span.');
+        const widest = Math.max(...axialWidths(shape.projection).map(section => section.width ?? 0));
+        specimens.push({id: 'S' + (index + 1), filename, features: [
+          shape.transverseRms / shape.axialSpan, shape.planeDepth / shape.axialSpan,
+          widest / shape.axialSpan, shape.reflectionError
+        ]});
+      } finally {
+        geometry.dispose();
+      }
+    }
+    clusterReport = {
+      method: 'Average-linkage hierarchical clustering with Euclidean feature distances',
+      featureOrder: ['transverseRmsToAxialSpan', 'mirrorPlaneDepthToAxialSpan',
+        'widestSampledSectionToAxialSpan', 'normalizedMirrorMismatch'],
+      specimens,
+      ...shapeDendrogram(specimens.map(specimen => specimen.features))
+    };
+    renderCluster(clusterReport);
+    $('clusterResult').hidden = false;
+    $('clusterHeading').focus();
+    clusterStatus.textContent = 'Similarity tree complete.';
+  } catch (error) {
+    clusterStatus.textContent = 'Could not build the tree' + (filename ? ' · ' + filename : '') + '. ' + error.message;
+  } finally {
+    busy = false;
+    updateControls();
+  }
+});
+
+$('clusterExport').addEventListener('click', () => {
+  if (clusterReport) downloadJSON(clusterReport, 'shell-shape-similarity.json');
+});
+
 function updateControls() {
+  clusterFiles.disabled = busy;
+  clusterRun.disabled = busy || clusterFiles.files.length < 2 || clusterFiles.files.length > 8;
   for (const slot of ['A', 'B']) {
     inputs[slot].disabled = busy;
     $('specimenRun' + slot).disabled = busy || !selected[slot];

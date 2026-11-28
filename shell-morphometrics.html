@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=summary-figures-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=paired-profiles-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=summary-figures-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=shell-dendrogram-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Analysis</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
@@ -242,6 +242,40 @@
       <button class="az-button secondary" type="button" id="meshExport" disabled>Download results (JSON)</button>
     </details>
   </section>
+  </details>
+  <details class="az-card shell-comparison-options">
+    <summary>Group up to eight shells by shape</summary>
+    <p>Choose 2–8 mesh files. A similarity dendrogram groups scans by their measured proportions and symmetry. Branches represent geometric differences, with closer matches joining at smaller distances.</p>
+    <div class="shell-actions">
+      <label>Specimen files <input id="clusterFiles" type="file" multiple accept=".obj,.ply,.stl,.glb"></label>
+      <button class="az-button" type="button" id="clusterRun" disabled>Build similarity tree</button>
+    </div>
+    <p id="clusterStatus" role="status"></p>
+    <section id="clusterResult" aria-labelledby="clusterHeading" hidden>
+      <h2 id="clusterHeading" tabindex="-1">Shell shape similarity</h2>
+      <figure class="shell-scientific-figure">
+        <div class="shell-plot" id="clusterPlot"></div>
+        <figcaption><strong>Shell shape similarity dendrogram.</strong> Average-linkage clustering of Euclidean distances across four unitless measurements. The horizontal scale shows the distance at which clusters joined.</figcaption>
+      </figure>
+      <div class="shell-table-wrap">
+        <table class="shell-measurements">
+          <caption>Pairwise shape distances</caption>
+          <thead id="clusterDistanceHead"></thead><tbody id="clusterDistances"></tbody>
+        </table>
+      </div>
+      <div class="shell-table-wrap">
+        <table class="shell-measurements">
+          <caption>Measurements used to group the shells</caption>
+          <thead><tr><th scope="col">Specimen</th><th scope="col">Transverse RMS radius / axial span</th><th scope="col">Mirror-plane depth / axial span</th><th scope="col">Widest sampled section / axial span</th><th scope="col">Normalized mirror mismatch</th></tr></thead>
+          <tbody id="clusterFeatures"></tbody>
+        </table>
+      </div>
+      <button class="az-button secondary" type="button" id="clusterExport">Download tree and measurements (JSON)</button>
+    </section>
+    <details>
+      <summary>How to interpret the tree</summary>
+      <p>This phenogram is a descriptive comparison of scanned shape. The four features have equal numerical weights and use the original scan geometry. Age-related shape changes, convergent evolution, scan coverage, and damage can affect the grouping. Inference about evolutionary ancestry requires independent evidence and a phylogenetic method.</p>
+    </details>
   </details>
 </section>
 <div class="az-wrap">
