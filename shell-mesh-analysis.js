@@ -229,6 +229,11 @@ let pointerStart = null;
 
 const landmarkPairs = [
   ['Apex to siphonal canal tip', 'Apex', 'Siphonal canal tip'],
+  ['Spire height (apex to spire base)', 'Apex', 'Spire base'],
+  ['Siphonal canal length', 'Siphonal canal start', 'Siphonal canal tip'],
+  ['Aperture length', 'Aperture upper end', 'Aperture lower end'],
+  ['Shoulder width between marks', 'Shoulder edge 1', 'Shoulder edge 2'],
+  ['Valve length (bivalves)', 'Anterior margin', 'Posterior margin'],
   ['Spine 1 length (base to tip)', 'Spine 1 base', 'Spine 1 tip'],
   ['Spine tip spacing', 'Spine 1 tip', 'Spine 2 tip'],
   ['Aperture width between marks', 'Aperture edge 1', 'Aperture edge 2'],
@@ -493,6 +498,52 @@ function projectSpecimen(points, centroid, major, multiply) {
   });
 }
 
+function axialWidths(projection) {
+  const axial = projection.map(point => point[0]).sort((a, b) => a - b);
+  const low = axial[Math.floor(.025 * (axial.length - 1))];
+  const high = axial[Math.floor(.975 * (axial.length - 1))];
+  const sections = Array.from({length: 8}, () => []);
+  for (const [x, y] of projection) {
+    if (x < low || x > high) continue;
+    const index = Math.min(sections.length - 1, Math.floor(sections.length * (x - low) / (high - low)));
+    sections[index].push(y);
+  }
+  return sections.map((points, index) => {
+    points.sort((a, b) => a - b);
+    const last = points.length - 1;
+    const width = points.length >= 12 ? points[Math.floor(.95 * last)] - points[Math.floor(.05 * last)] : null;
+    return {startPercent: index * 12.5, endPercent: (index + 1) * 12.5, width};
+  });
+}
+
+function formatLength(value, units) {
+  const length = value.toPrecision(5) + ' ' + units;
+  return units === 'mm' ? length + ' (' + (value / 10).toPrecision(5) + ' cm)' : length;
+}
+
+function renderWidths(slot, widths, units) {
+  const graph = $('specimenWidthProfile' + slot);
+  graph.replaceChildren();
+  const maximum = Math.max(1e-15, ...widths.map(section => section.width ?? 0));
+  for (const {startPercent, endPercent, width, ratioToAxialSpan} of widths) {
+    const row = document.createElement('div');
+    row.className = 'shell-proportion';
+    const label = document.createElement('span');
+    label.textContent = startPercent + '–' + endPercent + '% along axis · ' + (width === null
+      ? 'Insufficient points'
+      : formatLength(width, units) + ' · ' + formatPercentage(ratioToAxialSpan) + ' of axial span');
+    row.append(label);
+    if (width !== null) {
+      const bar = document.createElement('meter');
+      bar.max = maximum;
+      bar.value = width;
+      bar.setAttribute('aria-hidden', 'true');
+      row.append(bar);
+    }
+    graph.append(row);
+  }
+}
+
 function drawSpecimenProjection(canvas, projection, axis) {
   const context = canvas.getContext('2d');
   if (!context) return;
@@ -569,8 +620,13 @@ function originalSpecimenProfile(slot) {
       units: record.mmPerMeshUnit ? 'mm' : 'mesh units',
       axialSpan95: shape.axialSpan * factor,
       transverseRmsRadius: shape.transverseRms * factor,
-      depthAcrossMirrorPlane95: shape.planeDepth * factor
+      depthAcrossMirrorPlane95: shape.planeDepth * factor,
+      widestAxialSection: profile.widestWidth * factor
     },
+    axialWidthProfile: profile.widths.map(({startPercent, endPercent, width}) => ({
+      startPercent, endPercent, width: width === null ? null : width * factor,
+      ratioToAxialSpan: width === null ? null : width / shape.axialSpan
+    })),
     landmarkMeasurements: (report?.landmarkAnalysis?.measurements ?? [])
       .filter(row => row.ratiosToAxialSpan[slot] !== null)
       .map(row => {
@@ -580,6 +636,7 @@ function originalSpecimenProfile(slot) {
     ratios: {
       transverseRmsToAxialSpan: shape.transverseRms / shape.axialSpan,
       depthToAxialSpan: shape.planeDepth / shape.axialSpan,
+      widestSectionToAxialSpan: profile.widestWidth / shape.axialSpan,
       elongation: shape.elongation,
       normalizedMirrorMismatch: shape.reflectionError
     }
@@ -606,6 +663,7 @@ function renderRatioComparison() {
   const rows = [
     ['Transverse RMS radius', A.ratios.transverseRmsToAxialSpan, B.ratios.transverseRmsToAxialSpan],
     ['Depth across mirror plane', A.ratios.depthToAxialSpan, B.ratios.depthToAxialSpan],
+    ['Widest sampled axial section', A.ratios.widestSectionToAxialSpan, B.ratios.widestSectionToAxialSpan],
     ...(report.landmarkAnalysis?.measurements ?? []).map(({label, ratiosToAxialSpan}) =>
       [label, ratiosToAxialSpan.A, ratiosToAxialSpan.B])
   ];
@@ -624,24 +682,26 @@ function renderSpecimen(slot) {
   const panel = $('specimenProfile' + slot);
   panel.hidden = !specimenProfiles[slot];
   if (panel.hidden) return;
-  const {filename, dimensions, ratios, shellTypeEstimate, landmarkMeasurements} = originalSpecimenProfile(slot);
+  const {filename, dimensions, ratios, shellTypeEstimate, landmarkMeasurements, axialWidthProfile} = originalSpecimenProfile(slot);
   $('specimenSummary' + slot).textContent = filename + ' · ' + typeLabels[shellTypeEstimate] +
-    ' · axial span ' + dimensions.axialSpan95.toPrecision(5) + ' ' + dimensions.units;
+    ' · axial span ' + formatLength(dimensions.axialSpan95, dimensions.units);
   const projection = specimenProfiles[slot].projection;
   drawSpecimenProjection($('specimenSide' + slot), projection, 1);
   drawSpecimenProjection($('specimenCross' + slot), projection, 2);
   renderSpecimenRatios(slot, ratios);
+  renderWidths(slot, axialWidthProfile, dimensions.units);
   const values = $('specimenValues' + slot);
   values.replaceChildren();
   const rows = [
     ['Axial span (central 95%)', dimensions.axialSpan95, 1],
     ['Transverse RMS radius', dimensions.transverseRmsRadius, ratios.transverseRmsToAxialSpan],
     ['Depth across mirror plane (central 95%)', dimensions.depthAcrossMirrorPlane95, ratios.depthToAxialSpan],
+    ['Widest sampled axial section (side view)', dimensions.widestAxialSection, ratios.widestSectionToAxialSpan],
     ...landmarkMeasurements.map(({label, distance, ratioToAxialSpan}) => [label, distance, ratioToAxialSpan])
   ];
   for (const [label, value, ratio] of rows) {
     appendMeasurementRow(values, label, [
-      value.toPrecision(5) + ' ' + dimensions.units,
+      formatLength(value, dimensions.units),
       ratio.toPrecision(5) + ' (' + formatPercentage(ratio) + ')'
     ]);
   }
@@ -650,7 +710,9 @@ function renderSpecimen(slot) {
 function measureSpecimen(slot, file, geometry, tree) {
   const {projection, ...shape} = shellShape(sample(geometry, 5000), tree, true);
   if (!(shape.axialSpan > 0)) throw Error('Specimen has no measurable axial span.');
-  specimenProfiles[slot] = {filename: file.name, shape, projection};
+  const widths = axialWidths(projection);
+  const widestWidth = Math.max(0, ...widths.map(section => section.width ?? 0));
+  specimenProfiles[slot] = {filename: file.name, shape, projection, widths, widestWidth};
   renderSpecimen(slot);
   $('specimenStatus' + slot).textContent = '';
   return shape;

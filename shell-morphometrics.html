@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=measurement-tables-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=measurement-tables-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=physical-units-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=physical-units-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Analysis</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
@@ -11,17 +11,18 @@
       <button class="az-button secondary" type="button" id="exampleA" disabled>Use example: Horse Conch</button>
       <small><a href="#source-1">University of South Florida Libraries · CC BY-NC-ND 4.0</a></small>
       <span id="selectionA" role="status"></span>
-      <details>
-        <summary>Museum record &amp; scan scale</summary>
-        <fieldset id="specimenFieldsA" style="display:grid;gap:.55rem">
-          <legend>Specimen A record</legend>
+      <fieldset id="specimenFieldsA" style="display:grid;gap:.55rem">
+        <legend>Scan scale</legend>
+        <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
+        <small>Enter 1 for a mesh in mm or 10 for a mesh in cm. Use the scanner or museum calibration. Leave blank when the scale is unknown.</small>
+        <details>
+          <summary>Museum record</summary>
           <label>Museum catalog number <input data-field="catalogNumber" type="text"></label>
           <label>Collection date as recorded <input data-field="collectionDate" type="text" placeholder="e.g., 1982"></label>
           <label>Collection locality <input data-field="locality" type="text"></label>
           <label>Age or life stage <input data-field="ageOrLifeStage" type="text" placeholder="Unknown"></label>
-          <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
-        </fieldset>
-      </details>
+        </details>
+      </fieldset>
       <button class="az-button" type="button" id="specimenRunA" disabled>Analyze shell</button>
       <p id="specimenStatusA" role="status"></p>
       <div id="specimenProfileA" hidden>
@@ -48,6 +49,11 @@
             <tbody id="specimenValuesA"></tbody>
           </table>
         </div>
+        <details class="shell-proportions">
+          <summary>Shell width along the axis</summary>
+          <p>Profile widths are estimates from sampled surface points in eight axial sections. The two ends follow the scan’s computed axis. Check the views before assigning anatomical names.</p>
+          <div id="specimenWidthProfileA"></div>
+        </details>
         <button class="az-button secondary" type="button" id="specimenExportA">Download specimen profile</button>
       </div>
   </article>
@@ -60,17 +66,18 @@
       <button class="az-button secondary" type="button" id="exampleB" disabled>Use example: Filamentous Horse Conch</button>
       <small><a href="#source-2">RISD Nature Lab · CC BY 4.0</a></small>
       <span id="selectionB" role="status"></span>
-      <details>
-        <summary>Museum record &amp; scan scale</summary>
-        <fieldset id="specimenFieldsB" style="display:grid;gap:.55rem">
-          <legend>Specimen B record</legend>
+      <fieldset id="specimenFieldsB" style="display:grid;gap:.55rem">
+        <legend>Scan scale</legend>
+        <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
+        <small>Enter 1 for a mesh in mm or 10 for a mesh in cm. Use the scanner or museum calibration. Leave blank when the scale is unknown.</small>
+        <details>
+          <summary>Museum record</summary>
           <label>Museum catalog number <input data-field="catalogNumber" type="text"></label>
           <label>Collection date as recorded <input data-field="collectionDate" type="text" placeholder="e.g., 1982"></label>
           <label>Collection locality <input data-field="locality" type="text"></label>
           <label>Age or life stage <input data-field="ageOrLifeStage" type="text" placeholder="Unknown"></label>
-          <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
-        </fieldset>
-      </details>
+        </details>
+      </fieldset>
       <button class="az-button secondary" type="button" id="specimenRunB" disabled>Analyze specimen B</button>
       <p id="specimenStatusB" role="status"></p>
       <div id="specimenProfileB" hidden>
@@ -97,6 +104,11 @@
             <tbody id="specimenValuesB"></tbody>
           </table>
         </div>
+        <details class="shell-proportions">
+          <summary>Shell width along the axis</summary>
+          <p>Profile widths are estimates from sampled surface points in eight axial sections. The two ends follow the scan’s computed axis. Check the views before assigning anatomical names.</p>
+          <div id="specimenWidthProfileB"></div>
+        </details>
         <button class="az-button secondary" type="button" id="specimenExportB">Download specimen profile</button>
       </div>
     </article>
@@ -140,10 +152,11 @@
         <label>Specimen <select id="landmarkShell"><option value="A">A · Reference</option><option value="B">B · Moving</option></select></label>
         <label>Landmark
           <select id="landmarkPoint">
-            <option>Apex</option><option>Siphonal canal tip</option>
+            <option>Apex</option><option>Spire base</option><option>Siphonal canal start</option><option>Siphonal canal tip</option>
             <option>Spine 1 base</option><option>Spine 1 tip</option><option>Spine 2 tip</option>
-            <option>Aperture edge 1</option><option>Aperture edge 2</option>
-            <option>Umbo</option><option>Ventral margin</option>
+            <option>Aperture edge 1</option><option>Aperture edge 2</option><option>Aperture upper end</option><option>Aperture lower end</option>
+            <option>Shoulder edge 1</option><option>Shoulder edge 2</option>
+            <option>Umbo</option><option>Ventral margin</option><option>Anterior margin</option><option>Posterior margin</option>
           </select>
         </label>
         <button class="az-button secondary" type="button" id="landmarkMark" aria-pressed="false">Mark on shell</button>
