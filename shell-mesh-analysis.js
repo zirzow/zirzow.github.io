@@ -521,7 +521,101 @@ function formatLength(value, units) {
   return units === 'mm' ? length + ' (' + (value / 10).toPrecision(5) + ' cm)' : length;
 }
 
+function svgElement(tag, attributes, caption) {
+  const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+  if (caption !== undefined) element.textContent = caption;
+  return element;
+}
+
+function shellPlot(host, height, title, description) {
+  const plot = svgElement('svg', {
+    viewBox: '0 0 740 ' + height, role: 'img', 'aria-label': title + '. ' + description,
+    'font-family': 'system-ui, sans-serif', 'font-size': 14, fill: '#183044'
+  });
+  plot.append(svgElement('title', {}, title));
+  host.replaceChildren(plot);
+  return {
+    line(x1, y1, x2, y2, stroke = '#a7b6c3') {
+      plot.append(svgElement('line', {x1, y1, x2, y2, stroke, 'stroke-width': 1.4}));
+    },
+    text(x, y, value, attributes = {}) {
+      plot.append(svgElement('text', {x, y, ...attributes}, value));
+    },
+    dot(cx, cy, color, open = false) {
+      plot.append(svgElement('circle', {
+        cx, cy, r: 5.2, fill: open ? 'none' : color, stroke: color, 'stroke-width': 2
+      }));
+    }
+  };
+}
+
+function percentAxis(ratios) {
+  const peak = Math.max(.01, ...ratios.filter(value => value !== null)) * 100;
+  const base = 10 ** Math.floor(Math.log10(peak / 4));
+  const step = [1, 2, 2.5, 5, 10].map(value => value * base).find(value => value >= peak / 4);
+  const count = Math.ceil(peak / step);
+  return {maximum: count * step, ticks: Array.from({length: count + 1}, (_, index) => index * step)};
+}
+
+function renderAxialPlot(slot, widths) {
+  const values = widths.map(section => section.ratioToAxialSpan);
+  const {maximum, ticks} = percentAxis(values);
+  const chart = shellPlot($('specimenAxialPlot' + slot), 300, 'Axial width profile',
+    'Estimated widths over eight sections. Exact values are in the width table.');
+  const x = percent => 96 + percent * 6.15;
+  const y = percent => 238 - percent / maximum * 198;
+  chart.text(96, 23, 'Width (% of axial span)', {'font-weight': 650});
+  for (const tick of ticks) {
+    chart.line(x(0), y(tick), x(100), y(tick), '#dce5eb');
+    chart.text(83, y(tick) + 4, String(Number(tick.toPrecision(8))), {'text-anchor': 'end'});
+  }
+  for (const tick of [0, 25, 50, 75, 100]) {
+    chart.text(x(tick), 260, String(tick), {'text-anchor': 'middle'});
+  }
+  chart.line(x(0), y(0), x(100), y(0));
+  chart.text(x(50), 286, 'Position along axial span (%)', {'text-anchor': 'middle'});
+  let prior = null;
+  for (const {startPercent, endPercent, ratioToAxialSpan} of widths) {
+    if (ratioToAxialSpan === null) {
+      prior = null;
+      continue;
+    }
+    const point = [x((startPercent + endPercent) / 2), y(ratioToAxialSpan * 100)];
+    if (prior) chart.line(...prior, ...point, '#006989');
+    chart.dot(...point, '#006989');
+    prior = point;
+  }
+}
+
+function renderRatioPlot(rows) {
+  const selectedRows = rows.filter(([label]) => label !== 'Transverse RMS radius');
+  const {maximum, ticks} = percentAxis(selectedRows.flatMap(([, a, b]) => [a, b]));
+  const baseline = 58 + selectedRows.length * 35;
+  const chart = shellPlot($('shellRatioPlot'), baseline + 57, 'Shell proportion comparison',
+    'Open blue circles are specimen A. Filled orange circles are specimen B. Exact values are in the ratio table.');
+  const x = ratio => 325 + ratio * 100 / maximum * 385;
+  chart.dot(330, 24, '#006989', true);
+  chart.text(342, 29, 'A');
+  chart.dot(376, 24, '#b34a16');
+  chart.text(388, 29, 'B');
+  for (const tick of ticks) {
+    const position = x(tick / 100);
+    chart.line(position, 40, position, baseline, '#dce5eb');
+    chart.text(position, baseline + 19, String(Number(tick.toPrecision(8))), {'text-anchor': 'middle'});
+  }
+  for (const [index, [label, a, b]] of selectedRows.entries()) {
+    const y = 59 + 35 * index;
+    chart.text(310, y + 4, label, {'text-anchor': 'end'});
+    if (a !== null && b !== null) chart.line(x(a), y, x(b), y);
+    if (b !== null) chart.dot(x(b), y, '#b34a16');
+    if (a !== null) chart.dot(x(a), y, '#006989', true);
+  }
+  chart.text(x(maximum / 200), baseline + 43, 'Measurement (% of axial span)', {'text-anchor': 'middle'});
+}
+
 function renderWidths(slot, widths, units) {
+  renderAxialPlot(slot, widths);
   const body = $('specimenWidthProfile' + slot);
   body.replaceChildren();
   for (const {startPercent, endPercent, width, ratioToAxialSpan} of widths) {
@@ -655,6 +749,7 @@ function renderRatioComparison() {
     ...(report.landmarkAnalysis?.measurements ?? []).map(({label, ratiosToAxialSpan}) =>
       [label, ratiosToAxialSpan.A, ratiosToAxialSpan.B])
   ];
+  renderRatioPlot(rows);
   for (const [label, a, b] of rows) {
     const difference = a === null || b === null ? '—' :
       ((b - a) * 100).toLocaleString(undefined, {maximumFractionDigits: 3, signDisplay: 'exceptZero'});

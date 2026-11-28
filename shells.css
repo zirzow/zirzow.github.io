@@ -47,3 +47,8 @@
   vertical-align: top;
 }
 .shell-measurements td { font-variant-numeric: tabular-nums; }
+
+.shell-scientific-figure { margin: 1.25rem 0; width: 100%; max-width: 56rem; }
+.shell-scientific-figure figcaption { margin-top: .5rem; font-size: .92rem; }
+.shell-plot { overflow-x: auto; }
+.shell-plot svg { display: block; width: 100%; min-width: 32rem; background: #fff; border-radius: .5rem; }
