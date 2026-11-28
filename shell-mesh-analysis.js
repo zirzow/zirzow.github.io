@@ -659,26 +659,28 @@ function drawSpecimenProjection(canvas, projection, axis) {
 }
 
 function renderSpecimenRatios(slot, ratios) {
-  const container = $('specimenRatios' + slot);
-  container.replaceChildren();
   const rows = [
-    ['Axial span', 1],
     ['Transverse RMS radius', ratios.transverseRmsToAxialSpan],
-    ['Depth across mirror plane', ratios.depthToAxialSpan]
+    ['Depth across mirror plane', ratios.depthToAxialSpan],
+    ['Widest sampled axial section', ratios.widestSectionToAxialSpan]
   ];
-  const maximum = Math.max(...rows.map(([, value]) => value));
-  for (const [label, value] of rows) {
-    const row = document.createElement('div');
-    row.className = 'shell-proportion';
-    const caption = document.createElement('span');
-    caption.textContent = label + ' · ' + (100 * value).toLocaleString(undefined, {maximumFractionDigits: 1}) + '%';
-    const meter = document.createElement('meter');
-    meter.max = maximum;
-    meter.value = value;
-    meter.setAttribute('aria-hidden', 'true');
-    row.append(caption, meter);
-    container.append(row);
+  const {maximum, ticks} = percentAxis([1, ...rows.map(([, ratio]) => ratio)]);
+  const chart = shellPlot($('specimenRatios' + slot), 193, 'Shape proportions',
+    'Each point shows a measured distance as a percentage of axial span. Exact values appear in the measurement table.');
+  const x = percent => 275 + 380 * percent / maximum;
+  for (const tick of ticks) {
+    chart.line(x(tick), 22, x(tick), 137, '#dce5eb');
+    chart.text(x(tick), 156, String(Number(tick.toPrecision(8))), {'text-anchor': 'middle'});
   }
+  chart.line(x(0), 137, x(maximum), 137);
+  for (const [index, [label, ratio]] of rows.entries()) {
+    const y = 39 + 35 * index;
+    const position = x(ratio * 100);
+    chart.text(260, y + 5, label, {'text-anchor': 'end'});
+    chart.dot(position, y, '#006989');
+    chart.text(position + 12, y + 5, formatPercentage(ratio));
+  }
+  chart.text(x(maximum / 2), 181, 'Measurement (% of axial span)', {'text-anchor': 'middle'});
 }
 
 const specimenProfiles = {A: null, B: null};
