@@ -436,7 +436,7 @@ function shellShape(points, tree, withProjection = false) {
   const type = best.error <= .045 && elongation < 1.45 ? 'bivalve'
     : best.error >= .10 && elongation >= 1.25 ? 'gastropod' : 'uncertain';
   const shape = {type, reflectionError: best.error, elongation, axialSpan, transverseRms, planeDepth};
-  if (withProjection) shape.projection = projectSpecimen(points, centroid, major, multiply);
+  if (withProjection) Object.assign(shape, projectSpecimen(points, centroid, major, multiply));
   return shape;
 }
 
@@ -492,19 +492,24 @@ function projectSpecimen(points, centroid, major, multiply) {
     return axis;
   }).sort((a, b) => b.dot(multiply(b)) - a.dot(multiply(a)))[0];
   const across = major.clone().cross(side).normalize();
-  return points.map(point => {
+  const projection = points.map(point => {
     const offset = point.clone().sub(centroid);
     return [offset.dot(major), offset.dot(side), offset.dot(across)];
   });
+  return {projection, axes: {major, side}};
 }
 
-function axialWidths(projection) {
+function axialRange(projection) {
   const axial = projection.map(point => point[0]).sort((a, b) => a - b);
   const low = axial[Math.floor(.025 * (axial.length - 1))];
   const high = axial[Math.floor(.975 * (axial.length - 1))];
+  return {low, high};
+}
+
+function axialWidths(projection, {low, high} = axialRange(projection)) {
   const sections = Array.from({length: 8}, () => []);
   for (const [x, y] of projection) {
-    if (x < low || x > high) continue;
+    if (high <= low || x < low || x > high) continue;
     const index = Math.min(sections.length - 1, Math.floor(sections.length * (x - low) / (high - low)));
     sections[index].push(y);
   }
@@ -558,11 +563,20 @@ function percentAxis(ratios) {
   return {maximum: count * step, ticks: Array.from({length: count + 1}, (_, index) => index * step)};
 }
 
-function renderAxialPlot(slot, widths) {
-  const values = widths.map(section => section.ratioToAxialSpan);
+function renderAxialPlot(host, series) {
+  const paired = series.length > 1;
+  const values = series.flatMap(({widths}) => widths.map(section => section.ratioToAxialSpan));
   const {maximum, ticks} = percentAxis(values);
-  const chart = shellPlot($('specimenAxialPlot' + slot), 300, 'Axial width profile',
-    'Estimated widths over eight sections. Exact values are in the width table.');
+  const chart = shellPlot(host, 300, paired ? 'Aligned axial width profiles' : 'Axial width profile',
+    paired ? 'Open blue circles show specimen A and filled orange circles show specimen B.'
+      : 'Estimated widths over eight sections. Exact values are in the width table.');
+  if (paired) {
+    for (const [index, {label, color, open}] of series.entries()) {
+      const x = 103 + index * 122;
+      chart.dot(x, 20, color, open);
+      chart.text(x + 12, 25, 'Specimen ' + label);
+    }
+  }
   const x = percent => 96 + percent * 6.15;
   const y = percent => 238 - percent / maximum * 198;
   const yLabelCenter = (y(0) + y(maximum)) / 2;
@@ -580,23 +594,24 @@ function renderAxialPlot(slot, widths) {
   chart.line(x(0), y(0), x(100), y(0));
   chart.line(x(0), y(0), x(0), y(maximum));
   chart.text(x(50), 286, 'Position along axial span (%)', {'text-anchor': 'middle'});
-  let prior = null;
-  for (const {startPercent, endPercent, ratioToAxialSpan} of widths) {
-    if (ratioToAxialSpan === null) {
-      prior = null;
-      continue;
+  for (const {widths, color, open} of [...series].reverse()) {
+    let prior = null;
+    for (const {startPercent, endPercent, ratioToAxialSpan} of widths) {
+      if (ratioToAxialSpan === null) {
+        prior = null;
+        continue;
+      }
+      const point = [x((startPercent + endPercent) / 2), y(ratioToAxialSpan * 100)];
+      if (prior) chart.line(...prior, ...point, color);
+      chart.dot(...point, color, open);
+      prior = point;
     }
-    const point = [x((startPercent + endPercent) / 2), y(ratioToAxialSpan * 100)];
-    if (prior) chart.line(...prior, ...point, '#006989');
-    chart.dot(...point, '#006989');
-    prior = point;
   }
 }
 
 function renderRatioPlot(rows) {
-  const selectedRows = rows.filter(([label]) => label !== 'Transverse RMS radius');
-  const {maximum, ticks} = percentAxis(selectedRows.flatMap(([, a, b]) => [a, b]));
-  const baseline = 58 + selectedRows.length * 35;
+  const {maximum, ticks} = percentAxis(rows.flatMap(([, a, b]) => [a, b]));
+  const baseline = 58 + rows.length * 35;
   const chart = shellPlot($('shellRatioPlot'), baseline + 57, 'Shell proportion comparison',
     'Open blue circles are specimen A. Filled orange circles are specimen B. Exact values are in the ratio table.');
   const x = ratio => 325 + ratio * 100 / maximum * 385;
@@ -609,7 +624,7 @@ function renderRatioPlot(rows) {
     chart.line(position, 40, position, baseline, '#dce5eb');
     chart.text(position, baseline + 19, String(Number(tick.toPrecision(8))), {'text-anchor': 'middle'});
   }
-  for (const [index, [label, a, b]] of selectedRows.entries()) {
+  for (const [index, [label, a, b]] of rows.entries()) {
     const y = 59 + 35 * index;
     chart.text(310, y + 4, label, {'text-anchor': 'end'});
     if (a !== null && b !== null) chart.line(x(a), y, x(b), y);
@@ -646,7 +661,7 @@ $('meshQuestion').addEventListener('input', () => {
 });
 
 function renderWidths(slot, widths, units) {
-  renderAxialPlot(slot, widths);
+  renderAxialPlot($('specimenAxialPlot' + slot), [{widths, color: '#006989'}]);
   renderAxialCaption(slot, widths);
   const body = $('specimenWidthProfile' + slot);
   body.replaceChildren();
@@ -825,11 +840,11 @@ function renderSpecimen(slot) {
 }
 
 function measureSpecimen(slot, file, geometry, tree) {
-  const {projection, ...shape} = shellShape(sample(geometry, 5000), tree, true);
+  const {projection, axes, ...shape} = shellShape(sample(geometry, 5000), tree, true);
   if (!(shape.axialSpan > 0)) throw Error('Specimen has no measurable axial span.');
   const widths = axialWidths(projection);
   const widestWidth = Math.max(0, ...widths.map(section => section.width ?? 0));
-  specimenProfiles[slot] = {filename: file.name, shape, projection, widths, widestWidth};
+  specimenProfiles[slot] = {filename: file.name, shape, projection, axes, widths, widestWidth};
   renderSpecimen(slot);
   $('specimenStatus' + slot).textContent = '';
   return shape;
@@ -1073,6 +1088,24 @@ async function runAnalysis() {
     report.calibration = {applied: calibrated, mmPerMeshUnit: {A: meshA, B: meshB}};
     report.transformFrame = calibrated ? 'calibrated input B (mm) to calibrated reference A (mm)' : 'input B mesh units to reference A mesh units';
     report.transformInputBToOutputColumnMajor = best.clone().scale(V(calibrationB, calibrationB, calibrationB)).toArray();
+    const {major, side} = specimenProfiles.A.axes;
+    const alignedWidths = points => {
+      const projection = points.map(point => [point.dot(major), point.dot(side)]);
+      const range = axialRange(projection);
+      const axialSpan = range.high - range.low;
+      const widths = axialWidths(projection, range).map(({startPercent, endPercent, width}) => ({
+        startPercent, endPercent, width, ratioToAxialSpan: width === null ? null : width / axialSpan
+      }));
+      return {axialSpan, widths};
+    };
+    report.pairedAxialWidthProfiles = {
+      frame: 'aligned specimen A principal and transverse axes',
+      units, A: alignedWidths(pA), B: alignedWidths(pB)
+    };
+    renderAxialPlot($('pairedAxialPlot'), [
+      {label: 'A', widths: report.pairedAxialWidthProfiles.A.widths, color: '#006989', open: true},
+      {label: 'B', widths: report.pairedAxialWidthProfiles.B.widths, color: '#b34a16'}
+    ]);
     report.specimens = {A: originalSpecimenProfile('A'), B: originalSpecimenProfile('B')};
     renderRatioComparison();
     updateCaption();
