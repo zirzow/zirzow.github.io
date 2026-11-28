@@ -120,6 +120,7 @@ function updateView() {
   }
   $('meshColorKey').hidden = mode !== 'heat';
   draw();
+  updateCaption();
 }
 
 function resetView() {
@@ -151,6 +152,53 @@ const scale = $('meshScale');
 const pair = $('examplePair');
 const selected = {A: null, B: null};
 let busy = false;
+
+function updateCaption() {
+  if (!report) return;
+  const views = {
+    heat: ['Surface deviation heat map', 'The surface of aligned B shows unsigned nearest-surface distances to A.'],
+    overlay: ['Overlay of aligned shells', 'Reference A is shown as a blue wireframe over aligned B in amber.'],
+    reference: ['Reference shell', 'The fixed reference mesh A is shown in the alignment frame.'],
+    moving: ['Aligned moving shell', 'Mesh B is shown after alignment to the reference mesh A.']
+  };
+  const [title, viewDescription] = views[viewMode.value];
+  const question = $('meshQuestion').value.trim();
+  const reference = selected.A.title || report.reference;
+  const moving = selected.B.title || report.moving;
+  const units = report.mode === 'normalized' ? 'reference mesh units' : 'input mesh units';
+  const scaling = report.mode === 'normalized'
+    ? `B was uniformly rescaled to match the RMS surface radius of A (scale factor ${report.scaleFactor.toPrecision(5)}).`
+    : 'The original mesh sizes were preserved.';
+  const legend = viewMode.value === 'heat'
+    ? ` Blue marks zero distance and red marks distances at or above ${report.displayCap.toPrecision(5)} ${units} (the B-to-A 95th-percentile display cap).`
+    : '';
+  const forward = report.summary.BtoA.rms.toPrecision(5);
+  const reverse = report.summary.AtoB.rms.toPrecision(5);
+  const label = `Figure 1. ${title} — ${moving} (B) vs. ${reference} (A)`;
+  const description = [
+    question ? `Comparison goal: ${question}` : '',
+    viewDescription + legend,
+    'B was aligned to A using multistart iterative closest point (ICP).',
+    scaling,
+    `RMS surface deviation was ${forward} (B to A) and ${reverse} (A to B) ${units}, based on 5,000 surface samples per direction.`
+  ].filter(Boolean).join(' ');
+  report.figureCaption = {label, description, view: viewMode.value, question};
+  $('meshFigureLabel').textContent = label;
+  $('meshFigureDescription').textContent = description;
+  $('meshCaptionStatus').textContent = '';
+}
+
+$('meshQuestion').addEventListener('input', updateCaption);
+$('meshCopyCaption').addEventListener('click', async () => {
+  if (!report?.figureCaption) return;
+  const {label, description} = report.figureCaption;
+  try {
+    await navigator.clipboard.writeText(label + '\n' + description);
+    $('meshCaptionStatus').textContent = 'Caption copied.';
+  } catch {
+    $('meshCaptionStatus').textContent = 'Select the caption text to copy it.';
+  }
+});
 
 function updateControls() {
   for (const slot of ['A', 'B']) {
@@ -304,7 +352,8 @@ async function runAnalysis() {
     const sB = summarize(dB);
     const sA = summarize(dA);
     const cap = Math.max(sB.p95, ra * 1e-9);
-    status.textContent='Generating heat map…';await pause();$('meshResult').hidden=false;show(a,b,tree,cap);let units=mode==='normalized'?'reference mesh units (B rescaled)':'input mesh units';$('meshLegend').textContent='Blue = 0; red ≥ '+cap.toPrecision(5)+' '+units+' (95th-percentile display cap).';$('meshStats').textContent='B → A: mean '+sB.mean.toPrecision(5)+'; RMS '+sB.rms.toPrecision(5)+'; P95 '+sB.p95.toPrecision(5)+'; sampled max '+sB.max.toPrecision(5)+'\nA → B: mean '+sA.mean.toPrecision(5)+'; RMS '+sA.rms.toPrecision(5)+'; P95 '+sA.p95.toPrecision(5)+'; sampled max '+sA.max.toPrecision(5)+'\nUnits: '+units+'; B scale factor: '+factor.toPrecision(8)+'\n5,000 area-distributed samples per direction. Inspect alignment before interpretation.';report={version:1,reference:fa.name,moving:fb.name,mode,units,scaleFactor:factor,transformColumnMajor:best.toArray(),displayCap:cap,summary:{BtoA:sB,AtoB:sA},samples:[...pB.map((p,i)=>['BtoA',...p.toArray(),dB[i]]),...pA.map((p,i)=>['AtoB',...p.toArray(),dA[i]])]};exp.disabled=false;status.textContent='Alignment complete.';
+    status.textContent='Generating heat map…';await pause();$('meshResult').hidden=false;show(a,b,tree,cap);let units=mode==='normalized'?'reference mesh units (B rescaled)':'input mesh units';$('meshLegend').textContent='Blue = 0; red ≥ '+cap.toPrecision(5)+' '+units+' (95th-percentile display cap).';$('meshStats').textContent='B → A: mean '+sB.mean.toPrecision(5)+'; RMS '+sB.rms.toPrecision(5)+'; P95 '+sB.p95.toPrecision(5)+'; sampled max '+sB.max.toPrecision(5)+'\nA → B: mean '+sA.mean.toPrecision(5)+'; RMS '+sA.rms.toPrecision(5)+'; P95 '+sA.p95.toPrecision(5)+'; sampled max '+sA.max.toPrecision(5)+'\nUnits: '+units+'; B scale factor: '+factor.toPrecision(8)+'\n5,000 area-distributed samples per direction. Inspect alignment before interpretation.';report={version:1,reference:fa.name,moving:fb.name,mode,units,scaleFactor:factor,transformColumnMajor:best.toArray(),displayCap:cap,summary:{BtoA:sB,AtoB:sA},samples:[...pB.map((p,i)=>['BtoA',...p.toArray(),dB[i]]),...pA.map((p,i)=>['AtoB',...p.toArray(),dA[i]])]};updateCaption();
+    exp.disabled=false;status.textContent='Alignment complete.';
     $('meshResultTitle').focus();} catch (e) {
     $('meshResult').hidden = true;
     status.textContent = 'Analysis failed: ' + e.message;

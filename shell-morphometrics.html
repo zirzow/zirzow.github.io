@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=viewer-2"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=caption-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Comparison</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
@@ -29,6 +29,11 @@
       </select>
     </label>
   </div>
+  <details class="az-card">
+    <summary>Add a research question (optional)</summary>
+    <label for="meshQuestion">Research question or comparison goal</label>
+    <input id="meshQuestion" type="text" maxlength="300" style="display:block;width:100%;box-sizing:border-box" placeholder="e.g., How do the two shell scans differ in shape?">
+  </details>
   <p id="meshStatus" role="status">Loading 3D analysis…</p>
   <section id="meshResult" hidden aria-labelledby="meshResultTitle">
     <h2 id="meshResultTitle" tabindex="-1">Aligned specimens</h2>
@@ -43,12 +48,20 @@
       </label>
       <button class="az-button secondary" type="button" id="meshReset">Reset view</button>
     </div>
-    <div id="meshView"></div>
-    <div id="meshColorKey">
-      <div class="shell-heat-key" aria-hidden="true"></div>
-      <p id="meshLegend"></p>
-    </div>
-    <p id="meshViewHint">Drag to rotate. Scroll or pinch to zoom. With the viewer focused, use arrow keys to rotate and + or − to zoom.</p>
+    <figure style="margin:0">
+      <div id="meshView"></div>
+      <div id="meshColorKey">
+        <div class="shell-heat-key" aria-hidden="true"></div>
+        <p id="meshLegend"></p>
+      </div>
+      <p id="meshViewHint">Drag to rotate. Scroll or pinch to zoom. With the viewer focused, use arrow keys to rotate and + or − to zoom.</p>
+      <figcaption>
+        <p><strong id="meshFigureLabel"></strong></p>
+        <p id="meshFigureDescription"></p>
+      </figcaption>
+    </figure>
+    <button class="az-button secondary" type="button" id="meshCopyCaption">Copy caption</button>
+    <span id="meshCaptionStatus" role="status"></span>
     <details class="az-card">
       <summary>Measurements &amp; export</summary>
       <pre id="meshStats"></pre>
