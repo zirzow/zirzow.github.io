@@ -178,7 +178,7 @@ function updateCaption() {
   const question = $('meshQuestion').value.trim();
   const reference = selected.A.title || report.reference;
   const moving = selected.B.title || report.moving;
-  const units = report.mode === 'normalized' ? 'reference mesh units' : 'input mesh units';
+  const units = report.calibration?.applied ? 'mm' : report.mode === 'normalized' ? 'reference mesh units' : 'input mesh units';
   const scaling = report.mode === 'normalized'
     ? `B was uniformly rescaled to match the RMS surface radius of A (scale factor ${report.scaleFactor.toPrecision(5)}).`
     : 'The original mesh sizes were preserved.';
@@ -292,9 +292,14 @@ function updateLandmarkGraphs() {
       const b = marks[slot].get(to);
       return a && b ? a.distanceTo(b) : null;
     };
-    return {label, from, to, A: distance('A'), B: distance('B')};
+    const A = distance('A');
+    const B = distance('B');
+    return {label, from, to, A, B, ratiosToAxialSpan: {
+      A: A === null ? null : A / report.shellProfiles.A.axialSpan,
+      B: B === null ? null : B / report.shellProfiles.B.axialSpan
+    }};
   }).filter(row => row.A !== null || row.B !== null);
-  const units = report.mode === 'normalized' ? 'reference mesh units (B rescaled)' : 'input mesh units';
+  const units = report.units;
   const maximum = Math.max(1e-15, ...measurements.flatMap(row => [row.A ?? 0, row.B ?? 0]));
   const bars = $('landmarkBars');
   bars.replaceChildren();
@@ -306,7 +311,7 @@ function updateLandmarkGraphs() {
     for (const slot of ['A', 'B']) {
       const line = document.createElement('p');
       const value = row[slot];
-      line.append(slot + ' · ' + (value === null ? 'Unmeasured' : value.toPrecision(5)) + ' ');
+      line.append(slot + ' · ' + (value === null ? 'Unmeasured' : value.toPrecision(5) + ' (' + (row.ratiosToAxialSpan[slot] * 100).toPrecision(4) + '% of axial span)') + ' ');
       if (value !== null) {
         const bar = document.createElement('meter');
         bar.max = maximum;
@@ -329,6 +334,10 @@ function updateLandmarkGraphs() {
     ])),
     measurements
   };
+  for (const slot of ['A', 'B']) {
+    report.specimens[slot] = originalSpecimenProfile(slot);
+    renderSpecimen(slot);
+  }
 }
 
 landmarkMark.addEventListener('click', () => {
@@ -430,7 +439,7 @@ function updateShellProfile() {
     ? A.type === B.type && A.type !== 'uncertain' ? A.type : 'general'
     : graphMode.value;
   $('shellTypeEstimate').textContent = `Shape estimate • A: ${typeLabels[A.type]} · B: ${typeLabels[B.type]}. Exploratory, unvalidated.`;
-  const units = report.mode === 'normalized' ? 'reference mesh units (B rescaled)' : 'input mesh units';
+  const units = report.units;
   const general = [['Axial span (central 95%)', 'axialSpan', units],
     ['Elongation (axial ÷ transverse RMS)', 'elongation', 'ratio']];
   const rows = mode === 'gastropod' ? [...general, ['Transverse RMS radius', 'transverseRms', units]]
@@ -467,9 +476,144 @@ function updateShellProfile() {
 
 graphMode.addEventListener('change', updateShellProfile);
 
+const specimenProfiles = {A: null, B: null};
+const specimenFields = Object.fromEntries(['A', 'B'].map(slot => [
+  slot, [...$('specimenFields' + slot).querySelectorAll('[data-field]')]
+]));
+
+function specimenRecord(slot) {
+  const record = Object.fromEntries(specimenFields[slot].map(input => [
+    input.dataset.field, input.value.trim() || null
+  ]));
+  const calibration = Number(record.mmPerMeshUnit);
+  record.mmPerMeshUnit = Number.isFinite(calibration) && calibration > 0 ? calibration : null;
+  return record;
+}
+
+function originalSpecimenProfile(slot) {
+  const profile = specimenProfiles[slot];
+  const record = specimenRecord(slot);
+  const factor = record.mmPerMeshUnit ?? 1;
+  const shape = profile.shape;
+  return {
+    version: 1, specimen: slot, filename: profile.filename, record,
+    shellTypeEstimate: shape.type,
+    dimensions: {
+      units: record.mmPerMeshUnit ? 'mm' : 'mesh units',
+      axialSpan95: shape.axialSpan * factor,
+      transverseRmsRadius: shape.transverseRms * factor,
+      depthAcrossMirrorPlane95: shape.planeDepth * factor
+    },
+    landmarkMeasurements: (report?.landmarkAnalysis?.measurements ?? [])
+      .filter(row => row.ratiosToAxialSpan[slot] !== null)
+      .map(row => {
+        const ratio = row.ratiosToAxialSpan[slot];
+        return {label: row.label, distance: ratio * shape.axialSpan * factor, ratioToAxialSpan: ratio};
+      }),
+    ratios: {
+      transverseRmsToAxialSpan: shape.transverseRms / shape.axialSpan,
+      depthToAxialSpan: shape.planeDepth / shape.axialSpan,
+      elongation: shape.elongation,
+      normalizedMirrorMismatch: shape.reflectionError
+    }
+  };
+}
+
+function renderSpecimen(slot) {
+  const panel = $('specimenProfile' + slot);
+  panel.hidden = !specimenProfiles[slot];
+  if (panel.hidden) return;
+  const {filename, dimensions, ratios, shellTypeEstimate, landmarkMeasurements} = originalSpecimenProfile(slot);
+  const values = $('specimenValues' + slot);
+  values.replaceChildren();
+  const format = value => value.toPrecision(5);
+  const rows = [
+    ['File', filename],
+    ['Shell type estimate', typeLabels[shellTypeEstimate]],
+    ['Axial span (central 95%)', format(dimensions.axialSpan95) + ' ' + dimensions.units],
+    ['Transverse RMS radius', format(dimensions.transverseRmsRadius) + ' ' + dimensions.units],
+    ['Depth across mirror plane (central 95%)', format(dimensions.depthAcrossMirrorPlane95) + ' ' + dimensions.units],
+    ['Transverse RMS radius ÷ axial span', format(ratios.transverseRmsToAxialSpan)],
+    ['Depth ÷ axial span', format(ratios.depthToAxialSpan)],
+    ...landmarkMeasurements.map(({label, distance, ratioToAxialSpan}) => [
+      label, format(distance) + ' ' + dimensions.units + ' (' + format(ratioToAxialSpan * 100) + '% of axial span)'
+    ])
+  ];
+  for (const [label, value] of rows) {
+    const term = document.createElement('dt');
+    term.textContent = label;
+    const description = document.createElement('dd');
+    description.textContent = value;
+    values.append(term, description);
+  }
+}
+
+function measureSpecimen(slot, file, geometry, tree) {
+  const shape = shellShape(sample(geometry, 5000), tree);
+  if (!(shape.axialSpan > 0)) throw Error('Specimen has no measurable axial span.');
+  specimenProfiles[slot] = {filename: file.name, shape};
+  renderSpecimen(slot);
+  $('specimenStatus' + slot).textContent = '';
+  return shape;
+}
+
+function downloadJSON(data, filename) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function replaceSpecimen(slot, selection) {
+  if (selected[slot] === selection) return;
+  if (selected[slot]) {
+    for (const input of specimenFields[slot]) input.value = '';
+  }
+  selected[slot] = selection;
+  specimenProfiles[slot] = null;
+  renderSpecimen(slot);
+  $('specimenStatus' + slot).textContent = '';
+}
+
+async function runSpecimen(slot) {
+  busy = true;
+  updateControls();
+  const message = $('specimenStatus' + slot);
+  let geometry;
+  try {
+    message.textContent = 'Measuring specimen ' + slot + '…';
+    await pause();
+    const file = await readSelection(selected[slot]);
+    geometry = await load(file);
+    measureSpecimen(slot, file, geometry, new MeshBVH(geometry));
+  } catch (error) {
+    message.textContent = 'Specimen analysis failed: ' + error.message;
+  } finally {
+    geometry?.dispose();
+    busy = false;
+    updateControls();
+  }
+}
+
+for (const slot of ['A', 'B']) {
+  $('specimenRun' + slot).addEventListener('click', () => runSpecimen(slot));
+  $('specimenExport' + slot).addEventListener('click', () =>
+    downloadJSON(originalSpecimenProfile(slot), 'shell-specimen-' + slot + '.json'));
+  $('specimenFields' + slot).addEventListener('input', event => {
+    renderSpecimen(slot);
+    if (!report) return;
+    if (event.target.dataset.field === 'mmPerMeshUnit') clearResults();
+    else report.specimens[slot] = originalSpecimenProfile(slot);
+  });
+}
+
 function updateControls() {
   for (const slot of ['A', 'B']) {
     inputs[slot].disabled = busy;
+    $('specimenRun' + slot).disabled = busy || !selected[slot];
+    $('specimenFields' + slot).disabled = busy;
     $('example' + slot).disabled = busy;
   }
   scale.disabled = pair.disabled = busy;
@@ -477,7 +621,12 @@ function updateControls() {
 }
 
 function clearResults() {
+  const hadLandmarks = Boolean(report?.landmarkAnalysis);
   report = null;
+  if (hadLandmarks) {
+    renderSpecimen('A');
+    renderSpecimen('B');
+  }
   marks.A.clear();
   marks.B.clear();
   markerGroup.clear();
@@ -491,7 +640,7 @@ function clearResults() {
 
 function selectExample(slot) {
   inputs[slot].value = '';
-  selected[slot] = examples[slot];
+  replaceSpecimen(slot, examples[slot]);
   $('selection' + slot).textContent = examples[slot].title + ' selected.';
 }
 
@@ -520,7 +669,7 @@ async function readSelection(selection) {
 
 for (const slot of ['A', 'B']) {
   inputs[slot].addEventListener('change', () => {
-    selected[slot] = inputs[slot].files[0] ?? null;
+    replaceSpecimen(slot, inputs[slot].files[0] ?? null);
     $('selection' + slot).textContent = '';
     clearResults();
     updateControls();
@@ -557,6 +706,22 @@ async function runAnalysis() {
     const fb = await readSelection(selected.B);
     const b = await load(fb);
     const mode = scale.value;
+    const meshA = specimenRecord('A').mmPerMeshUnit;
+    const meshB = specimenRecord('B').mmPerMeshUnit;
+    const calibrated = Boolean(meshA && meshB);
+    if (mode === 'rigid' && Boolean(meshA) !== Boolean(meshB)) {
+      throw Error('Calibrate both meshes for original-size comparison, or choose Match sizes.');
+    }
+    status.textContent = 'Measuring specimens before alignment…';
+    await pause();
+    const rawTreeA = new MeshBVH(a);
+    const rawTreeB = new MeshBVH(b);
+    const originalA = specimenProfiles.A?.shape ?? measureSpecimen('A', fa, a, rawTreeA);
+    const originalB = specimenProfiles.B?.shape ?? measureSpecimen('B', fb, b, rawTreeB);
+    const calibrationA = calibrated ? meshA : 1;
+    const calibrationB = calibrated ? meshB : 1;
+    if (calibrationA !== 1) a.scale(calibrationA, calibrationA, calibrationA);
+    if (calibrationB !== 1) b.scale(calibrationB, calibrationB, calibrationB);
     const sa = sample(a, 1800);
     const sb = sample(b, 1800);
     const ca = center(sa);
@@ -565,8 +730,8 @@ async function runAnalysis() {
     const rb = rmsRadius(sb, cb);
     if (!ra || !rb) throw Error('Degenerate mesh.');
     const factor = mode === 'normalized' ? ra / rb : 1;
-    const tree = new MeshBVH(a);
-    const originalTreeB = new MeshBVH(b);
+    const tree = calibrationA === 1 ? rawTreeA : new MeshBVH(a);
+    const originalTreeB = calibrationB === 1 ? rawTreeB : new MeshBVH(b);
     const smallA = sa.filter((_, index) => index % 4 === 0);
     const smallB = sb.filter((_, index) => index % 4 === 0);
     const candidates = [];
@@ -616,11 +781,21 @@ async function runAnalysis() {
     const dA = pA.map(point => point.distanceTo(closest(treeB, point)));
     const sB = summarize(dB);
     const sA = summarize(dA);
-    status.textContent = 'Estimating shell type and measuring shape…';
-    await pause();
-    const shellProfiles = {A: shellShape(pA, tree), B: shellShape(pB, treeB)};
+    const profileAtScale = (shape, factor) => ({
+      ...shape, axialSpan: shape.axialSpan * factor, transverseRms: shape.transverseRms * factor,
+      planeDepth: shape.planeDepth * factor
+    });
+    const shellProfiles = {
+      A: profileAtScale(originalA, calibrationA),
+      B: profileAtScale(originalB, calibrationB * factor)
+    };
     const cap = Math.max(sB.p95, ra * 1e-9);
-    status.textContent='Generating heat map…';await pause();$('meshResult').hidden=false;show(a,b,tree,cap);let units=mode==='normalized'?'reference mesh units (B rescaled)':'input mesh units';$('meshLegend').textContent='Blue = 0; red ≥ '+cap.toPrecision(5)+' '+units+' (95th-percentile display cap).';$('meshStats').textContent='B → A: mean '+sB.mean.toPrecision(5)+'; RMS '+sB.rms.toPrecision(5)+'; P95 '+sB.p95.toPrecision(5)+'; sampled max '+sB.max.toPrecision(5)+'\nA → B: mean '+sA.mean.toPrecision(5)+'; RMS '+sA.rms.toPrecision(5)+'; P95 '+sA.p95.toPrecision(5)+'; sampled max '+sA.max.toPrecision(5)+'\nUnits: '+units+'; B scale factor: '+factor.toPrecision(8)+'\n5,000 area-distributed samples per direction. Inspect alignment before interpretation.';report={version:1,reference:fa.name,moving:fb.name,mode,units,scaleFactor:factor,transformColumnMajor:best.toArray(),displayCap:cap,summary:{BtoA:sB,AtoB:sA},samples:[...pB.map((p,i)=>['BtoA',...p.toArray(),dB[i]]),...pA.map((p,i)=>['AtoB',...p.toArray(),dA[i]])]};updateCaption();
+    status.textContent='Generating heat map…';await pause();$('meshResult').hidden=false;show(a,b,tree,cap);const units=calibrated?'mm':mode==='normalized'?'reference mesh units (B rescaled)':'input mesh units';$('meshLegend').textContent='Blue = 0; red ≥ '+cap.toPrecision(5)+' '+units+' (95th-percentile display cap).';$('meshStats').textContent='B → A: mean '+sB.mean.toPrecision(5)+'; RMS '+sB.rms.toPrecision(5)+'; P95 '+sB.p95.toPrecision(5)+'; sampled max '+sB.max.toPrecision(5)+'\nA → B: mean '+sA.mean.toPrecision(5)+'; RMS '+sA.rms.toPrecision(5)+'; P95 '+sA.p95.toPrecision(5)+'; sampled max '+sA.max.toPrecision(5)+'\nUnits: '+units+'; B scale factor: '+factor.toPrecision(8)+'\n5,000 area-distributed samples per direction. Inspect alignment before interpretation.';report={version:1,reference:fa.name,moving:fb.name,mode,units,scaleFactor:factor,transformColumnMajor:best.toArray(),displayCap:cap,summary:{BtoA:sB,AtoB:sA},samples:[...pB.map((p,i)=>['BtoA',...p.toArray(),dB[i]]),...pA.map((p,i)=>['AtoB',...p.toArray(),dA[i]])]};
+    report.calibration = {applied: calibrated, mmPerMeshUnit: {A: meshA, B: meshB}};
+    report.transformFrame = calibrated ? 'calibrated input B (mm) to calibrated reference A (mm)' : 'input B mesh units to reference A mesh units';
+    report.transformInputBToOutputColumnMajor = best.clone().scale(V(calibrationB, calibrationB, calibrationB)).toArray();
+    report.specimens = {A: originalSpecimenProfile('A'), B: originalSpecimenProfile('B')};
+    updateCaption();
     report.shellProfiles = shellProfiles;
     graphMode.value = 'auto';
     updateShellProfile();
@@ -633,6 +808,6 @@ async function runAnalysis() {
     updateControls();
   }
 }
-exp.onclick=()=>{if(!report)return;const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='shell-surface-analysis.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+exp.onclick = () => { if (report) downloadJSON(report, 'shell-surface-analysis.json'); };
 clearResults();
 updateControls();

@@ -1,10 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=shape-profile-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=specimen-profile-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Comparison</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
 </section>
 <section class="az-wrap shell-compare" id="mesh-lab">
   <div id="sample-comparison"></div>
+  <p>Analyze one shell on its own, or select two to compare. Museum records and scan scale are optional.</p>
   <div class="shell-inputs">
     <article class="az-card">
       <label for="meshA"><strong>A · Reference specimen</strong></label>
@@ -12,6 +13,24 @@
       <button class="az-button secondary" type="button" id="exampleA" disabled>Use example: Horse Conch</button>
       <small><a href="#source-1">University of South Florida Libraries · CC BY-NC-ND 4.0</a></small>
       <span id="selectionA" role="status"></span>
+      <details>
+        <summary>Museum record &amp; scan scale</summary>
+        <fieldset id="specimenFieldsA" style="display:grid;gap:.55rem">
+          <legend>Specimen A record</legend>
+          <label>Museum catalog number <input data-field="catalogNumber" type="text"></label>
+          <label>Collection date as recorded <input data-field="collectionDate" type="text" placeholder="e.g., 1982"></label>
+          <label>Collection locality <input data-field="locality" type="text"></label>
+          <label>Age or life stage <input data-field="ageOrLifeStage" type="text" placeholder="Unknown"></label>
+          <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
+        </fieldset>
+      </details>
+      <button class="az-button secondary" type="button" id="specimenRunA" disabled>Analyze specimen A</button>
+      <p id="specimenStatusA" role="status"></p>
+      <div id="specimenProfileA" hidden>
+        <h3>Specimen A profile</h3>
+        <dl id="specimenValuesA"></dl>
+        <button class="az-button secondary" type="button" id="specimenExportA">Download specimen profile</button>
+      </div>
     </article>
     <article class="az-card">
       <label for="meshB"><strong>B · Moving specimen</strong></label>
@@ -19,6 +38,24 @@
       <button class="az-button secondary" type="button" id="exampleB" disabled>Use example: Filamentous Horse Conch</button>
       <small><a href="#source-2">RISD Nature Lab · CC BY 4.0</a></small>
       <span id="selectionB" role="status"></span>
+      <details>
+        <summary>Museum record &amp; scan scale</summary>
+        <fieldset id="specimenFieldsB" style="display:grid;gap:.55rem">
+          <legend>Specimen B record</legend>
+          <label>Museum catalog number <input data-field="catalogNumber" type="text"></label>
+          <label>Collection date as recorded <input data-field="collectionDate" type="text" placeholder="e.g., 1982"></label>
+          <label>Collection locality <input data-field="locality" type="text"></label>
+          <label>Age or life stage <input data-field="ageOrLifeStage" type="text" placeholder="Unknown"></label>
+          <label>Millimeters per mesh unit <input data-field="mmPerMeshUnit" type="number" min="0" step="any" placeholder="Unknown"></label>
+        </fieldset>
+      </details>
+      <button class="az-button secondary" type="button" id="specimenRunB" disabled>Analyze specimen B</button>
+      <p id="specimenStatusB" role="status"></p>
+      <div id="specimenProfileB" hidden>
+        <h3>Specimen B profile</h3>
+        <dl id="specimenValuesB"></dl>
+        <button class="az-button secondary" type="button" id="specimenExportB">Download specimen profile</button>
+      </div>
     </article>
   </div>
   <div class="shell-actions">
@@ -27,10 +64,14 @@
     <label>Scale
       <select id="meshScale">
         <option value="rigid">Keep original size</option>
-        <option value="normalized">Match sizes</option>
+        <option value="normalized" selected>Match sizes</option>
       </select>
     </label>
   </div>
+  <details class="az-card">
+    <summary>Size, scale &amp; age</summary>
+    <p>Individual profiles preserve dimensions before rescaling. Enter calibration for both scans to compare in millimeters. Keep original size requires comparable units. Match sizes compares shape after uniform rescaling. Growth can change proportions, and collection date records when a specimen was collected. Enter age or life stage only when known.</p>
+  </details>
   <details class="az-card">
     <summary>Add a research question (optional)</summary>
     <label for="meshQuestion">Research question or comparison goal</label>
