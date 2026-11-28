@@ -187,7 +187,7 @@ function updateCaption() {
     : '';
   const forward = report.summary.BtoA.rms.toPrecision(5);
   const reverse = report.summary.AtoB.rms.toPrecision(5);
-  const label = `Figure 1. ${title} — ${moving} (B) vs. ${reference} (A)`;
+  const label = `Figure 3. ${title} — ${moving} (B) vs. ${reference} (A)`;
   const description = [
     question ? `Comparison goal: ${question}` : '',
     viewDescription + legend,
@@ -622,18 +622,21 @@ function renderRatioPlot(rows) {
 function renderAxialCaption(slot, widths) {
   const question = $('meshQuestion').value.trim();
   const specimen = selected[slot]?.title || specimenProfiles[slot].filename;
-  $('specimenAxialTitle' + slot).textContent = 'Axial width profile of ' + specimen +
-    (question ? ' · ' + question : '');
-  const measured = widths.filter(section => section.ratioToAxialSpan !== null);
-  const peak = measured.reduce((best, section) =>
+  const figure = slot === 'A' ? 1 : 2;
+  $('specimenAxialTitle' + slot).textContent =
+    'Figure ' + figure + '. Axial width profile of ' + specimen + ' (specimen ' + slot + ').';
+  const peak = widths.filter(section => section.ratioToAxialSpan !== null).reduce((best, section) =>
     best && best.ratioToAxialSpan >= section.ratioToAxialSpan ? best : section, null);
   const finding = peak
-    ? 'The widest sampled section falls at ' + peak.startPercent + '–' + peak.endPercent +
-      '% along the axis and measures ' + formatPercentage(peak.ratioToAxialSpan) + ' of axial span.'
-    : 'The sections have insufficient points for a width estimate.';
-  $('specimenAxialCaption' + slot).textContent = finding +
-    ' Dots sit at section midpoints. Width is the side-view spread between the 5th and 95th percentiles of sampled points, divided by axial span.' +
-    ' Positions follow the scan’s computed axis.';
+    ? ' Maximum estimated width was ' +
+      (peak.ratioToAxialSpan * 100).toLocaleString(undefined, {maximumSignificantDigits: 3}) +
+      '% of axial span in the ' + peak.startPercent + '–' + peak.endPercent + '% interval.'
+    : ' Surface sampling was insufficient to estimate section widths.';
+  const context = question ? ' Research question: ' + question + (/[.!?]$/.test(question) ? '' : '.') : '';
+  $('specimenAxialCaption' + slot).textContent =
+    ' Points represent the midpoints of eight equal-length intervals along the computed principal axis.' +
+    ' Section width is the difference between the 95th and 5th percentiles of transverse surface coordinates in the side projection, expressed as a percentage of axial span.' +
+    finding + context;
 }
 
 $('meshQuestion').addEventListener('input', () => {
