@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=examples-live"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=landmarks-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Comparison</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
@@ -50,6 +50,24 @@
       </label>
       <button class="az-button secondary" type="button" id="meshReset">Reset view</button>
     </div>
+    <details class="az-card" id="meshLandmarks">
+      <summary>Measure shell features</summary>
+      <p>Choose a specimen and a landmark, then select <strong>Mark on shell</strong> and click the feature in the viewer. Use matching anatomical points and leave absent features blank.</p>
+      <div class="shell-actions">
+        <label>Specimen <select id="landmarkShell"><option value="A">A · Reference</option><option value="B">B · Moving</option></select></label>
+        <label>Landmark
+          <select id="landmarkPoint">
+            <option>Apex</option><option>Siphonal canal tip</option>
+            <option>Spine 1 base</option><option>Spine 1 tip</option><option>Spine 2 tip</option>
+            <option>Aperture edge 1</option><option>Aperture edge 2</option>
+            <option>Umbo</option><option>Ventral margin</option>
+          </select>
+        </label>
+        <button class="az-button secondary" type="button" id="landmarkMark" aria-pressed="false">Mark on shell</button>
+        <button class="az-button secondary" type="button" id="landmarkRemove" disabled>Remove mark</button>
+      </div>
+      <p id="landmarkStatus" role="status"></p>
+    </details>
     <figure style="margin:0">
       <div id="meshView"></div>
       <div id="meshColorKey">
@@ -64,6 +82,11 @@
     </figure>
     <button class="az-button secondary" type="button" id="meshCopyCaption">Copy caption</button>
     <span id="meshCaptionStatus" role="status"></span>
+    <section id="landmarkGraphs" hidden aria-labelledby="landmarkGraphHeading">
+      <h3 id="landmarkGraphHeading">Shell feature distances</h3>
+      <p id="landmarkUnits"></p>
+      <div id="landmarkBars"></div>
+    </section>
     <details class="az-card">
       <summary>Measurements &amp; export</summary>
       <pre id="meshStats"></pre>

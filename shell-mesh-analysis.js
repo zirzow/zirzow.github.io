@@ -25,12 +25,21 @@ function init() {
   controls = new OrbitControls(camera, canvas);
   controls.addEventListener('change', draw);
   group = new T.Group();
-  scene.add(group, new T.HemisphereLight(0xeaf5ff, 0x596673, 2.2));
+  scene.add(group, markerGroup, new T.HemisphereLight(0xeaf5ff, 0x596673, 2.2));
   const light = new T.DirectionalLight(0xffffff, 2.3);
   light.position.set(1, 2, 3);
   camera.add(light);
   scene.add(camera);
   new ResizeObserver(draw).observe(view);
+  canvas.addEventListener('pointerdown', event => {
+    if (armed && event.isPrimary && event.button === 0) {
+      pointerStart = {id: event.pointerId, x: event.clientX, y: event.clientY};
+    } else {
+      pointerStart = null;
+    }
+  });
+  canvas.addEventListener('pointerup', pickLandmark);
+  canvas.addEventListener('pointercancel', () => { pointerStart = null; });
   canvas.addEventListener('keydown', event => {
     const offset = camera.position.clone().sub(controls.target);
     const orbit = new T.Spherical().setFromVector3(offset);
@@ -119,6 +128,7 @@ function updateView() {
       (mesh.name === 'moving' || mesh.name === 'wireframe'));
   }
   $('meshColorKey').hidden = mode !== 'heat';
+  drawMarks();
   draw();
   updateCaption();
 }
@@ -140,7 +150,10 @@ function resetView() {
   draw();
 }
 
-viewMode.addEventListener('change', updateView);
+viewMode.addEventListener('change', () => {
+  updateMarkSelection();
+  updateView();
+});
 $('meshReset').addEventListener('click', resetView);
 
 const examples = {
@@ -200,6 +213,149 @@ $('meshCopyCaption').addEventListener('click', async () => {
   }
 });
 
+const landmarkShell = $('landmarkShell');
+const landmarkPoint = $('landmarkPoint');
+const landmarkMark = $('landmarkMark');
+const landmarkRemove = $('landmarkRemove');
+const landmarkStatus = $('landmarkStatus');
+const marks = {A: new Map(), B: new Map()};
+const markerGroup = new T.Group();
+const markerGeometry = new T.SphereGeometry(1, 12, 8);
+const markerMaterial = new T.MeshBasicMaterial({color: 0xffde57, depthTest: false});
+const raycaster = new T.Raycaster();
+raycaster.firstHitOnly = true;
+let armed = false;
+let pointerStart = null;
+
+const landmarkPairs = [
+  ['Apex to siphonal canal tip', 'Apex', 'Siphonal canal tip'],
+  ['Spine 1 length (base to tip)', 'Spine 1 base', 'Spine 1 tip'],
+  ['Spine tip spacing', 'Spine 1 tip', 'Spine 2 tip'],
+  ['Aperture width between marks', 'Aperture edge 1', 'Aperture edge 2'],
+  ['Umbo to ventral margin (bivalves)', 'Umbo', 'Ventral margin']
+];
+
+function setMarking(value) {
+  armed = value;
+  pointerStart = null;
+  landmarkMark.setAttribute('aria-pressed', String(value));
+  landmarkMark.textContent = value ? 'Cancel marking' : 'Mark on shell';
+}
+
+function updateMarkSelection() {
+  setMarking(false);
+  const marked = marks[landmarkShell.value].has(landmarkPoint.value);
+  landmarkRemove.disabled = !marked;
+  landmarkStatus.textContent = marked ? 'Point marked. Select Mark on shell to replace it.' : '';
+}
+
+function drawMarks() {
+  markerGroup.clear();
+  const slot = viewMode.value === 'reference' ? 'A' : viewMode.value === 'moving' ? 'B' : null;
+  if (!slot || !$('meshLandmarks').open || !viewBounds) return;
+  for (const point of marks[slot].values()) {
+    const marker = new T.Mesh(markerGeometry, markerMaterial);
+    marker.position.copy(point);
+    marker.scale.setScalar(viewBounds.radius * .012);
+    marker.renderOrder = 1;
+    markerGroup.add(marker);
+  }
+}
+
+function pickLandmark(event) {
+  if (!armed || !pointerStart || event.pointerId !== pointerStart.id ||
+      Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 5) return;
+  const slot = landmarkShell.value;
+  const target = group.getObjectByName(slot === 'A' ? 'reference' : 'moving');
+  const rect = renderer.domElement.getBoundingClientRect();
+  raycaster.setFromCamera(new T.Vector2(
+    2 * (event.clientX - rect.left) / rect.width - 1,
+    1 - 2 * (event.clientY - rect.top) / rect.height
+  ), camera);
+  const hit = raycaster.intersectObject(target, false)[0];
+  if (!hit) {
+    landmarkStatus.textContent = 'Click directly on the shell surface.';
+    return;
+  }
+  marks[slot].set(landmarkPoint.value, hit.point.clone());
+  updateMarkSelection();
+  updateLandmarkGraphs();
+  drawMarks();
+  draw();
+}
+
+function updateLandmarkGraphs() {
+  if (!report) return;
+  const measurements = landmarkPairs.map(([label, from, to]) => {
+    const distance = slot => {
+      const a = marks[slot].get(from);
+      const b = marks[slot].get(to);
+      return a && b ? a.distanceTo(b) : null;
+    };
+    return {label, from, to, A: distance('A'), B: distance('B')};
+  }).filter(row => row.A !== null || row.B !== null);
+  const units = report.mode === 'normalized' ? 'reference mesh units (B rescaled)' : 'input mesh units';
+  const maximum = Math.max(1e-15, ...measurements.flatMap(row => [row.A ?? 0, row.B ?? 0]));
+  const bars = $('landmarkBars');
+  bars.replaceChildren();
+  for (const row of measurements) {
+    const block = document.createElement('section');
+    const heading = document.createElement('h4');
+    heading.textContent = row.label;
+    block.append(heading);
+    for (const slot of ['A', 'B']) {
+      const line = document.createElement('p');
+      const value = row[slot];
+      line.append(slot + ' · ' + (value === null ? 'Unmeasured' : value.toPrecision(5)) + ' ');
+      if (value !== null) {
+        const bar = document.createElement('meter');
+        bar.max = maximum;
+        bar.value = value;
+        bar.setAttribute('aria-hidden', 'true');
+        bar.style.width = 'min(55%, 28rem)';
+        line.append(bar);
+      }
+      block.append(line);
+    }
+    bars.append(block);
+  }
+  $('landmarkUnits').textContent = 'Straight-line distances in ' + units + '. All bars share the same scale.';
+  $('landmarkGraphs').hidden = !measurements.length;
+  report.landmarkAnalysis = {
+    coordinateFrame: 'aligned reference frame',
+    units,
+    points: Object.fromEntries(['A', 'B'].map(slot => [
+      slot, Object.fromEntries([...marks[slot]].map(([label, point]) => [label, point.toArray()]))
+    ])),
+    measurements
+  };
+}
+
+landmarkMark.addEventListener('click', () => {
+  if (armed) {
+    updateMarkSelection();
+    return;
+  }
+  viewMode.value = landmarkShell.value === 'A' ? 'reference' : 'moving';
+  updateView();
+  setMarking(true);
+  landmarkStatus.textContent = 'Click ' + landmarkPoint.value + ' on specimen ' + landmarkShell.value + '.';
+});
+landmarkRemove.addEventListener('click', () => {
+  marks[landmarkShell.value].delete(landmarkPoint.value);
+  updateMarkSelection();
+  updateLandmarkGraphs();
+  drawMarks();
+  draw();
+});
+landmarkShell.addEventListener('change', updateMarkSelection);
+landmarkPoint.addEventListener('change', updateMarkSelection);
+$('meshLandmarks').addEventListener('toggle', () => {
+  if (!$('meshLandmarks').open) updateMarkSelection();
+  drawMarks();
+  draw();
+});
+
 function updateControls() {
   for (const slot of ['A', 'B']) {
     inputs[slot].disabled = busy;
@@ -211,6 +367,11 @@ function updateControls() {
 
 function clearResults() {
   report = null;
+  marks.A.clear();
+  marks.B.clear();
+  markerGroup.clear();
+  updateMarkSelection();
+  $('landmarkGraphs').hidden = true;
   exp.disabled = true;
   $('meshStats').textContent = '';
   $('meshResult').hidden = true;
