@@ -368,7 +368,7 @@ $('meshLandmarks').addEventListener('toggle', () => {
 const graphMode = $('shellGraphMode');
 const typeLabels = {gastropod: 'gastropod-like', bivalve: 'bivalve-like', uncertain: 'uncertain'};
 
-function shellShape(points, tree) {
+function shellShape(points, tree, withProjection = false) {
   const centroid = center(points);
   const radius = rmsRadius(points, centroid);
   const centered = points.map(point => point.clone().sub(centroid));
@@ -429,7 +429,9 @@ function shellShape(points, tree) {
   const planeDepth = percentile(depth, .975) - percentile(depth, .025);
   const type = best.error <= .045 && elongation < 1.45 ? 'bivalve'
     : best.error >= .10 && elongation >= 1.25 ? 'gastropod' : 'uncertain';
-  return {type, reflectionError: best.error, elongation, axialSpan, transverseRms, planeDepth};
+  const shape = {type, reflectionError: best.error, elongation, axialSpan, transverseRms, planeDepth};
+  if (withProjection) shape.projection = projectSpecimen(points, centroid, major, multiply);
+  return shape;
 }
 
 function updateShellProfile() {
@@ -475,6 +477,70 @@ function updateShellProfile() {
 }
 
 graphMode.addEventListener('change', updateShellProfile);
+
+function projectSpecimen(points, centroid, major, multiply) {
+  const perpendicular = direction => direction.addScaledVector(major, -direction.dot(major)).normalize();
+  const candidates = [V(1, 0, 0), V(0, 1, 0), V(0, 0, 1)];
+  const side = candidates.map(perpendicular).map(axis => {
+    for (let step = 0; step < 18; step++) axis = perpendicular(multiply(axis));
+    return axis;
+  }).sort((a, b) => b.dot(multiply(b)) - a.dot(multiply(a)))[0];
+  const across = major.clone().cross(side).normalize();
+  return points.map(point => {
+    const offset = point.clone().sub(centroid);
+    return [offset.dot(major), offset.dot(side), offset.dot(across)];
+  });
+}
+
+function drawSpecimenProjection(canvas, projection, axis) {
+  const context = canvas.getContext('2d');
+  if (!context) return;
+  const {width, height} = canvas;
+  const xs = projection.map(point => point[0]);
+  const lowX = Math.min(...xs);
+  const highX = Math.max(...xs);
+  const maxCross = Math.max(...projection.map(point => Math.max(Math.abs(point[1]), Math.abs(point[2]))));
+  const scale = Math.min((width - 58) / (highX - lowX), (height - 44) / Math.max(maxCross * 2, 1e-12));
+  const x = value => width / 2 + (value - (lowX + highX) / 2) * scale;
+  const y = value => height / 2 - value * scale;
+  context.fillStyle = '#142334';
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = '#6997aa';
+  context.setLineDash([6, 8]);
+  context.beginPath();
+  context.moveTo(20, height / 2);
+  context.lineTo(width - 20, height / 2);
+  context.stroke();
+  context.fillStyle = '#a4e8f7';
+  context.globalAlpha = .65;
+  context.beginPath();
+  for (const point of projection) context.rect(x(point[0]) - 1.2, y(point[axis]) - 1.2, 2.4, 2.4);
+  context.fill();
+  context.globalAlpha = 1;
+}
+
+function renderSpecimenRatios(slot, ratios) {
+  const container = $('specimenRatios' + slot);
+  container.replaceChildren();
+  const rows = [
+    ['Axial span', 1],
+    ['Transverse RMS radius', ratios.transverseRmsToAxialSpan],
+    ['Depth across mirror plane', ratios.depthToAxialSpan]
+  ];
+  const maximum = Math.max(...rows.map(([, value]) => value));
+  for (const [label, value] of rows) {
+    const row = document.createElement('div');
+    row.className = 'shell-proportion';
+    const caption = document.createElement('span');
+    caption.textContent = label + ' · ' + (100 * value).toLocaleString(undefined, {maximumFractionDigits: 1}) + '%';
+    const meter = document.createElement('meter');
+    meter.max = maximum;
+    meter.value = value;
+    meter.setAttribute('aria-hidden', 'true');
+    row.append(caption, meter);
+    container.append(row);
+  }
+}
 
 const specimenProfiles = {A: null, B: null};
 const specimenFields = Object.fromEntries(['A', 'B'].map(slot => [
@@ -524,6 +590,12 @@ function renderSpecimen(slot) {
   panel.hidden = !specimenProfiles[slot];
   if (panel.hidden) return;
   const {filename, dimensions, ratios, shellTypeEstimate, landmarkMeasurements} = originalSpecimenProfile(slot);
+  $('specimenSummary' + slot).textContent = filename + ' · ' + typeLabels[shellTypeEstimate] +
+    ' · axial span ' + dimensions.axialSpan95.toPrecision(5) + ' ' + dimensions.units;
+  const projection = specimenProfiles[slot].projection;
+  drawSpecimenProjection($('specimenSide' + slot), projection, 1);
+  drawSpecimenProjection($('specimenCross' + slot), projection, 2);
+  renderSpecimenRatios(slot, ratios);
   const values = $('specimenValues' + slot);
   values.replaceChildren();
   const format = value => value.toPrecision(5);
@@ -549,9 +621,9 @@ function renderSpecimen(slot) {
 }
 
 function measureSpecimen(slot, file, geometry, tree) {
-  const shape = shellShape(sample(geometry, 5000), tree);
+  const {projection, ...shape} = shellShape(sample(geometry, 5000), tree, true);
   if (!(shape.axialSpan > 0)) throw Error('Specimen has no measurable axial span.');
-  specimenProfiles[slot] = {filename: file.name, shape};
+  specimenProfiles[slot] = {filename: file.name, shape, projection};
   renderSpecimen(slot);
   $('specimenStatus' + slot).textContent = '';
   return shape;
@@ -588,6 +660,7 @@ async function runSpecimen(slot) {
     const file = await readSelection(selected[slot]);
     geometry = await load(file);
     measureSpecimen(slot, file, geometry, new MeshBVH(geometry));
+    $('specimenHeading' + slot).focus();
   } catch (error) {
     message.textContent = 'Specimen analysis failed: ' + error.message;
   } finally {

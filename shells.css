@@ -1,12 +1,4 @@
 .shell-hero{padding-top:36px;padding-bottom:36px}.shell-hero h1{font-size:clamp(2.4rem,5.6vw,5rem);line-height:1.04}.shell-portrait{margin:0;max-width:420px;justify-self:center}.shell-portrait[hidden]{display:none}.shell-portrait img{display:block;width:100%;height:auto;border-radius:16px}.shell-portrait figcaption{font-size:13px;color:var(--az-muted);margin-top:8px}.shell-hero.az-bridge{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}@media(max-width:750px){.shell-hero.az-bridge{grid-template-columns:1fr}.shell-portrait{max-width:300px}}
-.shell-inputs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
-  gap: 1rem;
-}
-.shell-inputs article { display: grid; gap: .75rem; justify-items: start; min-width: 0; }
-.shell-inputs input { max-width: 100%; }
-.shell-inputs span:empty { display: none; }
 .shell-actions { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; margin-block: 1rem; }
 .shell-actions select { font: inherit; padding: .35rem; }
 .shell-compare [hidden] { display: none !important; }
@@ -27,3 +19,20 @@
 #meshStats { white-space: pre-wrap; overflow-wrap: anywhere; }
 #meshViewHint, #meshLegend { font-size: .9rem; }
 #meshResultTitle { scroll-margin-top: 6rem; }
+
+.shell-specimen { display: grid; gap: .7rem; justify-items: start; }
+.shell-specimen input { max-width: 100%; }
+.shell-specimen [id^="specimenProfile"] { width: 100%; min-width: 0; }
+.shell-specimen [role="status"]:empty { display: none; }
+.shell-comparison-options { margin-top: 1rem; }
+.shell-projections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: .85rem;
+}
+.shell-projections figure { margin: 0; }
+.shell-projections canvas { display: block; width: 100%; height: auto; border-radius: .65rem; background: #142334; }
+.shell-projections figcaption { padding-top: .3rem; }
+.shell-proportions { margin-block: 1rem; max-width: 42rem; }
+.shell-proportion { display: grid; gap: .25rem; margin-bottom: .6rem; }
+.shell-proportion meter { width: 100%; }
