@@ -6,7 +6,7 @@ Personal website hosted on GitHub Pages: https://amandazirzow.com/
 
 ### Switch the homepage occasion block
 
-Edit [special-occasion-settings.json](special-occasion-settings.json) on main, commit, and refresh the website after deployment. You do not need to edit index.html.
+Edit [special-occasion-settings.json](special-occasions/special-occasion-settings.json) on main, commit, and refresh the website after deployment. You do not need to edit index.html.
 
 **Automatic seasonal rotation**
 ```json
@@ -20,7 +20,7 @@ Edit [special-occasion-settings.json](special-occasion-settings.json) on main, c
 
 Use xmas for Christmas, black-friday for Black Friday, or general for year-round gifts. Set mode to off to hide the block when JavaScript is available.
 
-**[Complete seasonal editing guide — all 22 IDs, dates, examples and troubleshooting](SPECIAL-OCCASIONS.md)**
+**[Complete seasonal editing guide — all 22 IDs, dates, examples and troubleshooting](special-occasions/README.md)**
 
 ### Other common edits
 
@@ -31,13 +31,13 @@ Use xmas for Christmas, black-friday for Black Friday, or general for year-round
 | Theme and footer loading | [site.js](site.js) |
 | Homepage animated hero | [index.html](index.html) |
 | Gift recommendations | [gift-guide.html](gift-guide.html) |
-| Seasonal styling and animation | [special-occasions.css](special-occasions.css) |
-| Seasonal calendar and loading | [special-occasions.js](special-occasions.js) |
+| Seasonal styling and animation | [special-occasions.css](special-occasions/special-occasions.css) |
+| Seasonal calendar and loading | [special-occasions.js](special-occasions/special-occasions.js) |
 | Cycling and race links | [cycling.html](cycling.html) |
 
 ## Additional documentation
 
-- [Seasonal promotion system](SPECIAL-OCCASIONS.md)
+- [Seasonal promotion system](special-occasions/README.md)
 - [Website redesign notes](REDESIGN.md)
 - [Calusa Waterkeeper water-map documentation](README_CWK_MAP.md)
 

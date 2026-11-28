@@ -31,7 +31,7 @@
     if(within(fixed(10,10),fixed(10,31)))return 'halloween';
     return 'general';
   }
-  async function config(){try{const response=await fetch('special-occasion-settings.json',{cache:'no-cache'});if(response.ok)return await response.json();}catch(e){}return {mode:'auto'};}
+  async function config(){try{const response=await fetch('/special-occasions/special-occasion-settings.json',{cache:'no-cache'});if(response.ok)return await response.json();}catch(e){}return {mode:'auto'};}
   function enhanceMotion(){
     const card=host?.querySelector('.so-card');
     const icon=card?.querySelector('.so-icon');
@@ -50,7 +50,7 @@
     const id=settings.mode==='manual'&&valid.has(settings.manual)?settings.manual:auto(new Date());
     for(const candidate of [...new Set([id,'general'])]){
       try{
-        const response=await fetch('special-occasion-'+candidate+'.html',{cache:'no-cache'});
+        const response=await fetch('/special-occasions/special-occasion-'+candidate+'.html',{cache:'no-cache'});
         if(!response.ok)continue;
         const template=document.createElement('template');template.innerHTML=await response.text();
         const section=template.content.querySelector('section[data-occasion]');

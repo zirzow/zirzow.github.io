@@ -38,4 +38,4 @@ const cards=[...document.querySelectorAll('.gg-card')];const buttons=[...filters
 function selectGiftFilter(value){let total=0;cards.forEach(card=>{const show=value==='all'||card.dataset.tags.split(/\s+/).includes(value);card.hidden=!show;if(show)total++;});buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.filter===value)));count.textContent=total+' gift ideas';}
 buttons.forEach(button=>button.addEventListener('click',()=>selectGiftFilter(button.dataset.filter)));selectGiftFilter('all');
 
-</script><script defer src="special-occasions.js?v=3"></script></body></html>
+</script><script defer src="/special-occasions/special-occasions.js?v=4"></script></body></html>
