@@ -522,25 +522,13 @@ function formatLength(value, units) {
 }
 
 function renderWidths(slot, widths, units) {
-  const graph = $('specimenWidthProfile' + slot);
-  graph.replaceChildren();
-  const maximum = Math.max(1e-15, ...widths.map(section => section.width ?? 0));
+  const body = $('specimenWidthProfile' + slot);
+  body.replaceChildren();
   for (const {startPercent, endPercent, width, ratioToAxialSpan} of widths) {
-    const row = document.createElement('div');
-    row.className = 'shell-proportion';
-    const label = document.createElement('span');
-    label.textContent = startPercent + '–' + endPercent + '% along axis · ' + (width === null
-      ? 'Insufficient points'
-      : formatLength(width, units) + ' · ' + formatPercentage(ratioToAxialSpan) + ' of axial span');
-    row.append(label);
-    if (width !== null) {
-      const bar = document.createElement('meter');
-      bar.max = maximum;
-      bar.value = width;
-      bar.setAttribute('aria-hidden', 'true');
-      row.append(bar);
-    }
-    graph.append(row);
+    appendMeasurementRow(body, startPercent + '–' + endPercent + '%', [
+      width === null ? 'Insufficient points' : formatLength(width, units),
+      ratioToAxialSpan === null ? '—' : formatPercentage(ratioToAxialSpan)
+    ]);
   }
 }
 
