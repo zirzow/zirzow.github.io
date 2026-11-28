@@ -356,6 +356,117 @@ $('meshLandmarks').addEventListener('toggle', () => {
   draw();
 });
 
+const graphMode = $('shellGraphMode');
+const typeLabels = {gastropod: 'gastropod-like', bivalve: 'bivalve-like', uncertain: 'uncertain'};
+
+function shellShape(points, tree) {
+  const centroid = center(points);
+  const radius = rmsRadius(points, centroid);
+  const centered = points.map(point => point.clone().sub(centroid));
+  const covariance = [V(), V(), V()];
+  for (const p of centered) {
+    covariance[0].addScaledVector(p, p.x);
+    covariance[1].addScaledVector(p, p.y);
+    covariance[2].addScaledVector(p, p.z);
+  }
+  const multiply = axis => V(...covariance.map(row => row.dot(axis)));
+  const major = [V(1,0,0), V(0,1,0), V(0,0,1)].map(axis => {
+    for (let i = 0; i < 24; i++) axis = multiply(axis).normalize();
+    return axis;
+  }).sort((a, b) => b.dot(multiply(b)) - a.dot(multiply(a)))[0];
+  const axial = centered.map(point => point.dot(major));
+  const ordered = [...axial].sort((a, b) => a - b);
+  const percentile = (list, fraction) => list[Math.floor(fraction * (list.length - 1))];
+  const low = percentile(ordered, .025);
+  const high = percentile(ordered, .975);
+  const axialSpan = high - low;
+  const radial = centered.map((point, i) => point.clone().addScaledVector(major, -axial[i]));
+  const transverseRms = Math.sqrt(radial.reduce((sum, point) => sum + point.lengthSq(), 0) / points.length);
+  const axialRms = Math.hypot(...axial) / Math.sqrt(points.length);
+  const elongation = axialRms / Math.max(transverseRms, radius * 1e-9);
+  const subset = points.filter((_, i) => i % 12 === 0);
+  let best = {error: Infinity, normal: null, offset: 0};
+  const reflected = V();
+  function check(normal, offset) {
+    let sum = 0;
+    for (const point of subset) {
+      reflected.copy(point).addScaledVector(normal, -2 * (point.dot(normal) - offset));
+      sum += reflected.distanceToSquared(closest(tree, reflected));
+    }
+    const error = Math.sqrt(sum / subset.length) / radius;
+    if (error < best.error) best = {error, normal, offset};
+  }
+  for (let i = 0; i < 72; i++) {
+    const z = (i + .5) / 72;
+    const r = Math.sqrt(1 - z * z);
+    const angle = i * Math.PI * (3 - Math.sqrt(5));
+    const normal = V(r * Math.cos(angle), r * Math.sin(angle), z);
+    for (const delta of [-.15, 0, .15]) check(normal, centroid.dot(normal) + delta * radius);
+  }
+  for (const step of [.15, .075, .035]) {
+    const {normal, offset} = best;
+    const u = normal.clone().cross(Math.abs(normal.z) < .9 ? V(0,0,1) : V(0,1,0)).normalize();
+    const v = normal.clone().cross(u);
+    const relativeOffset = offset - centroid.dot(normal);
+    for (const axis of [u, v]) {
+      for (const sign of [-1, 1]) {
+        const tilted = normal.clone().addScaledVector(axis, sign * step).normalize();
+        check(tilted, centroid.dot(tilted) + relativeOffset);
+      }
+    }
+    for (const sign of [-1, 1]) check(normal, offset + sign * step * radius);
+  }
+  const depth = centered.map(point => point.dot(best.normal)).sort((a, b) => a - b);
+  const planeDepth = percentile(depth, .975) - percentile(depth, .025);
+  const type = best.error <= .045 && elongation < 1.45 ? 'bivalve'
+    : best.error >= .10 && elongation >= 1.25 ? 'gastropod' : 'uncertain';
+  return {type, reflectionError: best.error, elongation, axialSpan, transverseRms, planeDepth};
+}
+
+function updateShellProfile() {
+  if (!report?.shellProfiles) return;
+  const {A, B} = report.shellProfiles;
+  const mode = graphMode.value === 'auto'
+    ? A.type === B.type && A.type !== 'uncertain' ? A.type : 'general'
+    : graphMode.value;
+  $('shellTypeEstimate').textContent = `Shape estimate • A: ${typeLabels[A.type]} · B: ${typeLabels[B.type]}. Exploratory, unvalidated.`;
+  const units = report.mode === 'normalized' ? 'reference mesh units (B rescaled)' : 'input mesh units';
+  const general = [['Axial span (central 95%)', 'axialSpan', units],
+    ['Elongation (axial ÷ transverse RMS)', 'elongation', 'ratio']];
+  const rows = mode === 'gastropod' ? [...general, ['Transverse RMS radius', 'transverseRms', units]]
+    : mode === 'bivalve' ? [
+      ['Depth across estimated mirror plane (central 95%)', 'planeDepth', units],
+      ['Axial span (central 95%)', 'axialSpan', units],
+      ['Mirror mismatch (RMS ÷ shell RMS radius)', 'reflectionError', 'ratio']
+    ] : [...general, ['Mirror mismatch (RMS ÷ shell RMS radius)', 'reflectionError', 'ratio']];
+  const title = mode === 'general' ? 'General shape' : mode === 'gastropod' ? 'Gastropod shape' : 'Bivalve shape';
+  $('shellGraphNote').textContent = title + '. Each row uses a shared scale for A and B.';
+  const graph = $('shellProfileGraph');
+  graph.replaceChildren();
+  for (const [label, key, unit] of rows) {
+    const row = document.createElement('section');
+    const heading = document.createElement('h4');
+    heading.textContent = label + ' · ' + unit;
+    row.append(heading);
+    for (const [slot, value] of [['A', A[key]], ['B', B[key]]]) {
+      const line = document.createElement('p');
+      line.textContent = slot + ' · ' + value.toPrecision(5) + ' ';
+      const bar = document.createElement('meter');
+      bar.max = Math.max(A[key], B[key], 1e-15);
+      bar.value = value;
+      bar.setAttribute('aria-hidden', 'true');
+      bar.style.width = 'min(55%, 28rem)';
+      line.append(bar);
+      row.append(line);
+    }
+    graph.append(row);
+  }
+  report.shellProfileGraph = {mode, units, measurements: rows.map(([label, key, unit]) =>
+    ({label, unit, A: A[key], B: B[key]}))};
+}
+
+graphMode.addEventListener('change', updateShellProfile);
+
 function updateControls() {
   for (const slot of ['A', 'B']) {
     inputs[slot].disabled = busy;
@@ -505,8 +616,14 @@ async function runAnalysis() {
     const dA = pA.map(point => point.distanceTo(closest(treeB, point)));
     const sB = summarize(dB);
     const sA = summarize(dA);
+    status.textContent = 'Estimating shell type and measuring shape…';
+    await pause();
+    const shellProfiles = {A: shellShape(pA, tree), B: shellShape(pB, treeB)};
     const cap = Math.max(sB.p95, ra * 1e-9);
     status.textContent='Generating heat map…';await pause();$('meshResult').hidden=false;show(a,b,tree,cap);let units=mode==='normalized'?'reference mesh units (B rescaled)':'input mesh units';$('meshLegend').textContent='Blue = 0; red ≥ '+cap.toPrecision(5)+' '+units+' (95th-percentile display cap).';$('meshStats').textContent='B → A: mean '+sB.mean.toPrecision(5)+'; RMS '+sB.rms.toPrecision(5)+'; P95 '+sB.p95.toPrecision(5)+'; sampled max '+sB.max.toPrecision(5)+'\nA → B: mean '+sA.mean.toPrecision(5)+'; RMS '+sA.rms.toPrecision(5)+'; P95 '+sA.p95.toPrecision(5)+'; sampled max '+sA.max.toPrecision(5)+'\nUnits: '+units+'; B scale factor: '+factor.toPrecision(8)+'\n5,000 area-distributed samples per direction. Inspect alignment before interpretation.';report={version:1,reference:fa.name,moving:fb.name,mode,units,scaleFactor:factor,transformColumnMajor:best.toArray(),displayCap:cap,summary:{BtoA:sB,AtoB:sA},samples:[...pB.map((p,i)=>['BtoA',...p.toArray(),dB[i]]),...pA.map((p,i)=>['AtoB',...p.toArray(),dA[i]])]};updateCaption();
+    report.shellProfiles = shellProfiles;
+    graphMode.value = 'auto';
+    updateShellProfile();
     exp.disabled=false;status.textContent='Alignment complete.';
     $('meshResultTitle').focus();} catch (e) {
     $('meshResult').hidden = true;

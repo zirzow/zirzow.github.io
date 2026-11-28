@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=landmarks-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Morphometrics | Amanda Zirzow</title><meta name="description" content="An exploratory 3D shell comparison and landmark analysis laboratory."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=viewer-2"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=shape-profile-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Comparison</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
@@ -82,6 +82,24 @@
     </figure>
     <button class="az-button secondary" type="button" id="meshCopyCaption">Copy caption</button>
     <span id="meshCaptionStatus" role="status"></span>
+    <section class="az-card" aria-labelledby="shellTypeHeading">
+      <h3 id="shellTypeHeading">Shell type &amp; shape comparison</h3>
+      <p id="shellTypeEstimate"></p>
+      <label>Graph
+        <select id="shellGraphMode">
+          <option value="auto">Automatic</option>
+          <option value="gastropod">Gastropod shape</option>
+          <option value="bivalve">Bivalve shape</option>
+          <option value="general">General shape</option>
+        </select>
+      </label>
+      <p id="shellGraphNote"></p>
+      <div id="shellProfileGraph"></div>
+      <details>
+        <summary>How the estimate works</summary>
+        <p>The tool checks mirror symmetry and elongation. A strongly asymmetric, elongated mesh suggests a gastropod. A near-symmetric, less elongated mesh suggests a bivalve. This is an exploratory geometry rule. Scans of single valves, damaged shells, and unusual shapes can be uncertain or misleading. Select a graph manually when you know the shell type.</p>
+      </details>
+    </section>
     <section id="landmarkGraphs" hidden aria-labelledby="landmarkGraphHeading">
       <h3 id="landmarkGraphHeading">Shell feature distances</h3>
       <p id="landmarkUnits"></p>
