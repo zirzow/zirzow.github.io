@@ -1,10 +1,15 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=summary-figures-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=summary-figures-3"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3D Shell Analysis | Amanda Zirzow</title><meta name="description" content="Analyze a single 3D shell mesh or compare two specimens with surface alignment and landmarks."><link rel="stylesheet" href="/site.css?v=20261126-navhover"><link rel="stylesheet" href="/shells.css?v=summary-figures-1"><script defer src="/site.js?v=20261125-motion"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/src/index.js"}}</script><script type="module" src="/shell-mesh-analysis.js?v=axial-caption-1"></script></head><body class="az-site"><a class="az-skip" href="#main-content">Skip to content</a><header class="az-header"><div class="az-nav"><a class="az-brand" href="index.html">ZIRZOW<span>.</span></a><button class="az-theme" type="button" aria-label="Switch color theme">Color theme</button><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">My story</a><a href="science.html">Science</a><a href="art.html">Art</a><a href="nature.html">Nature</a><a href="cycling.html">Cycling & racing</a><a href="diving.html">Diving</a><a href="water-map.html">Water map</a><a href="models.html">3D models</a><a href="games.html">Games</a><a href="support.html">Support</a></nav></div></header><main id="main-content">
 <section class="az-wrap">
   <h1>3D Shell Analysis</h1>
   <p><a href="/shells.html">Back to Shells, Science &amp; Discovery</a> · <a href="#external-references">Model credits</a></p>
 </section>
 <section class="az-wrap shell-compare" id="mesh-lab">
   <div id="sample-comparison"></div>
+  <details class="az-card">
+    <summary>Add a research question (optional)</summary>
+    <label for="meshQuestion">Research question or comparison goal</label>
+    <input id="meshQuestion" type="text" maxlength="300" style="display:block;width:100%;box-sizing:border-box" placeholder="e.g., Where along the shell is it widest?">
+  </details>
   <article class="az-card shell-specimen">
       <label for="meshA"><strong>Choose a shell mesh</strong></label>
       <input id="meshA" type="file" accept=".obj,.ply,.stl,.glb">
@@ -51,7 +56,10 @@
         </div>
         <figure class="shell-scientific-figure">
           <div class="shell-plot" id="specimenAxialPlotA"></div>
-          <figcaption>Axial width profile of specimen A. Points mark eight section midpoints. Width is the 5th-to-95th percentile spread of sampled points in the side view, divided by axial span. Axis direction is computational.</figcaption>
+          <figcaption>
+            <strong id="specimenAxialTitleA">Axial width profile</strong>
+            <p id="specimenAxialCaptionA"></p>
+          </figcaption>
         </figure>
         <div class="shell-table-wrap">
           <table class="shell-measurements" aria-describedby="specimenWidthNoteA">
@@ -113,7 +121,10 @@
         </div>
         <figure class="shell-scientific-figure">
           <div class="shell-plot" id="specimenAxialPlotB"></div>
-          <figcaption>Axial width profile of specimen B. Points mark eight section midpoints. Width is the 5th-to-95th percentile spread of sampled points in the side view, divided by axial span. Axis direction is computational.</figcaption>
+          <figcaption>
+            <strong id="specimenAxialTitleB">Axial width profile</strong>
+            <p id="specimenAxialCaptionB"></p>
+          </figcaption>
         </figure>
         <div class="shell-table-wrap">
           <table class="shell-measurements" aria-describedby="specimenWidthNoteB">
@@ -139,11 +150,6 @@
   <details class="az-card">
     <summary>Size, scale &amp; age</summary>
     <p>Individual profiles preserve dimensions before rescaling. Enter calibration for both scans to compare in millimeters. Keep original size requires comparable units. Match sizes compares shape after uniform rescaling. Growth can change proportions, and collection date records when a specimen was collected. Enter age or life stage only when known.</p>
-  </details>
-  <details class="az-card">
-    <summary>Add a research question (optional)</summary>
-    <label for="meshQuestion">Research question or comparison goal</label>
-    <input id="meshQuestion" type="text" maxlength="300" style="display:block;width:100%;box-sizing:border-box" placeholder="e.g., How do the two shell scans differ in shape?">
   </details>
   <p id="meshStatus" role="status">Loading 3D analysis…</p>
   <section id="meshResult" hidden aria-labelledby="meshResultTitle">

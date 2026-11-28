@@ -619,8 +619,32 @@ function renderRatioPlot(rows) {
   chart.text(x(maximum / 200), baseline + 43, 'Measurement (% of axial span)', {'text-anchor': 'middle'});
 }
 
+function renderAxialCaption(slot, widths) {
+  const question = $('meshQuestion').value.trim();
+  const specimen = selected[slot]?.title || specimenProfiles[slot].filename;
+  $('specimenAxialTitle' + slot).textContent = 'Axial width profile of ' + specimen +
+    (question ? ' · ' + question : '');
+  const measured = widths.filter(section => section.ratioToAxialSpan !== null);
+  const peak = measured.reduce((best, section) =>
+    best && best.ratioToAxialSpan >= section.ratioToAxialSpan ? best : section, null);
+  const finding = peak
+    ? 'The widest sampled section falls at ' + peak.startPercent + '–' + peak.endPercent +
+      '% along the axis and measures ' + formatPercentage(peak.ratioToAxialSpan) + ' of axial span.'
+    : 'The sections have insufficient points for a width estimate.';
+  $('specimenAxialCaption' + slot).textContent = finding +
+    ' Dots sit at section midpoints. Width is the side-view spread between the 5th and 95th percentiles of sampled points, divided by axial span.' +
+    ' Positions follow the scan’s computed axis.';
+}
+
+$('meshQuestion').addEventListener('input', () => {
+  for (const slot of ['A', 'B']) {
+    if (specimenProfiles[slot]) renderAxialCaption(slot, originalSpecimenProfile(slot).axialWidthProfile);
+  }
+});
+
 function renderWidths(slot, widths, units) {
   renderAxialPlot(slot, widths);
+  renderAxialCaption(slot, widths);
   const body = $('specimenWidthProfile' + slot);
   body.replaceChildren();
   for (const {startPercent, endPercent, width, ratioToAxialSpan} of widths) {
