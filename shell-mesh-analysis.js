@@ -565,7 +565,11 @@ function renderAxialPlot(slot, widths) {
     'Estimated widths over eight sections. Exact values are in the width table.');
   const x = percent => 96 + percent * 6.15;
   const y = percent => 238 - percent / maximum * 198;
-  chart.text(96, 23, 'Width (% of axial span)', {'font-weight': 650});
+  const yLabelCenter = (y(0) + y(maximum)) / 2;
+  chart.text(27, yLabelCenter, 'Width (% of axial span)', {
+    'font-weight': 650, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    transform: 'rotate(-90 27 ' + yLabelCenter + ')'
+  });
   for (const tick of ticks) {
     chart.line(x(0), y(tick), x(100), y(tick), '#dce5eb');
     chart.text(83, y(tick) + 4, String(Number(tick.toPrecision(8))), {'text-anchor': 'end'});
@@ -574,6 +578,7 @@ function renderAxialPlot(slot, widths) {
     chart.text(x(tick), 260, String(tick), {'text-anchor': 'middle'});
   }
   chart.line(x(0), y(0), x(100), y(0));
+  chart.line(x(0), y(0), x(0), y(maximum));
   chart.text(x(50), 286, 'Position along axial span (%)', {'text-anchor': 'middle'});
   let prior = null;
   for (const {startPercent, endPercent, ratioToAxialSpan} of widths) {
