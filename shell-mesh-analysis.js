@@ -338,6 +338,7 @@ function updateLandmarkGraphs() {
     report.specimens[slot] = originalSpecimenProfile(slot);
     renderSpecimen(slot);
   }
+  renderRatioComparison();
 }
 
 landmarkMark.addEventListener('click', () => {
@@ -585,6 +586,40 @@ function originalSpecimenProfile(slot) {
   };
 }
 
+function formatPercentage(ratio) {
+  return (ratio * 100).toLocaleString(undefined, {maximumSignificantDigits: 5}) + '%';
+}
+
+function appendMeasurementRow(body, label, values) {
+  const row = body.insertRow();
+  const heading = document.createElement('th');
+  heading.scope = 'row';
+  heading.textContent = label;
+  row.append(heading);
+  for (const value of values) row.insertCell().textContent = value;
+}
+
+function renderRatioComparison() {
+  const body = $('shellRatioComparison');
+  body.replaceChildren();
+  const {A, B} = report.specimens;
+  const rows = [
+    ['Transverse RMS radius', A.ratios.transverseRmsToAxialSpan, B.ratios.transverseRmsToAxialSpan],
+    ['Depth across mirror plane', A.ratios.depthToAxialSpan, B.ratios.depthToAxialSpan],
+    ...(report.landmarkAnalysis?.measurements ?? []).map(({label, ratiosToAxialSpan}) =>
+      [label, ratiosToAxialSpan.A, ratiosToAxialSpan.B])
+  ];
+  for (const [label, a, b] of rows) {
+    const difference = a === null || b === null ? '—' :
+      ((b - a) * 100).toLocaleString(undefined, {maximumFractionDigits: 3, signDisplay: 'exceptZero'});
+    appendMeasurementRow(body, label, [
+      a === null ? 'Unmeasured' : formatPercentage(a),
+      b === null ? 'Unmeasured' : formatPercentage(b),
+      difference
+    ]);
+  }
+}
+
 function renderSpecimen(slot) {
   const panel = $('specimenProfile' + slot);
   panel.hidden = !specimenProfiles[slot];
@@ -598,25 +633,17 @@ function renderSpecimen(slot) {
   renderSpecimenRatios(slot, ratios);
   const values = $('specimenValues' + slot);
   values.replaceChildren();
-  const format = value => value.toPrecision(5);
   const rows = [
-    ['File', filename],
-    ['Shell type estimate', typeLabels[shellTypeEstimate]],
-    ['Axial span (central 95%)', format(dimensions.axialSpan95) + ' ' + dimensions.units],
-    ['Transverse RMS radius', format(dimensions.transverseRmsRadius) + ' ' + dimensions.units],
-    ['Depth across mirror plane (central 95%)', format(dimensions.depthAcrossMirrorPlane95) + ' ' + dimensions.units],
-    ['Transverse RMS radius ÷ axial span', format(ratios.transverseRmsToAxialSpan)],
-    ['Depth ÷ axial span', format(ratios.depthToAxialSpan)],
-    ...landmarkMeasurements.map(({label, distance, ratioToAxialSpan}) => [
-      label, format(distance) + ' ' + dimensions.units + ' (' + format(ratioToAxialSpan * 100) + '% of axial span)'
-    ])
+    ['Axial span (central 95%)', dimensions.axialSpan95, 1],
+    ['Transverse RMS radius', dimensions.transverseRmsRadius, ratios.transverseRmsToAxialSpan],
+    ['Depth across mirror plane (central 95%)', dimensions.depthAcrossMirrorPlane95, ratios.depthToAxialSpan],
+    ...landmarkMeasurements.map(({label, distance, ratioToAxialSpan}) => [label, distance, ratioToAxialSpan])
   ];
-  for (const [label, value] of rows) {
-    const term = document.createElement('dt');
-    term.textContent = label;
-    const description = document.createElement('dd');
-    description.textContent = value;
-    values.append(term, description);
+  for (const [label, value, ratio] of rows) {
+    appendMeasurementRow(values, label, [
+      value.toPrecision(5) + ' ' + dimensions.units,
+      ratio.toPrecision(5) + ' (' + formatPercentage(ratio) + ')'
+    ]);
   }
 }
 
@@ -868,6 +895,7 @@ async function runAnalysis() {
     report.transformFrame = calibrated ? 'calibrated input B (mm) to calibrated reference A (mm)' : 'input B mesh units to reference A mesh units';
     report.transformInputBToOutputColumnMajor = best.clone().scale(V(calibrationB, calibrationB, calibrationB)).toArray();
     report.specimens = {A: originalSpecimenProfile('A'), B: originalSpecimenProfile('B')};
+    renderRatioComparison();
     updateCaption();
     report.shellProfiles = shellProfiles;
     graphMode.value = 'auto';
